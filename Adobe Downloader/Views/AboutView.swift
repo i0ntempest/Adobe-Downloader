@@ -909,7 +909,7 @@ struct HelperStatusRow: View {
                             
                             await MainActor.run {
                                 helperAlertSuccess = true
-                                helperAlertMessage = "Helper 重新安装成功"
+                                helperAlertMessage = String(localized: "Helper 重新安装成功")
                                 showHelperAlert = true
                                 isReinstallingHelper = false
                             }
@@ -1236,7 +1236,7 @@ struct SetupComponentRow: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     } label: {
-                        Text("X1a0He CC")
+                        Text("X1a0He CC 选项")
                             .frame(width: 100)
                     }
                     .menuStyle(.borderlessButton)
