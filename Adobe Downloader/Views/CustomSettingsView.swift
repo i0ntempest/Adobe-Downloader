@@ -46,7 +46,7 @@ struct CustomSettingsView: View {
                                     selectedTab = "cleanup_view"
                                 }
                             }
-                            .accessibilityLabel("清理工具")
+                            .accessibilityLabel(String(localized: "清理工具"))
                             
                             SquareTabButton(
                                 imageName: "questionmark.circle",
@@ -57,7 +57,7 @@ struct CustomSettingsView: View {
                                     selectedTab = "qa_view"
                                 }
                             }
-                            .accessibilityLabel("常见问题")
+                            .accessibilityLabel(String(localized: "常见问题"))
                             
                             SquareTabButton(
                                 imageName: "info.circle",
@@ -68,7 +68,7 @@ struct CustomSettingsView: View {
                                     selectedTab = "about_app"
                                 }
                             }
-                            .accessibilityLabel("关于")
+                            .accessibilityLabel(String(localized: "关于"))
                         }
                         .padding(.leading, 8)
                         
