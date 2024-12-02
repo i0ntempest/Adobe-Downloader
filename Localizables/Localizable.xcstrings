@@ -12,7 +12,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "(May failed to processing the Setup)"
+            "value" : "(May cause failures in patching Setup components)"
           }
         }
       }
@@ -22,7 +22,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "（Unavailable to use install）"
+            "value" : "(Installation function unavailable)"
           }
         }
       }
@@ -75,7 +75,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ Install failed"
+            "value" : "%@ Installation failed"
           }
         }
       }
@@ -85,7 +85,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ Install completed"
+            "value" : "%@ Installation completed"
           }
         }
       }
@@ -132,7 +132,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "🔔 To be downloaded %1$@ (%2$@) version 🔔"
+            "value" : "🔔 Downloading for %1$@ (%2$@) 🔔"
           }
         }
       }
@@ -165,7 +165,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Adobe Downloader needs to use the background Daemon process to install and move files. Please allow the current App in \"System Preferences->Login Items->Allow in the Background\""
+            "value" : "Adobe Downloader needs to use a background Daemon process to install and move files. Please allow the current App in \"System Preferences->Login Items->Allow in the Background\""
           }
         }
       }
@@ -205,7 +205,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Helper response exception: %@"
+            "value" : "Helper returned an exception: %@"
           }
         }
       }
@@ -225,7 +225,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Helper is not installed and cannot perform operations that require administrator privileges"
+            "value" : "Helper is not installed, unable to perform operations requiring admin privileges"
           }
         }
       }
@@ -235,7 +235,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Helper is not installed or connected. Please install and connect Helper in the settings first."
+            "value" : "Helper is not installed or not connected. Please install and connect Helper in Settings panel first."
           }
         }
       }
@@ -275,7 +275,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Helper reinstalled successfully"
+            "value" : "Helper reinstalled"
           }
         }
       }
@@ -285,7 +285,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Helper reconnected successfully"
+            "value" : "Helper reconnected"
           }
         }
       }
@@ -309,7 +309,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Setup component installed successfully"
+            "value" : "Setup components installed successfully"
           }
         }
       }
@@ -319,7 +319,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Setup component not processed"
+            "value" : "Setup components not patched"
           }
         }
       }
@@ -329,7 +329,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Setup not backed up"
+            "value" : "Setup components not backed up"
           }
         }
       }
@@ -348,7 +348,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "X1a0He CC processing status:"
+            "value" : "X1a0He CC patch status:"
           }
         }
       }
@@ -398,7 +398,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Download Apple Silicon"
+            "value" : "Download for Apple Silicon"
           }
         }
       }
@@ -448,7 +448,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Download failed： %@"
+            "value" : "Download failed: %@"
           }
         }
       }
@@ -624,7 +624,17 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dependencies： %lld"
+            "value" : "Dependencies: %lld"
+          }
+        }
+      }
+    },
+    "修改 Setup 组件失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to patch Setup components"
           }
         }
       }
@@ -644,7 +654,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Continue All"
+            "value" : "Resume All"
           }
         }
       }
@@ -685,7 +695,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ready to Install…"
+            "value" : "Preparing installation…"
           }
         }
       }
@@ -735,7 +745,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Availables: %lld"
+            "value" : "Available versions: %lld"
           }
         }
       }
@@ -745,7 +755,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This may result in the inability to use the installation function. Please make sure whether you use the installation function."
+            "value" : "Installation function maybe be unavailable. Please make sure whether you will use the installation function."
           }
         }
       }
@@ -760,12 +770,22 @@
         }
       }
     },
+    "备份 Setup 组件失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to backup Setup components"
+          }
+        }
+      }
+    },
     "备份失败" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Backup failure"
+            "value" : "Backup failed"
           }
         }
       }
@@ -775,7 +795,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Backup success"
+            "value" : "Backup succeeded"
           }
         }
       }
@@ -816,7 +836,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "If you can't find the current app in the settings, you can try resetting the guardian"
+            "value" : "If the app is not in the list, try resetting the Daemon"
           }
         }
       }
@@ -857,7 +877,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Install failed"
+            "value" : "Installation failed"
           }
         }
       }
@@ -867,7 +887,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Install failed (Exit Code: %lld)"
+            "value" : "Installation failed (Exit Code: %lld)"
           }
         }
       }
@@ -877,7 +897,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Install failed: %@"
+            "value" : "Installation failed: %@"
           }
         }
       }
@@ -887,7 +907,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Install failed: Setup was not processed. (Exit Code: %lld)"
+            "value" : "Installation failed: Setup was not patched. (Exit Code: %lld)"
           }
         }
       }
@@ -897,7 +917,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Install failed: Incomplete file (Exit Code: %lld)"
+            "value" : "Installation failed: Incomplete file (Exit Code: %lld)"
           }
         }
       }
@@ -907,17 +927,17 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Install failed: Permission denied (Exit Code: %lld)"
+            "value" : "Installation failed: Permission denied (Exit Code: %lld)"
           }
         }
       }
     },
-    "安装失败: 架构或本不一致 (退出代码: %lld)" : {
+    "安装失败: 架构不一致 (退出代码: %lld)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Install failed: architecture inconsistency (exit code: %lld)"
+            "value" : "Installation failed: architecture mismatch (exit code: %lld)"
           }
         }
       }
@@ -984,6 +1004,17 @@
         }
       }
     },
+    "小时" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "h"
+          }
+        }
+      }
+    },
     "尝试使用不同的搜索关键词" : {
       "localizations" : {
         "en" : {
@@ -1019,7 +1050,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Processed"
+            "value" : "Patched"
           }
         }
       }
@@ -1135,6 +1166,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Current Architecture: %@"
+          }
+        }
+      }
+    },
+    "所有操作已成功完成" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All components patched"
           }
         }
       }
@@ -1384,7 +1425,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Are you sure you want to re-download? This will overwrite the existing installer"
+            "value" : "Are you sure you want to redownload? This will overwrite the existing installer."
           }
         }
       }
@@ -1394,7 +1435,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Do you want to install %@"
+            "value" : "Do you want to install %@?"
           }
         }
       }
@@ -1424,7 +1465,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "There are download tasks in progress. Are you sure you want to quit?\nThe progress of all download tasks has been saved and you can continue downloading next time you start the program."
+            "value" : "Download is in progress. Are you sure you want to quit?\nProgress of all download tasks has been saved and you may resume the downloads later."
           }
         }
       }
@@ -1445,7 +1486,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Server Unreachable"
+            "value" : "Server unreachable"
           }
         }
       }
@@ -1476,7 +1517,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The Setup component has not been processed or does not exist, so the installation function cannot be used. You can process the Setup component again through the settings page."
+            "value" : "The Setup components were not patched or does not exist, unable to use installation function. You can patch the Setup component again through the Settings page."
           }
         }
       }
@@ -1486,7 +1527,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Setup component not found"
+            "value" : "Setup components not found"
           }
         }
       }
@@ -1516,7 +1557,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Unknown Setup component version"
+            "value" : "Unknown Setup components version"
           }
         }
       }
@@ -1583,7 +1624,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "It is detected that the Setup file has not been backed up. If you need to install the program, the Setup must be processed. After clicking OK, you need to enter the password. Adobe Downloader will automatically process and back up the Setup.original."
+            "value" : "Setup components were not backed up. If you need to install apps, the Setup components must be patched. Your password will be required. Adobe Downloader will automatically patch and back up original components to “Setup.original”."
           }
         }
       }
@@ -1593,7 +1634,17 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "It has been detected that the Setup component does not exist in the system. The component needs to be downloaded before the operation can continue."
+            "value" : "Unable to detect Setup components. The components needs to be downloaded before continuing."
+          }
+        }
+      }
+    },
+    "正在下载" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloading"
           }
         }
       }
@@ -1659,6 +1710,16 @@
         }
       }
     },
+    "正在安装组件..." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installing..."
+          }
+        }
+      }
+    },
     "正在连接" : {
       "localizations" : {
         "en" : {
@@ -1685,6 +1746,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No products found"
+          }
+        }
+      }
+    },
+    "没有找到可下载的包" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No downloadable packages found"
           }
         }
       }
@@ -1735,7 +1806,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Are you sure you want to reprocess the Setup component?"
+            "value" : "Are you sure you want to repatch Setup components?"
           }
         }
       }
@@ -1775,7 +1846,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Confirm re-download"
+            "value" : "Confirm Redownload"
           }
         }
       }
@@ -1785,7 +1856,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Confirm reprocess"
+            "value" : "Confirm Repatch"
           }
         }
       }
@@ -1795,7 +1866,18 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Confirm reset"
+            "value" : "Confirm Reset"
+          }
+        }
+      }
+    },
+    "秒" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "s"
           }
         }
       }
@@ -1815,7 +1897,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Program is about to exit"
+            "value" : "App is about to quit"
           }
         }
       }
@@ -1825,7 +1907,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Program quit unexpectedly"
+            "value" : "App quit unexpectedly"
           }
         }
       }
@@ -1835,7 +1917,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Detected that Adobe CC components are not present on your Mac"
+            "value" : "Unable to detect Adobe CC components"
           }
         }
       }
@@ -1845,7 +1927,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Automatically pause after program restart"
+            "value" : "Auto-pause after app restart"
           }
         }
       }
@@ -1980,7 +2062,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Failed to obtain administrator authorization, the user actively canceled the authorization!"
+            "value" : "Failed to escalate to administrator privilege, operation cancelled by user!"
           }
         }
       }
@@ -2023,7 +2105,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Working…"
+            "value" : "Connected"
           }
         }
       }
@@ -2033,7 +2115,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This will clear all configuration and end the application. Are you sure you want to continue?"
+            "value" : "This will clear all configuration and quit the application. Are you sure you want to continue?"
           }
         }
       }
@@ -2134,7 +2216,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Re-download for second confirmation"
+            "value" : "Needs confirmation for redownload"
           }
         }
       }
@@ -2144,7 +2226,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reprocessing"
+            "value" : "Repatch"
           }
         }
       }
@@ -2174,7 +2256,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reset Program"
+            "value" : "Reset App Settings"
           }
         }
       }
@@ -2215,7 +2297,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Need to download the Setup component"
+            "value" : "Setup components download required"
           }
         }
       }
