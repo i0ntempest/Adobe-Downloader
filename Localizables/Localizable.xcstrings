@@ -21,7 +21,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "(May cause processing failure)"
+            "value" : "(May cause failures in patching Setup components)"
           }
         }
       }
@@ -31,7 +31,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "(The installation function cannot be used)"
+            "value" : "(Installation function unavailable)"
           }
         }
       }
@@ -84,7 +84,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ Install failed"
+            "value" : "%@ Installation failed"
           }
         }
       }
@@ -94,7 +94,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ Install completed"
+            "value" : "%@ Installation completed"
           }
         }
       }
@@ -167,7 +167,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Adobe Downloader needs to use the background Daemon process to install and move files. Please allow the current App in \"System Preferences->Login Items->Allow in the Background\""
+            "value" : "Adobe Downloader needs to use a background Daemon process to install and move files. Please allow the current App in \"System Preferences->Login Items->Allow in the Background\""
           }
         }
       }
@@ -333,7 +333,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Helper is a tool with administrator privileges, used to perform operations that require administrator privileges, such as modifying system files. Without Helper, some features of the software may not work properly."
+            "value" : "Helper is a tool running with administrator privileges for executing privileged operations, such as modifying system files. Without the Helper, some features may not work properly."
           }
         }
       }
@@ -343,7 +343,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Helper is not installed and cannot perform operations that require administrator privileges"
+            "value" : "Helper is not installed, unable to perform operations requiring admin privileges"
           }
         }
       }
@@ -353,7 +353,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Helper is not installed or connected. Please install and connect Helper in the settings first."
+            "value" : "Helper is not installed or not connected. Please install and connect Helper in Settings panel first."
           }
         }
       }
@@ -363,7 +363,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Helper Not connected"
+            "value" : "Helper not connected"
           }
         }
       }
@@ -383,7 +383,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Helper reinstalled successfully"
+            "value" : "Helper reinstalled"
           }
         }
       }
@@ -393,7 +393,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Helper reconnected successfully"
+            "value" : "Helper reconnected"
           }
         }
       }
@@ -423,7 +423,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The Setup component is the official installation program component of Adobe. We need to modify it to bypass the verification function. If the Setup component is not downloaded and processed, the installation function cannot be used."
+            "value" : "The Setup components are the official installation program component of Adobe. We need to modify it to bypass the its verification. If the Setup component is not downloaded and patched, the installation function cannot be used."
           }
         }
       }
@@ -433,7 +433,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Setup component unprocessed"
+            "value" : "Setup components not patched"
           }
         }
       }
@@ -443,7 +443,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Setup component unprocessed, installation unavailable."
+            "value" : "Unable to install, Setup components not patched"
           }
         }
       }
@@ -453,15 +453,12 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Setup not backed up"
+            "value" : "Setup components not backed up"
           }
         }
       }
     },
     "v%@" : {
-
-    },
-    "X1a0He CC" : {
 
     },
     "X1a0He CC 下载并处理成功" : {
@@ -470,7 +467,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "X1a0He CC downloaded and processed successfully"
+            "value" : "X1a0He CC downloaded and patched successfully"
           }
         }
       }
@@ -486,12 +483,22 @@
         }
       }
     },
+    "X1a0He CC 选项" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "X1a0He CC Options"
+          }
+        }
+      }
+    },
     "X1a0He CC设置" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "X1a0He CC settings"
+            "value" : "X1a0He CC Settings"
           }
         }
       }
@@ -511,7 +518,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Download Apple Silicon"
+            "value" : "Download for Apple Silicon"
           }
         }
       }
@@ -561,7 +568,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Download failed： %@"
+            "value" : "Download failed: %@"
           }
         }
       }
@@ -571,7 +578,17 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Download failed for multiple reasons:\n1. Unstable network connection\n2. Adobe server response timeout\n3. Insufficient local disk space\nPlease check your network connection and try again. If the problem persists, you can try using a proxy or VPN."
+            "value" : "Downloads could be affected by multiple factors:\n1. Unstable network connection\n2. Adobe server response timeout\n3. Insufficient local disk space\nPlease check your network connection and try again. If the problem persists, you can try using a proxy or VPN."
+          }
+        }
+      }
+    },
+    "下载完成" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download Completed"
           }
         }
       }
@@ -592,7 +609,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Download and process"
+            "value" : "Download and patch"
           }
         }
       }
@@ -686,7 +703,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Why do I need to download the Setup component?"
+            "value" : "Why do I need to download the Setup components?"
           }
         }
       }
@@ -696,7 +713,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Why do I need to install Helper?"
+            "value" : "Why do I need to install a Helper?"
           }
         }
       }
@@ -727,7 +744,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Only download"
+            "value" : "Download only"
           }
         }
       }
@@ -737,7 +754,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You can change the above options at any time in the settings"
+            "value" : "You can change the above options at any time in settings"
           }
         }
       }
@@ -767,7 +784,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Default directory"
+            "value" : "Default Download Directory"
           }
         }
       }
@@ -777,7 +794,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Default language"
+            "value" : "Default Package Language"
           }
         }
       }
@@ -797,7 +814,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Modify Setup component failed"
+            "value" : "Failed to patch Setup components"
           }
         }
       }
@@ -817,7 +834,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Select all"
+            "value" : "Select All"
           }
         }
       }
@@ -839,7 +856,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Continue"
+            "value" : "Resume All"
           }
         }
       }
@@ -869,7 +886,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Recent logs:"
+            "value" : "Logs:"
           }
         }
       }
@@ -900,7 +917,17 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ready to Install…"
+            "value" : "Preparing installation…"
+          }
+        }
+      }
+    },
+    "创建 %@ 目录失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to create directory for %@"
           }
         }
       }
@@ -1010,7 +1037,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Loading failed"
+            "value" : "Failed to Load"
           }
         }
       }
@@ -1040,7 +1067,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deselect all"
+            "value" : "Deselect All"
           }
         }
       }
@@ -1060,7 +1087,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This may result in the inability to use the installation function. Please make sure whether you use the installation function."
+            "value" : "Installation function maybe be unavailable. Please make sure whether you will use the installation function."
           }
         }
       }
@@ -1091,7 +1118,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Command line"
+            "value" : "Command Line Install"
           }
         }
       }
@@ -1101,7 +1128,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Process Status:"
+            "value" : "Patch status:"
           }
         }
       }
@@ -1111,7 +1138,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Backup Setup component failed"
+            "value" : "Failed to backup Setup components"
           }
         }
       }
@@ -1121,7 +1148,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Backup failure"
+            "value" : "Backup failued"
           }
         }
       }
@@ -1131,7 +1158,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Backup success"
+            "value" : "Backup succeeded"
           }
         }
       }
@@ -1191,7 +1218,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Failed to connect multiple times"
+            "value" : "Helper connection failed multiple times"
           }
         }
       }
@@ -1212,7 +1239,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "How to fix the installation failure problem?"
+            "value" : "How to fix installation failures?"
           }
         }
       }
@@ -1222,7 +1249,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "If you can't find the current app in the settings, you can try resetting the guardian"
+            "value" : "If the app is not in the list, try resetting the Daemon"
           }
         }
       }
@@ -1232,7 +1259,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "If the installation fails, you can try the following steps:\n1. Ensure that the Helper is correctly installed and connected\n2. Ensure that the Setup component has been downloaded and processed\n3. Check if there is enough disk space\n4. Try to re-download and install\nIf the problem persists, you can try to reinstall the Helper and re-process the Setup component."
+            "value" : "If the installation fails, please try the following:\n1. Ensure that the Helper is correctly installed and connected\n2. Ensure that the Setup components have been downloaded and patched\n3. Check if there is enough disk space\n4. Try to redownload and install\nIf the problem persists, you can try to reinstall the Helper and re-patch the Setup components."
           }
         }
       }
@@ -1283,7 +1310,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Install failed"
+            "value" : "Installation failed"
           }
         }
       }
@@ -1293,7 +1320,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Install failed: %@"
+            "value" : "Installation failed: %@"
           }
         }
       }
@@ -1303,7 +1330,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Completed"
+            "value" : "Installation Completed"
           }
         }
       }
@@ -1344,7 +1371,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Install error: %@"
+            "value" : "Installation error: %@"
           }
         }
       }
@@ -1375,7 +1402,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The command to be executed:"
+            "value" : "Command to be executed:"
           }
         }
       }
@@ -1466,7 +1493,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Processed"
+            "value" : "Patched"
           }
         }
       }
@@ -1601,7 +1628,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Start cleaning"
+            "value" : "Start Cleaning"
           }
         }
       }
@@ -1611,7 +1638,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Current execution:"
+            "value" : "Executing: %@"
           }
         }
       }
@@ -1661,7 +1688,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Execution successful"
+            "value" : "Execution completed"
           }
         }
       }
@@ -1670,8 +1697,8 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "Execution result: %1$@\nExecution command: %2$@"
+            "state" : "translated",
+            "value" : "Result: %1$@\nCommand: %2$@"
           }
         }
       }
@@ -1681,7 +1708,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Execution result: execution timeout\nExecution command: %@"
+            "value" : "Result: execution timeout\nCommand: %@"
           }
         }
       }
@@ -1722,7 +1749,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sort by added time"
+            "value" : "Sort by time added"
           }
         }
       }
@@ -1782,7 +1809,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Operation results"
+            "value" : "Operation result"
           }
         }
       }
@@ -1941,7 +1968,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Server unreachable"
+            "value" : "Server Unreachable"
           }
         }
       }
@@ -1972,7 +1999,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Are you sure you want to re-download? This will overwrite the existing installer"
+            "value" : "Are you sure you want to redownload? This will overwrite the existing installer."
           }
         }
       }
@@ -1982,7 +2009,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Do you want to install %@"
+            "value" : "Do you want to install %@?"
           }
         }
       }
@@ -2012,7 +2039,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Update settings"
+            "value" : "Update Settings"
           }
         }
       }
@@ -2022,7 +2049,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "There are download tasks in progress. Are you sure you want to quit?\nThe progress of all download tasks has been saved and you can continue downloading next time you start the program."
+            "value" : "Download is in progress. Are you sure you want to quit?\nProgress of all download tasks has been saved and you may resume the downloads later."
           }
         }
       }
@@ -2064,7 +2091,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Not processed"
+            "value" : "Not patched"
           }
         }
       }
@@ -2105,7 +2132,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The Setup component has not been processed or does not exist, so the installation function cannot be used. You can process the Setup component again through the settings page."
+            "value" : "The Setup components were not patched or does not exist, unable to use installation function. You can patch the Setup component again through the Settings page."
           }
         }
       }
@@ -2115,7 +2142,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Setup component not found"
+            "value" : "Setup components not found"
           }
         }
       }
@@ -2125,7 +2152,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "language not found"
+            "value" : "Language not found"
           }
         }
       }
@@ -2145,7 +2172,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Unknown Setup component version"
+            "value" : "Unknown Setup components version"
           }
         }
       }
@@ -2233,7 +2260,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "It is detected that the Setup file has not been backed up. If you need to install the program, the Setup must be processed. After clicking Confirm, you need to enter the password. Adobe Downloader will automatically process and back up the Setup.original."
+            "value" : "Setup components were not backed up. If you need to install apps, the Setup components must be patched. Your password will be required. Adobe Downloader will automatically patch and back up original components to “Setup.original”."
           }
         }
       }
@@ -2243,7 +2270,17 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "It has been detected that the Setup component does not exist in the system. The component needs to be downloaded before the operation can continue."
+            "value" : "Unable to detect Setup components. The components needs to be downloaded before continuing."
+          }
+        }
+      }
+    },
+    "正在下载" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloading"
           }
         }
       }
@@ -2319,12 +2356,32 @@
         }
       }
     },
+    "正在安装组件..." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installing components…"
+          }
+        }
+      }
+    },
+    "正在完成下载..." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finalizing download…"
+          }
+        }
+      }
+    },
     "正在执行..." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Executing..."
+            "value" : "Execution in progress..."
           }
         }
       }
@@ -2364,7 +2421,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cleaning up hosts file..."
+            "value" : "Cleaning up the hosts file..."
           }
         }
       }
@@ -2374,7 +2431,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cleaning up preferences file..."
+            "value" : "Cleaning up preferences files…"
           }
         }
       }
@@ -2384,7 +2441,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cleaning up other files..."
+            "value" : "Cleaning up miscellaneous files..."
           }
         }
       }
@@ -2424,7 +2481,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cleaning up crash report logs..."
+            "value" : "Cleaning up crash logs..."
           }
         }
       }
@@ -2464,7 +2521,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cleaning up keychain data..."
+            "value" : "Cleaning up keychain..."
           }
         }
       }
@@ -2499,12 +2556,22 @@
         }
       }
     },
+    "没有找到可下载的包" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No downloadable packages found"
+          }
+        }
+      }
+    },
     "注意：清理过程不会影响 Adobe Downloader 的文件和下载数据" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Note: The cleanup process will not affect any Adobe Downloader files or downloaded data"
+            "value" : "Note: The cleanup will not affect any Adobe Downloader files or downloaded data"
           }
         }
       }
@@ -2524,7 +2591,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cleanup completed"
+            "value" : "Cleanup Completed"
           }
         }
       }
@@ -2534,7 +2601,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cleanup Utility"
+            "value" : "Cleanup"
           }
         }
       }
@@ -2544,7 +2611,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cleanup cancelled"
+            "value" : "Cleanup Cancelled"
           }
         }
       }
@@ -2616,7 +2683,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Are you sure you want to download X1a0He CC? After downloading, it needs to be manually processed."
+            "value" : "This will download X1a0He CC. Manual patching will be required after download. Continue?"
           }
         }
       }
@@ -2626,7 +2693,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Are you sure you want to download and process X1a0He CC? This will complete the download and automatically process the Setup component."
+            "value" : "This will download X1a0He CC and automatically patch Setup components. Continue?"
           }
         }
       }
@@ -2666,7 +2733,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Are you sure you want to reprocess the Setup component? This will modify the Setup component to enable the installation feature."
+            "value" : "Are you sure you want to repatch the Setup component? This will modify the Setup component to enable the installation feature."
           }
         }
       }
@@ -2686,7 +2753,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Confirm download"
+            "value" : "Confirm Download"
           }
         }
       }
@@ -2696,7 +2763,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Confirm download and process"
+            "value" : "Confirm Download and Patch"
           }
         }
       }
@@ -2726,7 +2793,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Confirmation processing"
+            "value" : "Confirm patching"
           }
         }
       }
@@ -2756,7 +2823,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Confirm re-download"
+            "value" : "Confirm Redownload"
           }
         }
       }
@@ -2766,7 +2833,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Confirm reset"
+            "value" : "Confirm Reset"
           }
         }
       }
@@ -2786,7 +2853,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Program is about to exit"
+            "value" : "App is about to quit"
           }
         }
       }
@@ -2796,7 +2863,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Detected that Adobe CC components are not present on your Mac"
+            "value" : "Unable to detect Adobe CC components"
           }
         }
       }
@@ -2816,7 +2883,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Automatically pause after program restart"
+            "value" : "Auto-pause after program restart"
           }
         }
       }
@@ -2879,7 +2946,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Network outage"
+            "value" : "Network disconnected"
           }
         }
       }
@@ -2941,7 +3008,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Self-installation command:"
+            "value" : "Installation command:"
           }
         }
       }
@@ -2981,7 +3048,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Failed to obtain administrator authorization, the user actively canceled the authorization!"
+            "value" : "Failed to escalate to administrator privilege, operation cancelled by user!"
           }
         }
       }
@@ -2996,6 +3063,16 @@
         }
       }
     },
+    "解压 %@ 失败: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to decompress %1$@: %2$@"
+          }
+        }
+      }
+    },
     "解析错误: %@ - %@" : {
       "comment" : "Parsing error",
       "extractionState" : "extracted_with_value",
@@ -3004,6 +3081,26 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Parsing error: %1$@ - %2$@"
+          }
+        }
+      }
+    },
+    "设置 %@ 所有者失败: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to set ownership for %1$@: %2$@"
+          }
+        }
+      }
+    },
+    "设置 %@ 权限失败: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to set permissions for %1$@: %2$@"
           }
         }
       }
@@ -3044,7 +3141,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Working…"
+            "value" : "Connected"
           }
         }
       }
@@ -3074,7 +3171,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This will clear all configuration and end the application. Are you sure you want to continue?"
+            "value" : "This will clear all configuration and quit the application. Are you sure you want to continue?"
           }
         }
       }
@@ -3084,7 +3181,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Error connecting: %@"
+            "value" : "Connection error: %@"
           }
         }
       }
@@ -3144,7 +3241,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Select the way to download X1a0He CC"
+            "value" : "Download and install X1a0He CC"
           }
         }
       }
@@ -3175,7 +3272,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Select options to clean up"
+            "value" : "Select items to clean up"
           }
         }
       }
@@ -3205,7 +3302,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Re-download for second confirmation"
+            "value" : "Needs confirmation for redownload"
           }
         }
       }
@@ -3215,7 +3312,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reprocessing"
+            "value" : "Repatch"
           }
         }
       }
@@ -3245,7 +3342,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reset Program"
+            "value" : "Reset App Settings"
           }
         }
       }
@@ -3306,7 +3403,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Need to download the Setup component"
+            "value" : "Setup components download required"
           }
         }
       }
