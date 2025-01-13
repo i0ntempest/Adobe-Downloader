@@ -452,17 +452,9 @@ enum LoadingState: Equatable {
 
 private extension TimeInterval {
     func formatDuration() -> String {
-        if self < 60 {
-            return String(format: "%.1f秒", self)
-        } else if self < 3600 {
-            let minutes = Int(self / 60)
-            let remainingSeconds = Int(self.truncatingRemainder(dividingBy: 60))
-            return "\(minutes)分\(remainingSeconds)秒"
-        } else {
-            let hours = Int(self / 3600)
-            let minutes = Int((self.truncatingRemainder(dividingBy: 3600)) / 60)
-            let remainingSeconds = Int(self.truncatingRemainder(dividingBy: 60))
-            return "\(hours)小时\(minutes)分\(remainingSeconds)秒"
-        }
+        let hours = Int(self / 3600)
+        let minutes = Int((self.truncatingRemainder(dividingBy: 3600)) / 60)
+        let seconds = Int(self.truncatingRemainder(dividingBy: 60))
+        return String(format: NSLocalizedString("%02d:%02d:%02d", comment: ""), hours, minutes, seconds)
     }
 } 

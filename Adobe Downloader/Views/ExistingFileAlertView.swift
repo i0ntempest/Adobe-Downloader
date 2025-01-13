@@ -114,21 +114,21 @@ private struct ButtonSection: View {
     var body: some View {
         VStack(spacing: 16) {
             ActionButton(
-                title: "使用现有程序",
+                title: String(localized: "使用现有程序"),
                 icon: "checkmark.circle",
                 color: .blue,
                 action: onUseExisting
             )
             
             ActionButton(
-                title: "重新下载",
+                title: String(localized: "重新下载"),
                 icon: "arrow.down.circle",
                 color: .green,
                 action: onRedownload
             )
             
             ActionButton(
-                title: "取消",
+                title: String(localized: "取消"),
                 icon: "xmark.circle",
                 color: .red,
                 action: onCancel,

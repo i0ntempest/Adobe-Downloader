@@ -246,7 +246,7 @@ private struct ExistingPathButton: View {
     
     var body: some View {
         if isVisible {
-            Text("已存在")
+            Text("可能已存在目录")
                 .font(.caption)
                 .foregroundColor(.white)
                 .padding(.horizontal, 8)

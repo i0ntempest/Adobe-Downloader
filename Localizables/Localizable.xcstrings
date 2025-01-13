@@ -87,6 +87,17 @@
         }
       }
     },
+    "%02d:%02d:%02d" : {
+      "comment" : "Download time format (HH:mm:ss)",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$02d:%2$02d:%3$02d"
+          }
+        }
+      }
+    },
     "%lld" : {
 
     },
@@ -278,6 +289,16 @@
     },
     "OK" : {
 
+    },
+    "Setup 组件安装成功" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setup component installed successfully"
+          }
+        }
+      }
     },
     "Setup 组件未处理" : {
       "localizations" : {
@@ -544,6 +565,16 @@
         }
       }
     },
+    "使用现有程序" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use existing program"
+          }
+        }
+      }
+    },
     "使用默认目录" : {
       "localizations" : {
         "en" : {
@@ -691,6 +722,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "This may result in the inability to use the installation function. Please make sure whether you use the installation function."
+          }
+        }
+      }
+    },
+    "可能已存在目录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Directory may already exist"
           }
         }
       }
@@ -965,16 +1006,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Copied"
-          }
-        }
-      }
-    },
-    "已存在" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Existed"
           }
         }
       }
@@ -1549,7 +1580,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Downloadind %1$@ (%2$d/%3$d)"
+            "value" : "Downloading %1$@ (%2$d/%3$d)"
           }
         }
       }
@@ -2060,6 +2091,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "General"
+          }
+        }
+      }
+    },
+    "重新下载" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Re-download"
           }
         }
       }
