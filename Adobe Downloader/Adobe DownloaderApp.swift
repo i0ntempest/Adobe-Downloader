@@ -57,7 +57,7 @@ struct Adobe_DownloaderApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(networkManager)
-                .frame(width: 850, height: 800)
+                .frame(minWidth: 792, minHeight: 600)
                 .tint(.blue)
                 .task {
                     await setupApplication()

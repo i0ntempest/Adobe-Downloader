@@ -8,7 +8,7 @@ struct ContentView: View {
     @State private var searchText = ""
     @State private var currentApiVersion = StorageData.shared.apiVersion
     @State private var cachedProducts: [Sap] = []
-    
+
     private var apiVersion: String {
         get { StorageData.shared.apiVersion }
         set {
@@ -16,58 +16,48 @@ struct ContentView: View {
             refreshData()
         }
     }
-    
+
     private var filteredProducts: [Sap] {
         if searchText.isEmpty {
             return cachedProducts
         }
-        
+
         return cachedProducts.filter {
             $0.displayName.localizedCaseInsensitiveContains(searchText) ||
             $0.sapCode.localizedCaseInsensitiveContains(searchText)
         }
     }
-    
+
     private func openSettings() {
         NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
     }
-    
+
     private func updateProductsCache() {
         let products = networkManager.saps.values
             .filter { $0.hasValidVersions(allowedPlatform: StorageData.shared.allowedPlatform) }
             .sorted { $0.displayName < $1.displayName }
         cachedProducts = products
     }
-    
+
     var body: some View {
         VStack(spacing: 0) {
-            HStack() {
-                Text("Adobe Downloader")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .fixedSize()
-
-                Spacer()
-                
-                HStack {
-                    Toggle(isOn: Binding(
-                        get: { StorageData.shared.downloadAppleSilicon },
-                        set: { newValue in
-                            StorageData.shared.downloadAppleSilicon = newValue
-                            Task {
-                                await networkManager.fetchProducts()
-                            }
+            HStack(spacing: 16) {
+                Toggle(isOn: Binding(
+                    get: { StorageData.shared.downloadAppleSilicon },
+                    set: { newValue in
+                        StorageData.shared.downloadAppleSilicon = newValue
+                        Task {
+                            await networkManager.fetchProducts()
                         }
-                    )) {
-                        Text("Apple Silicon")
                     }
-                    .toggleStyle(.switch)
-                    .tint(.green)
-                    .disabled(isRefreshing)
+                )) {
+                    Text("Apple Silicon")
                 }
-                .padding(.horizontal, 10)
+                .toggleStyle(.switch)
+                .tint(.green)
+                .disabled(isRefreshing)
 
-                HStack {
+                HStack(spacing: 8) {
                     Text("API:")
                     Picker("", selection: $currentApiVersion) {
                         Text("v4").tag("4")
@@ -82,7 +72,6 @@ struct ContentView: View {
                     }
                 }
                 .disabled(isRefreshing)
-                .padding(.horizontal, 10)
 
                 HStack(spacing: 8) {
                     SearchField(text: $searchText)
@@ -108,7 +97,7 @@ struct ContentView: View {
                     }
                     .disabled(isRefreshing)
                     .buttonStyle(.borderless)
-                    
+
                     Button(action: { showDownloadManager.toggle() }) {
                         Image(systemName: "arrow.down.circle")
                             .imageScale(.medium)
@@ -129,6 +118,7 @@ struct ContentView: View {
                         }
                     )
                 }
+                .frame(maxWidth: .infinity, alignment: .trailing)
             }
             .padding(.horizontal)
             .padding(.vertical, 8)
@@ -147,28 +137,28 @@ struct ContentView: View {
             ZStack {
                 Color(NSColor.windowBackgroundColor)
                     .ignoresSafeArea()
-                
+
                 switch networkManager.loadingState {
                 case .idle, .loading:
                     ProgressView("正在加载...")
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                
+
                 case .failed(let error):
                     VStack(spacing: 20) {
                         Image(systemName: "exclamationmark.triangle")
                             .font(.system(size: 48))
                             .foregroundColor(.red)
-                        
+
                         Text("加载失败")
                             .font(.title2)
                             .fontWeight(.medium)
-                        
+
                         Text(error.localizedDescription)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
                             .frame(maxWidth: 300)
                             .padding(.bottom, 10)
-                        
+
                         Button(action: {
                             networkManager.retryFetchData()
                         }) {
@@ -181,7 +171,7 @@ struct ContentView: View {
                         .controlSize(.large)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                
+
                 case .success:
                     if filteredProducts.isEmpty {
                         VStack {
@@ -199,7 +189,9 @@ struct ContentView: View {
                     } else {
                         ScrollView(showsIndicators: false) {
                             LazyVGrid(
-                                columns: [GridItem(.adaptive(minimum: 250))],
+                                columns: [
+                                    GridItem(.adaptive(minimum: 240, maximum: 300), spacing: 20)
+                                ],
                                 spacing: 20
                             ) {
                                 ForEach(filteredProducts, id: \.sapCode) { sap in
@@ -207,7 +199,7 @@ struct ContentView: View {
                                 }
                             }
                             .padding()
-                            
+
                             HStack(spacing: 8) {
                                 Capsule()
                                     .fill(Color.secondary.opacity(0.2))
@@ -237,11 +229,11 @@ struct ContentView: View {
             updateProductsCache()
         }
     }
-    
+
     private func refreshData() {
         isRefreshing = true
         errorMessage = nil
-        
+
         Task {
             await networkManager.fetchProducts()
             await MainActor.run {
@@ -254,7 +246,7 @@ struct ContentView: View {
 
 struct SearchField: View {
     @Binding var text: String
-    
+
     var body: some View {
         HStack {
             Image(systemName: "magnifyingglass")
@@ -277,9 +269,9 @@ struct SearchField: View {
 
 #Preview {
     let networkManager = NetworkManager()
-    
+
     return ContentView()
         .environmentObject(networkManager)
-        .frame(width: 850, height: 700)
+        .frame(width: 792, height: 600)
 }
 
