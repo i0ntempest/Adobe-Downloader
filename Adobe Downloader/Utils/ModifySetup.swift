@@ -76,15 +76,43 @@ class ModifySetup {
         let setupPath = "/Library/Application Support/Adobe/Adobe Desktop Common/HDBox/Setup"
         let backupPath = "/Library/Application Support/Adobe/Adobe Desktop Common/HDBox/Setup.original"
 
+        if !FileManager.default.fileExists(atPath: setupPath) {
+            print("Setup 文件不存在: \(setupPath)")
+            completion(false)
+            return
+        }
+
         if isSetupBackup() {
-            let command = "cp '\(backupPath)' '\(setupPath)'"
-            PrivilegedHelperManager.shared.executeCommand(command) { result in
+            print("检测到备份文件，尝试从备份恢复...")
+            PrivilegedHelperManager.shared.executeCommand("/bin/cp -f '\(backupPath)' '\(setupPath)'") { result in
+                if result.starts(with: "Error:") {
+                    print("从备份恢复失败: \(result)")
+                }
                 completion(!result.starts(with: "Error:"))
             }
         } else {
-            let command = "cp '\(setupPath)' '\(backupPath)'"
-            PrivilegedHelperManager.shared.executeCommand(command) { result in
-                completion(!result.starts(with: "Error:"))
+            print("未检测到备份文件，尝试创建备份...")
+            PrivilegedHelperManager.shared.executeCommand("/bin/cp -f '\(setupPath)' '\(backupPath)'") { result in
+                if result.starts(with: "Error:") {
+                    print("创建备份失败: \(result)")
+                }
+                
+                if !result.starts(with: "Error:") {
+                    if FileManager.default.fileExists(atPath: backupPath) {
+                        print("备份文件创建成功")
+                        PrivilegedHelperManager.shared.executeCommand("/bin/chmod 644 '\(backupPath)'") { chmodResult in
+                            if chmodResult.starts(with: "Error:") {
+                                print("设置备份文件权限失败: \(chmodResult)")
+                            }
+                            completion(true)
+                        }
+                    } else {
+                        print("备份文件创建失败：文件不存在")
+                        completion(false)
+                    }
+                } else {
+                    completion(false)
+                }
             }
         }
     }
@@ -110,12 +138,15 @@ class ModifySetup {
                 return
             }
 
+            print("执行命令 [\(index + 1)/\(commands.count)]: \(commands[index])")
             PrivilegedHelperManager.shared.executeCommand(commands[index]) { result in
                 if result.starts(with: "Error:") {
-                    print("Command failed: \(commands[index])")
+                    print("命令执行失败: \(commands[index])")
+                    print("错误信息: \(result)")
                     completion(false)
                     return
                 }
+                print("命令执行成功")
                 executeNextCommand(index + 1)
             }
         }

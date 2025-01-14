@@ -229,14 +229,14 @@ class DownloadUtils {
         """
     }
 
-    private func executePrivilegedCommand(_ command: String) async throws -> String {
+    private func executePrivilegedCommand(_ command: String) async -> String {
         return await withCheckedContinuation { continuation in
             PrivilegedHelperManager.shared.executeCommand(command) { result in
                 if result.starts(with: "Error:") {
-                    continuation.resume(returning: result)
-                } else {
-                    continuation.resume(returning: result)
+                    print("命令执行失败: \(command)")
+                    print("错误信息: \(result)")
                 }
+                continuation.resume(returning: result)
             }
         }
     }
@@ -1175,52 +1175,58 @@ class DownloadUtils {
                 progressHandler(0.9, "正在安装组件...")
             }
             
-            let targetDirectory = "/Library/Application Support/Adobe/Adobe Desktop Common"
+            let targetDirectory = "/Library/Application\\ Support/Adobe/Adobe\\ Desktop\\ Common"
+            let rawTargetDirectory = "/Library/Application Support/Adobe/Adobe Desktop Common"
 
-            if !FileManager.default.fileExists(atPath: targetDirectory) {
-                let baseCommands = [
-                    "mkdir -p '\(targetDirectory)'",
-                    "chmod 755 '\(targetDirectory)'"
-                ]
-
-                for command in baseCommands {
-                    let result = await withCheckedContinuation { continuation in
-                        PrivilegedHelperManager.shared.executeCommand(command) { result in
-                            continuation.resume(returning: result)
-                        }
-                    }
-                    
-                    if result.starts(with: "Error:") {
-                        try? FileManager.default.removeItem(at: tempDirectory)
-                        throw NetworkError.installError("创建目录失败: \(result)")
-                    }
+            if !FileManager.default.fileExists(atPath: rawTargetDirectory) {
+                let createDirResult = await executePrivilegedCommand("/bin/mkdir -p \(targetDirectory)")
+                if createDirResult.starts(with: "Error:") {
+                    try? FileManager.default.removeItem(at: tempDirectory)
+                    throw NetworkError.installError("创建目录失败: \(createDirResult)")
+                }
+                
+                let chmodResult = await executePrivilegedCommand("/bin/chmod 755 \(targetDirectory)")
+                if chmodResult.starts(with: "Error:") {
+                    try? FileManager.default.removeItem(at: tempDirectory)
+                    throw NetworkError.installError("设置权限失败: \(chmodResult)")
                 }
             }
 
             for package in packagesToDownload {
                 let packageDir = "\(targetDirectory)/\(package.name)"
-                let packageCommands = [
-                    "rm -rf '\(packageDir)'",
-                    "mkdir -p '\(packageDir)'",
-                    "unzip -o '\(tempDirectory.path)/\(package.name).zip' -d '\(packageDir)/'",
-                    "chmod -R 755 '\(packageDir)'",
-                    "chown -R root:wheel '\(packageDir)'"
-                ]
-                
-                for command in packageCommands {
-                    let result = await withCheckedContinuation { continuation in
-                        PrivilegedHelperManager.shared.executeCommand(command) { result in
-                            continuation.resume(returning: result)
-                        }
-                    }
-                    
-                    if result.starts(with: "Error:") {
-                        try? FileManager.default.removeItem(at: tempDirectory)
-                        throw NetworkError.installError("安装 \(package.name) 失败: \(result)")
-                    }
+
+                let removeResult = await executePrivilegedCommand("/bin/rm -rf \(packageDir)")
+                if removeResult.starts(with: "Error:") {
+                    print("移除旧目录失败: \(removeResult)")
+                }
+
+                let mkdirResult = await executePrivilegedCommand("/bin/mkdir -p \(packageDir)")
+                if mkdirResult.starts(with: "Error:") {
+                    try? FileManager.default.removeItem(at: tempDirectory)
+                    throw NetworkError.installError("创建 \(package.name) 目录失败")
+                }
+
+                let unzipResult = await executePrivilegedCommand("cd \(packageDir) && /usr/bin/unzip -o '\(tempDirectory.path)/\(package.name).zip'")
+                if unzipResult.starts(with: "Error:") {
+                    try? FileManager.default.removeItem(at: tempDirectory)
+                    throw NetworkError.installError("解压 \(package.name) 失败: \(unzipResult)")
+                }
+
+                let chmodResult = await executePrivilegedCommand("/bin/chmod -R 755 \(packageDir)")
+                if chmodResult.starts(with: "Error:") {
+                    try? FileManager.default.removeItem(at: tempDirectory)
+                    throw NetworkError.installError("设置 \(package.name) 权限失败: \(chmodResult)")
+                }
+
+                let chownResult = await executePrivilegedCommand("/usr/sbin/chown -R root:wheel \(packageDir)")
+                if chownResult.starts(with: "Error:") {
+                    try? FileManager.default.removeItem(at: tempDirectory)
+                    throw NetworkError.installError("设置 \(package.name) 所有者失败: \(chownResult)")
                 }
             }
+
             try await Task.sleep(nanoseconds: 1_000_000_000)
+            
             try await withCheckedThrowingContinuation { continuation in
                 ModifySetup.backupAndModifySetupFile { success, message in
                     if success {

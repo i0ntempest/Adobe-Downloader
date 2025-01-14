@@ -766,6 +766,16 @@
         }
       }
     },
+    "多次尝试连接失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to connect multiple times"
+          }
+        }
+      }
+    },
     "失败: %@" : {
       "comment" : "Download status failed",
       "localizations" : {
@@ -1325,16 +1335,6 @@
       }
     },
     "无法连接到 Helper" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unable to connect to Helper"
-          }
-        }
-      }
-    },
-    "无法连接到Helper" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
