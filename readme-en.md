@@ -70,21 +70,15 @@ when prompted.
 
 - For historical update logs, please go to [Update Log](update-log.md)
 
-- 2024-11-19 00:55 Update Log
+- 2025-01-14 17:45 Update Log
 
 ```markdown
-1. Simulate the package dependency download logic of the official Adobe Creative Cloud
-2. Due to the above updates, the problem of insufficient download quantity of some packages has been fixed
-3. Fixed when HDBox and IPCBox already exist, the problem that the original components will not be replaced after
-   downloading X1a0He CC components
-4. Fixed the problem that Acrobat products are still in downloading status when paused and canceled
-5. Add product quantity display at the bottom and display warning slogan in the center
-6. Add some language selections
-7. Optimize the sorting display of the version selection page
-8. Optimize product processing and parsing speed, abandon xml processing and parsing, and use json processing
+1. Added support for window resizing to better accommodate smaller screens.
+2. Fixed spelling errors in certain views.
+3. Further improvements made to the Helper functionality.
 
-PS: Most products have been tested on M1 Max and downloaded and installed normally, but Intel has not been tested. If
-you have any questions, please raise issues
+PS: Adobe Downloader has reached a stable phase and is generally capable of performing downloads under most
+conditions.
 ```
 
 ### Language friendly

@@ -1,5 +1,25 @@
 # Change Log
 
+## 2025-01-14 17:45 更新日志
+
+[//]: # (1.4.0)
+
+```markdown
+1. 支持窗口调整大小，适配屏幕更小的设备
+2. 修正了部分视图下的拼写错误
+3. 对 Helper 进行了进一步的完善
+
+PS: Adobe Downloader 已进入了稳定阶段，大部分情况下均可正常下载
+====================
+
+1. Added support for window resizing to better accommodate smaller screens.
+2. Fixed spelling errors in certain views.
+3. Further improvements made to the Helper functionality.
+
+PS: Adobe Downloader has reached a stable phase and is generally capable of performing downloads under most
+conditions.
+```
+
 ## 2024-11-19 00:55 更新日志
 
 [//]: # (1.3.1)
