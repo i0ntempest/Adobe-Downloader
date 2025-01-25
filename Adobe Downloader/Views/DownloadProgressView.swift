@@ -208,7 +208,7 @@ struct DownloadProgressView: View {
                     InstallProgressView(
                         productName: task.displayName,
                         progress: 1.0,
-                        status: "安装完成",
+                        status: String(localized: "安装完成"),
                         onCancel: {
                             isInstalling = false
                         },
@@ -218,7 +218,7 @@ struct DownloadProgressView: View {
                     InstallProgressView(
                         productName: task.displayName,
                         progress: 0,
-                        status: "安装失败: \(error.localizedDescription)",
+                        status: String(localized: "安装失败: \(error.localizedDescription)"),
                         onCancel: {
                             isInstalling = false
                         },
@@ -232,7 +232,7 @@ struct DownloadProgressView: View {
                     InstallProgressView(
                         productName: task.displayName,
                         progress: 0,
-                        status: "准备安装...",
+                        status: String(localized: "准备安装..."),
                         onCancel: {
                             networkManager.cancelInstallation()
                             isInstalling = false

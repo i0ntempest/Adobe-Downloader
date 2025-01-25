@@ -4,6 +4,9 @@
     "" : {
 
     },
+    " [%@]" : {
+
+    },
     "(可能导致处理 Setup 组件失败)" : {
       "localizations" : {
         "en" : {
@@ -175,6 +178,17 @@
     },
     "By X1a0He. ❤️ Love from China. 🇨🇳" : {
 
+    },
+    "Debug 模式" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Debug Mode"
+          }
+        }
+      }
     },
     "GNU通用公共许可证GPL v3." : {
       "localizations" : {
@@ -349,12 +363,12 @@
         }
       }
     },
-    "X1a0He CC 版本信息: %@ [%@]" : {
+    "X1a0He CC 版本信息: " : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "X1a0He CC version info: %1$@ [%2$@]"
+            "value" : "X1a0He CC version info: "
           }
         }
       }
@@ -662,6 +676,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Preparing: %@"
+          }
+        }
+      }
+    },
+    "准备安装..." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ready to Install…"
           }
         }
       }

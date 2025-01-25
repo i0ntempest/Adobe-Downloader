@@ -122,7 +122,9 @@ struct Adobe_DownloaderApp: App {
             if needsSetup {
                 showCreativeCloudAlert = true
             } else if needsBackup {
+                #if !DEBUG
                 showBackupAlert = true
+                #endif
             }
 
             if storage.isFirstLaunch {

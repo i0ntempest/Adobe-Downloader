@@ -216,15 +216,15 @@ class PrivilegedHelperManager: NSObject {
     }
 
     static var getHelperStatus: Bool {
-        var status = false
-        let semaphore = DispatchSemaphore(value: 0)
-        
-        shared.getHelperStatus { helperStatus in
-            status = helperStatus == .installed
-            semaphore.signal()
+        if let currentBuild = Bundle.main.infoDictionary?["CFBundleVersion"] as? String,
+           let installedBuild = UserDefaults.standard.string(forKey: "InstalledHelperBuild"),
+           currentBuild != installedBuild {
+            return false
         }
-        semaphore.wait()
-        return status
+        
+        let helperURL = Bundle.main.bundleURL.appendingPathComponent("Contents/Library/LaunchServices/" + machServiceName)
+        guard CFBundleCopyInfoDictionaryForURL(helperURL as CFURL) != nil else { return false }
+        return FileManager.default.fileExists(atPath: "/Library/PrivilegedHelperTools/\(machServiceName)")
     }
     
     func reinstallHelper(completion: @escaping (Bool, String) -> Void) {

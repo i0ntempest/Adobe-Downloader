@@ -756,6 +756,11 @@ struct SetupComponentRow: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("X1a0He CC 备份状态: ")
+                #if DEBUG
+                Image(systemName: "ladybug.fill")
+                    .foregroundColor(.yellow)
+                Text("Debug 模式")
+                #else
                 if ModifySetup.isSetupBackup() {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.green)
@@ -765,10 +770,16 @@ struct SetupComponentRow: View {
                         .foregroundColor(.red)
                     Text("(可能导致处理 Setup 组件失败)")
                 }
+                #endif
             }
             Divider()
             HStack {
                 Text("X1a0He CC 处理状态: ")
+                #if DEBUG
+                Image(systemName: "ladybug.fill")
+                    .foregroundColor(.yellow)
+                Text("Debug 模式")
+                #else
                 if ModifySetup.isSetupModified() {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.green)
@@ -778,6 +789,7 @@ struct SetupComponentRow: View {
                         .foregroundColor(.red)
                     Text("(将导致无法使用安装功能)")
                 }
+                #endif
                 Spacer()
 
                 Button(action: {
@@ -792,7 +804,11 @@ struct SetupComponentRow: View {
             }
             Divider()
             HStack {
-                Text("X1a0He CC 版本信息: \(viewModel.setupVersion) [\(AppStatics.cpuArchitecture)]")
+                Text("X1a0He CC 版本信息: ")
+                Image(systemName: "info.circle.fill")
+                    .foregroundColor(.blue)
+                Text("\(viewModel.setupVersion)")
+                Text(" [\(AppStatics.cpuArchitecture)]")
                 Spacer()
 
                 if viewModel.isDownloadingSetup {
