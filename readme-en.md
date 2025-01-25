@@ -53,6 +53,7 @@ If you are still worried about problems, please find a professional to check the
 - 133: Insufficient system disk space
 - -1: The Setup component was not processed or failed to process, please contact the developer
 - 195: The downloaded product does not support your current system
+- 255: The Setup component needs to be updated, please contact the developer to resolve
 
 ### Questions about the Setup Component
 
@@ -70,15 +71,12 @@ when prompted.
 
 - For historical update logs, please go to [Update Log](update-log.md)
 
-- 2025-01-14 17:45 Update Log
+- 2025-01-26 Update Log
 
 ```markdown
-1. Added support for window resizing to better accommodate smaller screens.
-2. Fixed spelling errors in certain views.
-3. Further improvements made to the Helper functionality.
-
-PS: Adobe Downloader has reached a stable phase and is generally capable of performing downloads under most
-conditions.
+1. Fixed the issue of installation failure with error code 255.
+2. Added a new feature, in Debug mode, the handling and backup status of the CC component will not be checked.
+3. Adjusted the translation of some installation prompt messages.
 ```
 
 ### Language friendly

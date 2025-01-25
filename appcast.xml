@@ -3,6 +3,34 @@
     <channel>
         <title>Adobe Downloader</title>
         <item>
+            <title>1.4.1</title>
+            <pubDate>Sun, 26 Jan 2025 02:19:20 +0800</pubDate>
+            <sparkle:version>141</sparkle:version>
+            <sparkle:shortVersionString>1.4.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>12.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/X1a0He/Adobe-Downloader/releases/download/1.4.1/Adobe.Downloader.dmg"
+                       length="3340420" type="application/octet-stream"
+                       sparkle:edSignature="bPEzsXBZB9GVeqUXiUxIW/e8nJygDVfsBYumRUjaPV0iUq9MScJYZEqheOd+8vIHES88NUdXDJNnQM12TIRoAw=="/>
+            <description>
+                <![CDATA[
+                    <style>ul{margin-top: 0;margin-bottom: 7;padding-left: 18;}</style>
+                    <h4>Adobe Downloader 更新日志: </h4>
+                    <ul>
+                        <li>1. 修复安装失败并提示错误代码 255 的问题</li>
+                        <li>2. 增加了一个新特性，在 Debug 模式下，并不会检测 CC 组件的处理情况和备份情况</li>
+                        <li>3. 调整了部分安装提示文字的翻译</li>
+                    </ul>
+                    <hr>
+                    <h4>Adobe Downloader Changes: </h4>
+                    <ul>
+                        <li>1. Fixed the issue of installation failure with error code 255.</li>
+                        <li>2. Added a new feature, in Debug mode, the handling and backup status of the CC component will not be checked.</li>
+                        <li>3. Adjusted the translation of some installation prompt messages.</li>
+                    </ul>
+                ]]>
+            </description>
+        </item>
+        <item>
             <title>1.4.0</title>
             <pubDate>Tue, 14 Jan 2025 17:41:16 +0800</pubDate>
             <sparkle:version>140</sparkle:version>

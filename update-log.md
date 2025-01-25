@@ -1,5 +1,21 @@
 # Change Log
 
+## 2025-01-26 更新日志
+
+[//]: # (1.4.1)
+
+```markdown
+1. 修复安装失败并提示错误代码 255 的问题
+2. 增加了一个新特性，在 Debug 模式下，并不会检测 CC 组件的处理情况和备份情况
+3. 调整了部分安装提示文字的翻译
+
+====================
+
+1. Fixed the issue of installation failure with error code 255.
+2. Added a new feature, in Debug mode, the handling and backup status of the CC component will not be checked.
+3. Adjusted the translation of some installation prompt messages.
+```
+
 ## 2025-01-14 17:45 更新日志
 
 [//]: # (1.4.0)
