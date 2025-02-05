@@ -6,6 +6,8 @@
 
 ## Before Use
 
+> ⚠️ This repository does not support any PR submission
+
 **🍎Only for macOS 12.0+.**
 
 > **If you like Adobe Downloader, or it helps you, please Star🌟 it.**
@@ -16,7 +18,8 @@
 > 2. To enable smooth installation after downloading, Adobe Downloader needs to modify Adobe’s Setup program. This
      process is fully automated by the program and requires no user intervention. Many thanks
      to [QiuChenly](https://github.com/QiuChenly) for providing the solution.
-> 3. If you encounter any problems, don't panic, contact [@X1a0He](https://t.me/X1a0He) on Telegram or use the Python
+> 3. If you encounter any problems, don't panic, contact [@X1a0He](https://t.me/X1a0He_bot) on Telegram or use the
+     Python
      version. Many thanks to [Drovosek01](https://github.com/Drovosek01) for
      the [adobe-packager](https://github.com/Drovosek01/adobe-packager)
 > 4. ⚠️⚠️⚠️ **All Adobe apps in Adobe Downloader are from official Adobe channels and are not cracked versions.**
@@ -42,18 +45,16 @@ If you are still worried about problems, please find a professional to check the
 
 ### **Explanation of relevant error codes**
 
-- 2700: It is unlikely to occur unless the Setup component processing fails
-
-- 107: The downloaded file architecture is inconsistent with the system architecture or the installation file is
-  damaged. It is unlikely to occur in version 1.3.0
-
-- 103: There is a permission problem. It is unlikely to occur in version 1.3.0
-
-- 182: The file is incomplete or damaged, version 1.3.0 is unlikely to appear
-- 133: Insufficient system disk space
-- -1: The Setup component was not processed or failed to process, please contact the developer
+- 2700: This is unlikely to occur, unless the Setup component processing fails
+- 107: The downloaded file architecture does not match the system architecture or the installation file is damaged
+- 103: Permission issues, please ensure the Helper status is normal
+- 182: The downloaded file is not complete or damaged, or the Setup component does not match the product, please
+  download X1a0He CC
+- 133: System disk space is insufficient
+- -1: Setup component is not processed or processed failed, please contact the developer
 - 195: The downloaded product does not support your current system
-- 255: The Setup component needs to be updated, please contact the developer to resolve
+- 146: Please grant Adobe Downloader full disk permission in the Mac system settings
+- 255: Installation failed, please contact the developer
 
 ### Questions about the Setup Component
 
@@ -88,18 +89,31 @@ when prompted.
 
 **For all the SwiftUI seniors, I am just a SwiftUI newbie, some of the code comes from Claude, OpenAI and Apple, etc.**
 \
-**If you have any optimization suggestions or questions about Adobe Downloader, please open an issue or contact @X1a0He
+**If you have any optimization suggestions or questions about Adobe Downloader, please open an issue or
+contact [@X1a0He](https://t.me/X1a0He_bot)
 via Telegram.**
 
 ## ✨ Features
 
-- [x] Basic Functionality
+- [x] Basic 📦
     - [x] Download Acrobat Pro
     - [x] Download other Adobe products
     - [x] Support installation of non-Acrobat products
     - [x] Support multiple products download at the same time
     - [x] Supports using default language and default directory
     - [x] Support task record persistence
+- [x] Installation 📦
+- [x] Cleanup 🧹 (1.5.0 added)
+    - [x] Adobe applications
+    - [x] Adobe Creative Cloud
+    - [x] Adobe Preferences
+    - [x] Adobe Cache files
+    - [x] Adobe License files
+    - [x] Adobe Log files
+    - [x] Adobe Services
+    - [x] Adobe Keychain
+    - [x] Adobe Genuine Service
+    - [x] Adobe hosts
 
 ## 👀 Preview
 
@@ -131,5 +145,5 @@ Adobe Downloader © X1a0He
 
 Released under GPLv3. Created on 2024.11.05.
 
-> GitHub [@X1a0He](https://github.com/X1a0He/) \
-> Telegram [@X1a0He](https://t.me/X1a0He)
+> GitHub [@X1a0He](https://github.com/X1a0He) \
+> Telegram [@X1a0He](https://t.me/X1a0He_bot)
