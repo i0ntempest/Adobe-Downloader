@@ -20,6 +20,8 @@ struct DownloadProgressView: View {
     @State private var expandedProducts: Set<String> = []
     @State private var iconImage: NSImage? = nil
     @State private var showSetupProcessAlert = false
+    @State private var showCommandLineInstall = false
+    @State private var showCopiedAlert = false
 
     private var statusLabel: some View {
         Text(task.status.description)
@@ -78,12 +80,14 @@ struct DownloadProgressView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.orange)
+                .controlSize(.regular)
                 
                 Button(action: onCancel) {
                     Label("取消", systemImage: "xmark")
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.red)
+                .controlSize(.regular)
                 
             case .paused:
                 Button(action: onResume) {
@@ -91,12 +95,14 @@ struct DownloadProgressView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.blue)
+                .controlSize(.regular)
                 
                 Button(action: onCancel) {
                     Label("取消", systemImage: "xmark")
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.red)
+                .controlSize(.regular)
                 
             case .failed(let info):
                 if info.recoverable {
@@ -105,6 +111,7 @@ struct DownloadProgressView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(.blue)
+                    .controlSize(.regular)
                 }
                 
                 Button(action: onRemove) {
@@ -112,11 +119,24 @@ struct DownloadProgressView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.red)
+                .controlSize(.regular)
                 
             case .completed:
                 HStack(spacing: 8) {
                     if task.displayInstallButton {
                         Button(action: { 
+                            #if DEBUG
+                            do {
+                                _ = try PrivilegedHelperManager.shared.getHelperProxy()
+                                showInstallPrompt = false
+                                isInstalling = true
+                                Task {
+                                    await networkManager.installProduct(at: task.directory)
+                                }
+                            } catch {
+                                showSetupProcessAlert = true
+                            }
+                            #else
                             if !ModifySetup.isSetupModified() {
                                 showSetupProcessAlert = true
                             } else {
@@ -131,11 +151,13 @@ struct DownloadProgressView: View {
                                     showSetupProcessAlert = true
                                 }
                             }
+                            #endif
                         }) {
                             Label("安装", systemImage: "square.and.arrow.down.on.square")
                         }
                         .buttonStyle(.borderedProminent)
                         .tint(.green)
+                        .controlSize(.regular)
                         .alert("Setup 组件未处理", isPresented: $showSetupProcessAlert) {
                             Button("确定") { }
                         } message: {
@@ -154,6 +176,7 @@ struct DownloadProgressView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(.red)
+                    .controlSize(.regular)
                 }
                 
             case .retrying:
@@ -162,6 +185,7 @@ struct DownloadProgressView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.red)
+                .controlSize(.regular)
             }
         }
         .controlSize(.small)
@@ -410,21 +434,74 @@ struct DownloadProgressView: View {
                 Divider()
                 
                 VStack(alignment: .leading, spacing: 6) {
-                    Button(action: { 
-                        withAnimation {
-                            isPackageListExpanded.toggle()
+                    HStack {
+                        Button(action: { 
+                            withAnimation {
+                                isPackageListExpanded.toggle()
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: isPackageListExpanded ? "chevron.down" : "chevron.right")
+                                    .foregroundColor(.secondary)
+                                Text("产品和包列表")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            .contentShape(Rectangle())
                         }
-                    }) {
-                        HStack {
-                            Image(systemName: isPackageListExpanded ? "chevron.down" : "chevron.right")
-                                .foregroundColor(.secondary)
-                            Text("产品和包列表")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                        .buttonStyle(.plain)
+                        
+                        Spacer()
+                        
+                        if case .completed = task.status {
+                            Button(action: {
+                                showCommandLineInstall.toggle()
+                            }) {
+                                Label("命令行安装", systemImage: "terminal")
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.purple)
+                            .controlSize(.regular)
+                            .popover(isPresented: $showCommandLineInstall, arrowEdge: .bottom) {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Button("复制命令") {
+                                        let setupPath = "/Library/Application Support/Adobe/Adobe Desktop Common/HDBox/Setup"
+                                        let driverPath = "\(task.directory.path)/driver.xml"
+                                        let command = "sudo \"\(setupPath)\" --install=1 --driverXML=\"\(driverPath)\""
+                                        let pasteboard = NSPasteboard.general
+                                        pasteboard.clearContents()
+                                        pasteboard.setString(command, forType: .string)
+                                        showCopiedAlert = true
+                                        
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                            showCopiedAlert = false
+                                        }
+                                    }
+
+                                    if showCopiedAlert {
+                                        Text("已复制")
+                                            .font(.caption)
+                                            .foregroundColor(.green)
+                                    }
+
+                                    let setupPath = "/Library/Application Support/Adobe/Adobe Desktop Common/HDBox/Setup"
+                                    let driverPath = "\(task.directory.path)/driver.xml"
+                                    let command = "sudo \"\(setupPath)\" --install=1 --driverXML=\"\(driverPath)\""
+                                    Text(command)
+                                        .font(.system(.caption, design: .monospaced))
+                                        .foregroundColor(.secondary)
+                                        .textSelection(.enabled)
+                                        .padding(8)
+                                        .background(Color.secondary.opacity(0.1))
+                                        .cornerRadius(6)
+                                }
+                                .padding()
+                                .frame(width: 400)
+                            }
                         }
-                        .contentShape(Rectangle())
+                        
+                        actionButtons
                     }
-                    .buttonStyle(.plain)
                     
                     if isPackageListExpanded {
                         ScrollView(showsIndicators: false) {
@@ -441,11 +518,6 @@ struct DownloadProgressView: View {
                         .frame(maxHeight: 200)
                     }
                 }
-            }
-
-            HStack {
-                Spacer()
-                actionButtons
             }
         }
         .padding()
@@ -603,20 +675,29 @@ struct PackageRow: View {
 }
 
 #Preview("下载中") {
-    DownloadProgressView(
+    let product = ProductsToDownload(
+        sapCode: "AUDT",
+        version: "25.0",
+        buildGuid: "123"
+    )
+    product.packages = [
+        Package(
+            type: "Application",
+            fullPackageName: "AdobeAudition25All",
+            downloadSize: 878454797,
+            downloadURL: "https://example.com/download",
+            packageVersion: "25.0.0.1"
+        )
+    ]
+    
+    return DownloadProgressView(
         task: NewDownloadTask(
             sapCode: "AUDT",
             version: "25.0",
             language: "zh_CN",
             displayName: "Adobe Audition",
-            directory: URL(fileURLWithPath: "Adobe Downloader Audition_25.0-zh_CN-macuniversal"),
-            productsToDownload: [
-                ProductsToDownload(
-                    sapCode: "AUDT",
-                    version: "25.0",
-                    buildGuid: "123"
-                )
-            ],
+            directory: URL(fileURLWithPath: "/Users/test/Downloads/Adobe Audition_25.0-zh_CN-macuniversal"),
+            productsToDownload: [product],
             createAt: Date(),
             totalStatus: .downloading(DownloadStatus.DownloadInfo(
                 fileName: "AdobeAudition25All_stripped.zip",
@@ -629,7 +710,7 @@ struct PackageRow: View {
             totalDownloadedSize: 457424883,
             totalSize: 878454797,
             totalSpeed: 1024 * 1024 * 2,
-            platform: ""
+            platform: "macuniversal"
         ),
         onCancel: {},
         onPause: {},
@@ -641,20 +722,32 @@ struct PackageRow: View {
 }
 
 #Preview("已完成") {
-    DownloadProgressView(
+    let product = ProductsToDownload(
+        sapCode: "AUDT",
+        version: "25.0",
+        buildGuid: "123"
+    )
+    let package = Package(
+        type: "Application",
+        fullPackageName: "AdobeAudition25All",
+        downloadSize: 878454797,
+        downloadURL: "https://example.com/download",
+        packageVersion: "25.0.0.1"
+    )
+    package.status = .completed
+    package.progress = 1.0
+    package.downloadedSize = 878454797
+    package.downloaded = true
+    product.packages = [package]
+    
+    return DownloadProgressView(
         task: NewDownloadTask(
             sapCode: "AUDT",
             version: "25.0",
             language: "zh_CN",
             displayName: "Adobe Audition",
-            directory: URL(fileURLWithPath: "Adobe Downloader Audition_25.0-zh_CN-macuniversal"),
-            productsToDownload: [
-                ProductsToDownload(
-                    sapCode: "AUDT",
-                    version: "25.0",
-                    buildGuid: "123"
-                )
-            ],
+            directory: URL(fileURLWithPath: "/Users/test/Downloads/Adobe Audition_25.0-zh_CN-macuniversal"),
+            productsToDownload: [product],
             createAt: Date(),
             totalStatus: .completed(DownloadStatus.CompletionInfo(
                 timestamp: Date(),
@@ -665,7 +758,7 @@ struct PackageRow: View {
             totalDownloadedSize: 878454797,
             totalSize: 878454797,
             totalSpeed: 0,
-            platform: ""
+            platform: "macuniversal"
         ),
         onCancel: {},
         onPause: {},
@@ -677,20 +770,31 @@ struct PackageRow: View {
 }
 
 #Preview("暂停") {
-    DownloadProgressView(
+    let product = ProductsToDownload(
+        sapCode: "AUDT",
+        version: "25.0",
+        buildGuid: "123"
+    )
+    let package = Package(
+        type: "Application",
+        fullPackageName: "AdobeAudition25All",
+        downloadSize: 878454797,
+        downloadURL: "https://example.com/download",
+        packageVersion: "25.0.0.1"
+    )
+    package.status = .paused
+    package.progress = 0.52
+    package.downloadedSize = 457424883
+    product.packages = [package]
+    
+    return DownloadProgressView(
         task: NewDownloadTask(
             sapCode: "AUDT",
             version: "25.0",
             language: "zh_CN",
             displayName: "Adobe Audition",
-            directory: URL(fileURLWithPath: "Adobe Downloader Audition_25.0-zh_CN-macuniversal"),
-            productsToDownload: [
-                ProductsToDownload(
-                    sapCode: "AUDT",
-                    version: "25.0",
-                    buildGuid: "123"
-                )
-            ],
+            directory: URL(fileURLWithPath: "/Users/test/Downloads/Adobe Audition_25.0-zh_CN-macuniversal"),
+            productsToDownload: [product],
             createAt: Date(),
             totalStatus: .paused(DownloadStatus.PauseInfo(
                 reason: .userRequested,
@@ -701,7 +805,7 @@ struct PackageRow: View {
             totalDownloadedSize: 457424883,
             totalSize: 878454797,
             totalSpeed: 0,
-            platform: ""
+            platform: "macuniversal"
         ),
         onCancel: {},
         onPause: {},

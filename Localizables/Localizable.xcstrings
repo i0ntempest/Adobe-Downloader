@@ -7,6 +7,9 @@
     " [%@]" : {
 
     },
+    "(%@)" : {
+
+    },
     "(可能导致处理 Setup 组件失败)" : {
       "localizations" : {
         "en" : {
@@ -124,6 +127,16 @@
         }
       }
     },
+    "• 错误 2700：不太可能会出现，除非 Setup 组件处理失败了\n• 错误 107：所下载的文件架构与系统架构不一致或者安装文件被损坏\n• 错误 103：出现权限问题，请确保 Helper 状态正常\n• 错误 182：文件不齐全或文件被损坏，或者你的Setup组件不一致，请重新下载 X1a0He CC\n• 错误 133：系统磁盘空间不足\n• 错误 -1：Setup 组件未处理或处理失败，请联系开发者\n• 错误 195：所下载的产品不支持你当前的系统\n• 错误 146：请在 Mac 系统设置中给予 Adobe Downloader 全磁盘权限\n• 错误 255：Setup 组件需要更新，请联系开发者解决" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "• Error 2700: This is unlikely to occur, unless the Setup component processing fails\n• Error 107: The downloaded file architecture does not match the system architecture or the installation file is damaged\n• Error 103: Permission issues, please ensure the Helper status is normal\n• Error 182: The file is incomplete or damaged, or your Setup component is inconsistent, please re-download X1a0He CC\n• Error 133: System disk space is insufficient\n• Error -1: Setup component is not processed or processed failed, please contact the developer\n• Error 195: The downloaded product does not support your current system\n• Error 146: Please grant Adobe Downloader full disk permission in the Mac system settings\n• Error 255: The Setup component needs to be updated, please contact the developer to solve"
+          }
+        }
+      }
+    },
     "|" : {
 
     },
@@ -136,6 +149,9 @@
           }
         }
       }
+    },
+    "Adobe Creative Cloud" : {
+
     },
     "Adobe Downloader %@" : {
 
@@ -166,6 +182,96 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Adobe Downloader needs to use the background Daemon process to install and move files. Please allow the current App in \"System Preferences->Login Items->Allow in the Background\""
+          }
+        }
+      }
+    },
+    "Adobe Hosts" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adobe Hosts"
+          }
+        }
+      }
+    },
+    "Adobe 偏好设置" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adobe Preferences"
+          }
+        }
+      }
+    },
+    "Adobe 应用程序" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adobe Applications"
+          }
+        }
+      }
+    },
+    "Adobe 日志文件" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adobe Log Files"
+          }
+        }
+      }
+    },
+    "Adobe 服务" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adobe Services"
+          }
+        }
+      }
+    },
+    "Adobe 正版验证服务" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adobe Genuine Service"
+          }
+        }
+      }
+    },
+    "Adobe 缓存文件" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adobe Cache Files"
+          }
+        }
+      }
+    },
+    "Adobe 许可文件" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adobe License Files"
+          }
+        }
+      }
+    },
+    "Adobe 钥匙串" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adobe Keychain"
           }
         }
       }
@@ -216,6 +322,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Helper installation failed"
+          }
+        }
+      }
+    },
+    "Helper 是一个具有管理员权限的辅助工具，用于执行需要管理员权限的操作，如修改系统文件等。没有 Helper 将无法正常使用软件的某些功能。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Helper is a tool with administrator privileges, used to perform operations that require administrator privileges, such as modifying system files. Without Helper, some features of the software may not work properly."
           }
         }
       }
@@ -314,6 +430,16 @@
         }
       }
     },
+    "Setup 组件是 Adobe 官方的安装程序组件，我们需要对其进行修改以实现绕过验证的功能。如果没有下载并处理 Setup 组件，将无法使用安装功能。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Setup component is the official installation program component of Adobe. We need to modify it to bypass the verification function. If the Setup component is not downloaded and processed, the installation function cannot be used."
+          }
+        }
+      }
+    },
     "Setup 组件未处理" : {
       "localizations" : {
         "en" : {
@@ -342,6 +468,29 @@
     },
     "v6" : {
 
+    },
+    "X1a0He CC" : {
+
+    },
+    "X1a0He CC 下载并处理成功" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "X1a0He CC downloaded and processed successfully"
+          }
+        }
+      }
+    },
+    "X1a0He CC 下载成功" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "X1a0He CC downloaded successfully"
+          }
+        }
+      }
     },
     "X1a0He CC 处理状态: " : {
       "localizations" : {
@@ -453,6 +602,16 @@
         }
       }
     },
+    "下载失败可能有多种原因：\n1. 网络连接不稳定\n2. Adobe 服务器响应超时\n3. 本地磁盘空间不足\n建议您检查网络连接并重试，如果问题持续存在，可以尝试使用代理或 VPN。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download failed for multiple reasons:\n1. Unstable network connection\n2. Adobe server response timeout\n3. Insufficient local disk space\nPlease check your network connection and try again. If the problem persists, you can try using a proxy or VPN."
+          }
+        }
+      }
+    },
     "下载已取消" : {
       "comment" : "Download cancelled",
       "localizations" : {
@@ -460,6 +619,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Download cancelled"
+          }
+        }
+      }
+    },
+    "下载并处理" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download and process"
           }
         }
       }
@@ -549,12 +718,62 @@
         }
       }
     },
+    "为什么我安装的时候会遇到错误代码，错误代码表示什么意思？" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Why do I encounter error codes when installing? What do the error codes mean?"
+          }
+        }
+      }
+    },
+    "为什么有时候下载会失败？" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Why does the download sometimes fail?"
+          }
+        }
+      }
+    },
+    "为什么需要下载 Setup 组件？" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Why do I need to download the Setup component?"
+          }
+        }
+      }
+    },
+    "为什么需要安装 Helper？" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Why do I need to install Helper?"
+          }
+        }
+      }
+    },
     "产品和包列表" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Products and Packages"
+          }
+        }
+      }
+    },
+    "仅下载" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only download"
           }
         }
       }
@@ -629,6 +848,36 @@
         }
       }
     },
+    "修改 Setup 组件失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modify Setup component failed"
+          }
+        }
+      }
+    },
+    "停止并删除 Adobe 相关服务" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop and delete Adobe related services"
+          }
+        }
+      }
+    },
+    "全选" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select all"
+          }
+        }
+      }
+    },
     "全部暂停" : {
       "localizations" : {
         "en" : {
@@ -669,6 +918,16 @@
         }
       }
     },
+    "最近日志：" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recent logs:"
+          }
+        }
+      }
+    },
     "准备中: %@" : {
       "comment" : "Download status preparing",
       "localizations" : {
@@ -696,6 +955,86 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Delete"
+          }
+        }
+      }
+    },
+    "删除 Adobe Creative Cloud 应用程序及其组件" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Adobe Creative Cloud applications and components"
+          }
+        }
+      }
+    },
+    "删除 Adobe 应用程序的偏好设置文件（不包括 Adobe Downloader）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Adobe application preferences (excluding Adobe Downloader)"
+          }
+        }
+      }
+    },
+    "删除 Adobe 应用程序的日志文件（不包括 Adobe Downloader）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Adobe application log files (excluding Adobe Downloader)"
+          }
+        }
+      }
+    },
+    "删除 Adobe 应用程序的缓存文件（不包括 Adobe Downloader）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Adobe application cache files (excluding Adobe Downloader)"
+          }
+        }
+      }
+    },
+    "删除 Adobe 正版验证服务及其组件" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Adobe Genuine Service and its components"
+          }
+        }
+      }
+    },
+    "删除 Adobe 许可和激活相关文件" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Adobe license and activation related files"
+          }
+        }
+      }
+    },
+    "删除所有已安装的 Adobe 应用程序（不包括 Adobe Downloader）" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete all installed Adobe applications (excluding Adobe Downloader)"
+          }
+        }
+      }
+    },
+    "删除钥匙串中的 Adobe 相关条目" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Adobe related entries in the keychain"
           }
         }
       }
@@ -730,6 +1069,16 @@
         }
       }
     },
+    "取消全选" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deselect all"
+          }
+        }
+      }
+    },
     "可用版本: %lld" : {
       "localizations" : {
         "en" : {
@@ -756,6 +1105,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Directory may already exist"
+          }
+        }
+      }
+    },
+    "命令行安装" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Command line"
+          }
+        }
+      }
+    },
+    "备份 Setup 组件失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup Setup component failed"
           }
         }
       }
@@ -790,6 +1159,16 @@
         }
       }
     },
+    "复制完整错误信息" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy full error message"
+          }
+        }
+      }
+    },
     "多次尝试连接失败" : {
       "localizations" : {
         "en" : {
@@ -811,12 +1190,32 @@
         }
       }
     },
+    "如何修复安装失败的问题？" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How to fix the installation failure problem?"
+          }
+        }
+      }
+    },
     "如果在设置里没找到当前App，可以尝试重置守护程序" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "If you can't find the current app in the settings, you can try resetting the guardian"
+          }
+        }
+      }
+    },
+    "如果安装失败，您可以尝试以下步骤：\n1. 确保已正确安装并连接 Helper\n2. 确保已下载并处理 Setup 组件\n3. 检查磁盘剩余空间是否充足\n4. 尝试重新下载并安装\n如果问题仍然存在，可以尝试重新安装 Helper 和重新处理 Setup 组件。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If the installation fails, you can try the following steps:\n1. Ensure that the Helper is correctly installed and connected\n2. Ensure that the Setup component has been downloaded and processed\n3. Check if there is enough disk space\n4. Try to re-download and install\nIf the problem persists, you can try to reinstall the Helper and re-process the Setup component."
           }
         }
       }
@@ -912,12 +1311,12 @@
         }
       }
     },
-    "安装失败: 架构或本不一致 (退出代码: %lld)" : {
+    "安装失败: 架构或版本不一致 (退出代码: %lld)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Install failed: architecture inconsistency (exit code: %lld)"
+            "value" : "Install failed: Architecture or version mismatch (Exit Code: %lld)"
           }
         }
       }
@@ -984,6 +1383,17 @@
         }
       }
     },
+    "将执行的命令：" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The command to be executed:"
+          }
+        }
+      }
+    },
     "尝试使用不同的搜索关键词" : {
       "localizations" : {
         "en" : {
@@ -1010,6 +1420,27 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Try to reconnect to the installed Helper"
+          }
+        }
+      }
+    },
+    "展开全部" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expand all"
+          }
+        }
+      }
+    },
+    "已取消" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelled"
           }
         }
       }
@@ -1107,6 +1538,16 @@
         }
       }
     },
+    "常见问题" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Q & A"
+          }
+        }
+      }
+    },
     "应用信息错误: %@" : {
       "comment" : "Application info error",
       "localizations" : {
@@ -1129,6 +1570,26 @@
         }
       }
     },
+    "开始清理" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start cleaning"
+          }
+        }
+      }
+    },
+    "当前执行：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current execution: %@"
+          }
+        }
+      }
+    },
     "当前架构: %@" : {
       "localizations" : {
         "en" : {
@@ -1139,12 +1600,73 @@
         }
       }
     },
+    "当前版本：" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current Version: "
+          }
+        }
+      }
+    },
+    "所有操作已成功完成" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All operations completed successfully"
+          }
+        }
+      }
+    },
+    "执行成功" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Execution successful"
+          }
+        }
+      }
+    },
+    "执行结果：%@\n执行命令：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Execution result: %1$@\nExecution command: %2$@"
+          }
+        }
+      }
+    },
+    "执行结果：执行超时\n执行命令：%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Execution result: execution timeout\nExecution command: %@"
+          }
+        }
+      }
+    },
     "找不到安装程序" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Installer not found"
+          }
+        }
+      }
+    },
+    "折叠全部" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collapse all"
           }
         }
       }
@@ -1409,6 +1931,16 @@
         }
       }
     },
+    "暂无清理记录" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No cleanup history"
+          }
+        }
+      }
+    },
     "更新设置" : {
       "localizations" : {
         "en" : {
@@ -1583,7 +2115,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "It is detected that the Setup file has not been backed up. If you need to install the program, the Setup must be processed. After clicking OK, you need to enter the password. Adobe Downloader will automatically process and back up the Setup.original."
+            "value" : "It is detected that the Setup file has not been backed up. If you need to install the program, the Setup must be processed. After clicking Confirm, you need to enter the password. Adobe Downloader will automatically process and back up the Setup.original."
           }
         }
       }
@@ -1605,6 +2137,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Downloading %1$@ (%2$d/%3$d)"
+          }
+        }
+      }
+    },
+    "正在停止 Adobe 相关进程..." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stopping Adobe related processes..."
           }
         }
       }
@@ -1659,6 +2201,146 @@
         }
       }
     },
+    "正在执行..." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Executing..."
+          }
+        }
+      }
+    },
+    "正在清理 Adobe 应用程序..." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleaning up Adobe applications..."
+          }
+        }
+      }
+    },
+    "正在清理 Creative Cloud 应用..." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleaning up Creative Cloud applications..."
+          }
+        }
+      }
+    },
+    "正在清理 Creative Cloud 日志文件..." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleaning up Creative Cloud log files..."
+          }
+        }
+      }
+    },
+    "正在清理 hosts 文件..." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleaning up hosts file..."
+          }
+        }
+      }
+    },
+    "正在清理偏好设置文件..." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleaning up preferences file..."
+          }
+        }
+      }
+    },
+    "正在清理其他文件..." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleaning up other files..."
+          }
+        }
+      }
+    },
+    "正在清理启动项服务..." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleaning up startup items..."
+          }
+        }
+      }
+    },
+    "正在清理安装记录..." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleaning up installation records..."
+          }
+        }
+      }
+    },
+    "正在清理崩溃报告日志..." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleaning up crash report logs..."
+          }
+        }
+      }
+    },
+    "正在清理应用程序日志文件..." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleaning up application log files..."
+          }
+        }
+      }
+    },
+    "正在清理正版验证服务..." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleaning up Adobe Genuine Service..."
+          }
+        }
+      }
+    },
+    "正在清理缓存文件..." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleaning up cache files..."
+          }
+        }
+      }
+    },
+    "正在清理钥匙串数据..." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleaning up keychain data..."
+          }
+        }
+      }
+    },
     "正在连接" : {
       "localizations" : {
         "en" : {
@@ -1689,12 +2371,82 @@
         }
       }
     },
+    "注意：清理过程不会影响 Adobe Downloader 的文件和下载数据" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Note: The cleanup process will not affect any Adobe Downloader files or downloaded data"
+          }
+        }
+      }
+    },
+    "清理 hosts 文件中的 Adobe 相关条目" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleanup Adobe related entries in the hosts file"
+          }
+        }
+      }
+    },
+    "清理完成" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleanup completed"
+          }
+        }
+      }
+    },
+    "清理工具" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleanup Utility"
+          }
+        }
+      }
+    },
+    "清理已取消" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleanup cancelled"
+          }
+        }
+      }
+    },
     "清理已完成" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cleanup Completed"
+          }
+        }
+      }
+    },
+    "清理结果" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleanup Results"
+          }
+        }
+      }
+    },
+    "清理进度：%lld/%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Progress: %1$lld/%2$lld"
           }
         }
       }
@@ -1720,22 +2472,22 @@
         }
       }
     },
-    "确定要下载并安装 X1a0He CC 吗?" : {
+    "确定要下载 X1a0He CC 吗？下载完成后需要手动处理。" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Are you sure you want to download and install X1a0He CC?"
+            "value" : "Are you sure you want to download X1a0He CC? After downloading, it needs to be manually processed."
           }
         }
       }
     },
-    "确定要重新处理 Setup 组件吗?" : {
+    "确定要下载并处理 X1a0He CC 吗？这将完成下载并自动对 Setup 组件进行处理" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Are you sure you want to reprocess the Setup component?"
+            "value" : "Are you sure you want to download and process X1a0He CC? This will complete the download and automatically process the Setup component."
           }
         }
       }
@@ -1760,6 +2512,26 @@
         }
       }
     },
+    "确认下载并处理" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirm download and process"
+          }
+        }
+      }
+    },
+    "确认清理" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirm Cleanup"
+          }
+        }
+      }
+    },
     "确认退出" : {
       "localizations" : {
         "en" : {
@@ -1776,16 +2548,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Confirm re-download"
-          }
-        }
-      }
-    },
-    "确认重新处理" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Confirm reprocess"
           }
         }
       }
@@ -2028,6 +2790,16 @@
         }
       }
     },
+    "这将删除所选的 Adobe 相关文件，该操作不可撤销。清理过程不会影响 Adobe Downloader 的文件和下载数据。是否继续？" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This will delete the selected Adobe-related files. This operation cannot be undone. The cleanup process will not affect Adobe Downloader files and download data. Do you want to continue?"
+          }
+        }
+      }
+    },
     "这将清空所有配置并结束应用程序，确定要继续吗？" : {
       "localizations" : {
         "en" : {
@@ -2088,6 +2860,16 @@
         }
       }
     },
+    "选择下载 X1a0He CC 的方式" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select the way to download X1a0He CC"
+          }
+        }
+      }
+    },
     "选择安装语言" : {
       "localizations" : {
         "en" : {
@@ -2105,6 +2887,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Versions"
+          }
+        }
+      }
+    },
+    "选择要清理的内容" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select options to clean up"
           }
         }
       }

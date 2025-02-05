@@ -396,20 +396,21 @@ class PrivilegedHelperManager: NSObject {
     }
     
     private func parseCommand(_ command: String) -> (CommandType, String, String, Int) {
-        let components = command.components(separatedBy: " ")
+        let components = command.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
         
         if command.hasPrefix("installer -pkg") {
-            return (.install, components[2].replacingOccurrences(of: "\"", with: ""), "", 0)
+            return (.install, components[2], "", 0)
         } else if command.hasPrefix("rm -rf") {
-            return (.uninstall, components[2].replacingOccurrences(of: "\"", with: ""), "", 0)
+            let path = components.dropFirst(2).joined(separator: " ")
+            return (.uninstall, path, "", 0)
         } else if command.hasPrefix("mv") || command.hasPrefix("cp") {
-            return (.moveFile, 
-                   components[1].replacingOccurrences(of: "\"", with: "").replacingOccurrences(of: "'", with: ""),
-                   components[2].replacingOccurrences(of: "\"", with: "").replacingOccurrences(of: "'", with: ""),
-                   0)
+            let paths = components.dropFirst(1)
+            let sourcePath = String(paths.first ?? "")
+            let destPath = paths.dropFirst().joined(separator: " ")
+            return (.moveFile, sourcePath, destPath, 0)
         } else if command.hasPrefix("chmod") {
             return (.setPermissions,
-                   components[2].replacingOccurrences(of: "\"", with: ""),
+                   components.dropFirst(2).joined(separator: " "),
                    "",
                    Int(components[1]) ?? 0)
         }
@@ -637,13 +638,13 @@ enum HelperError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .connectionFailed:
-            return "无法连接到 Helper"
+            return String(localized: "无法连接到 Helper")
         case .proxyError:
-            return "无法获取 Helper 代理"
+            return String(localized: "无法获取 Helper 代理")
         case .authorizationFailed:
-            return "获取授权失败"
+            return String(localized: "获取授权失败")
         case .installationFailed(let reason):
-            return "安装失败: \(reason)"
+            return String(localized: "安装失败: \(reason)")
         }
     }
 }

@@ -25,9 +25,17 @@ class SecureCommandHandler {
         case .install:
             return "installer -pkg \"\(path1)\" -target /"
         case .uninstall:
+            if path1.contains("*") {
+                return "rm -rf \(path1)"
+            }
+            if path1.hasPrefix("\"") && path1.hasSuffix("\"") {
+                return "rm -rf \(path1)"
+            }
             return "rm -rf \"\(path1)\""
         case .moveFile:
-            return "cp \"\(path1)\" \"\(path2)\""
+            let source = path1.hasPrefix("\"") ? path1 : "\"\(path1)\""
+            let dest = path2.hasPrefix("\"") ? path2 : "\"\(path2)\""
+            return "cp \(source) \(dest)"
         case .setPermissions:
             return "chmod \(permissions) \"\(path1)\""
         case .shellCommand:
@@ -36,13 +44,14 @@ class SecureCommandHandler {
     }
     
     static func validatePath(_ path: String) -> Bool {
+        let cleanPath = path.trimmingCharacters(in: .init(charactersIn: "\"'"))
         let allowedPaths = ["/Library/Application Support/Adobe"]
-        if allowedPaths.contains(where: { path.hasPrefix($0) }) {
+        if allowedPaths.contains(where: { cleanPath.hasPrefix($0) }) {
             return true
         }
         
         let forbiddenPaths = ["/System", "/usr", "/bin", "/sbin", "/var"]
-        return !forbiddenPaths.contains { path.hasPrefix($0) }
+        return !forbiddenPaths.contains { cleanPath.hasPrefix($0) }
     }
 }
 
@@ -81,13 +90,17 @@ class HelperTool: NSObject, HelperToolProtocol {
 
     func executeCommand(type: CommandType, path1: String, path2: String, permissions: Int, withReply reply: @escaping (String) -> Void) {
         operationQueue.async {
-            self.logger.notice("收到安全命令执行请求")
-            
             guard let shellCommand = SecureCommandHandler.createCommand(type: type, path1: path1, path2: path2, permissions: permissions) else {
                 self.logger.error("不安全的路径访问被拒绝")
                 reply("Error: Invalid path access")
                 return
             }
+            
+            #if DEBUG
+            self.logger.notice("收到安全命令执行请求: \(shellCommand, privacy: .public)")
+            #else
+            self.logger.notice("收到安全命令执行请求")
+            #endif
             
             let isSetupCommand = shellCommand.contains("Setup") && shellCommand.contains("--install")
             
@@ -210,18 +223,33 @@ extension HelperTool: NSXPCListenerDelegate {
             return false
         }
         
-        var requirement: SecRequirement?
-        let requirementString = "anchor apple generic and identifier \"com.x1a0he.macOS.Adobe-Downloader\""
-        guard SecRequirementCreateWithString(requirementString as CFString,
-                                           [], &requirement) == errSecSuccess,
-              let req = requirement else {
-            logger.error("签名要求创建失败")
+        var staticCode: SecStaticCode?
+        let staticCodeResult = SecCodeCopyStaticCode(code, [], &staticCode)
+        guard staticCodeResult == errSecSuccess,
+              let staticCodeRef = staticCode else {
+            logger.error("获取静态代码失败: \(staticCodeResult)")
             return false
         }
         
-        let validityResult = SecCodeCheckValidity(code, [], req)
+        var requirement: SecRequirement?
+        let requirementString = "identifier \"com.x1a0he.macOS.Adobe-Downloader\" and anchor apple generic and certificate leaf[subject.CN] = \"Apple Development: x1a0he@outlook.com (LFN2762T4F)\" and certificate 1[field.1.2.840.113635.100.6.2.1] /* exists */"
+        guard SecRequirementCreateWithString(requirementString as CFString,
+                                           [], &requirement) == errSecSuccess,
+              let req = requirement else {
+            self.logger.error("签名要求创建失败")
+            return false
+        }
+        
+        let validityResult = SecStaticCodeCheckValidity(staticCodeRef, [], req)
         if validityResult != errSecSuccess {
-            logger.error("代码签名验证不匹配: \(validityResult)")
+            self.logger.error("代码签名验证不匹配: \(validityResult), 要求字符串: \(requirementString)")
+            
+            var signingInfo: CFDictionary?
+            if SecCodeCopySigningInformation(staticCodeRef, [], &signingInfo) == errSecSuccess,
+               let info = signingInfo as? [String: Any] {
+                self.logger.notice("实际签名信息: \(String(describing: info))")
+            }
+            
             return false
         }
         

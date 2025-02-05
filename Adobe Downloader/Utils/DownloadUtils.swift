@@ -1072,7 +1072,8 @@ class DownloadUtils {
 
     func downloadX1a0HeCCPackages(
         progressHandler: @escaping (Double, String) -> Void,
-        cancellationHandler: @escaping () -> Bool
+        cancellationHandler: @escaping () -> Bool,
+        shouldProcess: Bool = true
     ) async throws {
         let baseUrl = "https://cdn-ffc.oobesaas.adobe.com/core/v1/applications?name=CreativeCloud&platform=\(AppStatics.isAppleSilicon ? "macarm64" : "osx10")"
 
@@ -1159,6 +1160,7 @@ class DownloadUtils {
 
                 let destinationURL = tempDirectory.appendingPathComponent("\(package.name).zip")
                 var downloadRequest = URLRequest(url: package.url)
+                print(downloadRequest)
                 NetworkConstants.downloadHeaders.forEach { downloadRequest.setValue($0.value, forHTTPHeaderField: $0.key) }
                 let (downloadURL, downloadResponse) = try await session.download(for: downloadRequest)
                 
@@ -1172,7 +1174,7 @@ class DownloadUtils {
             }
 
             await MainActor.run {
-                progressHandler(0.9, "正在安装组件...")
+                progressHandler(0.9, shouldProcess ? "正在安装组件..." : "正在完成下载...")
             }
             
             let targetDirectory = "/Library/Application\\ Support/Adobe/Adobe\\ Desktop\\ Common"
@@ -1227,21 +1229,23 @@ class DownloadUtils {
 
             try await Task.sleep(nanoseconds: 1_000_000_000)
             
-            try await withCheckedThrowingContinuation { continuation in
-                ModifySetup.backupAndModifySetupFile { success, message in
-                    if success {
-                        continuation.resume()
-                    } else {
-                        continuation.resume(throwing: NetworkError.installError(message))
+            if shouldProcess {
+                try await withCheckedThrowingContinuation { continuation in
+                    ModifySetup.backupAndModifySetupFile { success, message in
+                        if success {
+                            continuation.resume()
+                        } else {
+                            continuation.resume(throwing: NetworkError.installError(message))
+                        }
                     }
                 }
+                ModifySetup.clearVersionCache()
             }
 
-            ModifySetup.clearVersionCache()
             try? FileManager.default.removeItem(at: tempDirectory)
             
             await MainActor.run {
-                progressHandler(1.0, "安装完成")
+                progressHandler(1.0, shouldProcess ? "安装完成" : "下载完成")
             }
         } catch {
             print("发生错误: \(error.localizedDescription)")
