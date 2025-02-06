@@ -1,5 +1,33 @@
 # Change Log
 
+## 2025-02-06 更新日志
+
+[//]: # (1.5.1)
+
+```markdown
+1. 修复了当任务下载完成后，退出程序重新进入时，状态显示非已完成的问题
+2. 修复了某种情况下，任务会被多次添加的问题
+3. 修复了 Acrobat 产品错误显示 "命令行安装" 按钮的问题
+4. 修复了当本地存在了已下载的文件，但持久化数据被删除后，需要每次点击 "使用现有程序" 才会创建任务的问题
+5. 修复了点击 "使用现有程序" 创建完任务后不会创建持久化文件的问题
+6. 在 DEBUG 模式下，添加了 "查看持久化文件" 的按钮
+
+PS: ⚠️ 1.5.x 版本将会是最后一个开源版本，请知晓
+
+====================
+
+1. Fixed the issue where after the task download is completed, the program will prompt that it has been paused when
+   re-entering the program
+2. Fixed an issue where tasks were loaded multiple times.
+3. Fixed an issue where Acrobat products displayed the "Command Line" button incorrectly.
+4. Fixed the issue that when the downloaded file exists locally but the persistent data is deleted, the task needs to be
+   created every time by clicking "Use existing program"
+5. Fixed the issue that the persistent file will not be created after clicking "Use existing program" to create the task
+6. Add a 'View Persistent Files' button to download progress in DEBUG mode
+
+PS: ⚠️ 1.5.x version will be the last open source version, please be aware
+```
+
 ## 2025-02-05 更新日志
 
 [//]: # (1.5.0)
@@ -13,7 +41,7 @@
 6. 程序设置页中，添加当前版本显示
 
 PS: 当前版本添加的 「清理工具」功能为实验性功能，如有清理不全，请及时反馈
-PS: ⚠️ 1.5.0 版本将会是最后一个开源版本，请知晓
+PS: ⚠️ 1.5.x 版本将会是最后一个开源版本，请知晓
 
 ====================
 
@@ -26,7 +54,7 @@ PS: ⚠️ 1.5.0 版本将会是最后一个开源版本，请知晓
 
 PS: The "Cleanup Tool" function in the current version is an experimental feature. If some files are not cleaned up,
 please feedback in time
-PS: ⚠️ 1.5.0 version will be the last open source version, please be aware
+PS: ⚠️ 1.5.x version will be the last open source version, please be aware
 ```
 
 ## 2025-01-26 更新日志

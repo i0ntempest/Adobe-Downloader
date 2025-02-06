@@ -80,12 +80,19 @@ when prompted.
 
 - For historical update logs, please go to [Update Log](update-log.md)
 
-- 2025-01-26 Update Log
+- 2025-02-06 Update Log
 
 ```markdown
-1. Fixed the issue of installation failure with error code 255.
-2. Added a new feature, in Debug mode, the handling and backup status of the CC component will not be checked.
-3. Adjusted the translation of some installation prompt messages.
+1. Fixed the issue where after the task download is completed, the program will prompt that it has been paused when
+   re-entering the program
+2. Fixed an issue where tasks were loaded multiple times.
+3. Fixed an issue where Acrobat products displayed the "Command Line" button incorrectly.
+4. Fixed the issue that when the downloaded file exists locally but the persistent data is deleted, the task needs to be
+   created every time by clicking "Use existing program"
+5. Fixed the issue that the persistent file will not be created after clicking "Use existing program" to create the task
+6. Add a 'View Persistent Files' button to download progress in DEBUG mode
+
+PS: ⚠️ 1.5.x version will be the last open source version, please be aware
 ```
 
 ### Language friendly
