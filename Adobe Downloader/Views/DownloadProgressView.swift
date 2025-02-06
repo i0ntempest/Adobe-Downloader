@@ -453,6 +453,21 @@ struct DownloadProgressView: View {
                         
                         Spacer()
                         
+                        #if DEBUG
+                        Button(action: {
+                            let containerURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+                            let tasksDirectory = containerURL.appendingPathComponent("Adobe Downloader/tasks", isDirectory: true)
+                            let fileName = "\(task.sapCode == "APRO" ? "Adobe Downloader \(task.sapCode)_\(task.version)_\(task.platform)" : "Adobe Downloader \(task.sapCode)_\(task.version)-\(task.language)-\(task.platform)")-task.json"
+                            let fileURL = tasksDirectory.appendingPathComponent(fileName)
+                            NSWorkspace.shared.selectFile(fileURL.path, inFileViewerRootedAtPath: tasksDirectory.path)
+                        }) {
+                            Label("查看持久化文件", systemImage: "doc.text.magnifyingglass")
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.blue)
+                        .controlSize(.regular)
+                        #endif
+
                         if case .completed = task.status {
                             Button(action: {
                                 showCommandLineInstall.toggle()
