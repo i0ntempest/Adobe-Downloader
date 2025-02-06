@@ -19,38 +19,3 @@ extension NewDownloadTask {
         }
     }
 }
-
-extension NetworkManager {
-    func configureNetworkMonitor() {
-        monitor.pathUpdateHandler = { [weak self] path in
-            Task { @MainActor [weak self] in
-                guard let self else { return }
-                let wasConnected = self.isConnected
-                self.isConnected = path.status == .satisfied
-                switch (wasConnected, self.isConnected) {
-                    case (false, true): await resumePausedTasks()
-                    case (true, false): await pauseActiveTasks()
-                    default: break
-                }
-            }
-        }
-        monitor.start(queue: .global(qos: .utility))
-    }
-    
-    private func resumePausedTasks() async {
-        for task in downloadTasks {
-            if case .paused(let info) = task.status,
-               info.reason == .networkIssue {
-                await downloadUtils.resumeDownloadTask(taskId: task.id)
-            }
-        }
-    }
-    
-    private func pauseActiveTasks() async {
-        for task in downloadTasks {
-            if case .downloading = task.status {
-                await downloadUtils.pauseDownloadTask(taskId: task.id, reason: .networkIssue)
-            }
-        }
-    }
-} 

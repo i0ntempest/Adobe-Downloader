@@ -113,7 +113,9 @@ class DownloadUtils {
             
             guard timeDiff >= NetworkConstants.progressUpdateInterval else { return }
 
-            progressHandler?(bytesWritten, totalBytesWritten, totalBytesExpectedToWrite)
+            Task {
+                progressHandler?(bytesWritten, totalBytesWritten, totalBytesExpectedToWrite)
+            }
             
             lastUpdateTime = now
             lastBytes = totalBytesWritten
@@ -133,29 +135,31 @@ class DownloadUtils {
             }
         }
 
-        await MainActor.run {
-            if let task = networkManager?.downloadTasks.first(where: { $0.id == taskId }) {
-                task.setStatus(.paused(DownloadStatus.PauseInfo(
-                    reason: reason,
-                    timestamp: Date(),
-                    resumable: true
-                )))
-                networkManager?.saveTask(task)
+        if let task = await networkManager?.downloadTasks.first(where: { $0.id == taskId }) {
+            task.setStatus(.paused(DownloadStatus.PauseInfo(
+                reason: reason,
+                timestamp: Date(),
+                resumable: true
+            )))
+            await networkManager?.saveTask(task)
+            await MainActor.run {
+                networkManager?.objectWillChange.send()
             }
         }
     }
 
     func resumeDownloadTask(taskId: UUID) async {
         if let task = await networkManager?.downloadTasks.first(where: { $0.id == taskId }) {
+            task.setStatus(.downloading(DownloadStatus.DownloadInfo(
+                fileName: task.currentPackage?.fullPackageName ?? "",
+                currentPackageIndex: 0,
+                totalPackages: task.productsToDownload.reduce(0) { $0 + $1.packages.count },
+                startTime: Date(),
+                estimatedTimeRemaining: nil
+            )))
+            await networkManager?.saveTask(task)
             await MainActor.run {
-                task.setStatus(.downloading(DownloadStatus.DownloadInfo(
-                    fileName: task.currentPackage?.fullPackageName ?? "",
-                    currentPackageIndex: 0,
-                    totalPackages: task.productsToDownload.reduce(0) { $0 + $1.packages.count },
-                    startTime: Date(),
-                    estimatedTimeRemaining: nil
-                )))
-                networkManager?.saveTask(task)
+                networkManager?.objectWillChange.send()
             }
             
             if task.sapCode == "APRO" {
@@ -178,19 +182,20 @@ class DownloadUtils {
     func cancelDownloadTask(taskId: UUID, removeFiles: Bool = false) async {
         await cancelTracker.cancel(taskId)
 
-        await MainActor.run {
-            if let task = networkManager?.downloadTasks.first(where: { $0.id == taskId }) {
-                if removeFiles {
-                    try? FileManager.default.removeItem(at: task.directory)
-                }
+        if let task = await networkManager?.downloadTasks.first(where: { $0.id == taskId }) {
+            if removeFiles {
+                try? FileManager.default.removeItem(at: task.directory)
+            }
 
-                task.setStatus(.failed(DownloadStatus.FailureInfo(
-                    message: String(localized: "下载已取消"),
-                    error: NetworkError.downloadCancelled,
-                    timestamp: Date(),
-                    recoverable: false
-                )))
-
+            task.setStatus(.failed(DownloadStatus.FailureInfo(
+                message: String(localized: "下载已取消"),
+                error: NetworkError.downloadCancelled,
+                timestamp: Date(),
+                recoverable: false
+            )))
+            
+            await networkManager?.saveTask(task)
+            await MainActor.run {
                 networkManager?.updateDockBadge()
                 networkManager?.objectWillChange.send()
             }
@@ -259,47 +264,50 @@ class DownloadUtils {
                         return
                     }
 
-                    Task { @MainActor in
-                        package.downloadedSize = package.downloadSize
-                        package.progress = 1.0
-                        package.status = .completed
-                        package.downloaded = true
+                    Task {
+                        await MainActor.run {
+                            package.downloadedSize = package.downloadSize
+                            package.progress = 1.0
+                            package.status = .completed
+                            package.downloaded = true
 
-                        var totalDownloaded: Int64 = 0
-                        var totalSize: Int64 = 0
+                            var totalDownloaded: Int64 = 0
+                            var totalSize: Int64 = 0
 
-                        for prod in task.productsToDownload {
-                            for pkg in prod.packages {
-                                totalSize += pkg.downloadSize
-                                if pkg.downloaded {
-                                    totalDownloaded += pkg.downloadSize
+                            for prod in task.productsToDownload {
+                                for pkg in prod.packages {
+                                    totalSize += pkg.downloadSize
+                                    if pkg.downloaded {
+                                        totalDownloaded += pkg.downloadSize
+                                    }
                                 }
                             }
+
+                            task.totalSize = totalSize
+                            task.totalDownloadedSize = totalDownloaded
+                            task.totalProgress = Double(totalDownloaded) / Double(totalSize)
+                            task.totalSpeed = 0
+
+                            let allCompleted = task.productsToDownload.allSatisfy {
+                                product in product.packages.allSatisfy { $0.downloaded }
+                            }
+
+                            if allCompleted {
+                                task.setStatus(.completed(DownloadStatus.CompletionInfo(
+                                    timestamp: Date(),
+                                    totalTime: Date().timeIntervalSince(task.createAt),
+                                    totalSize: totalSize
+                                )))
+                            }
+
+                            product.updateCompletedPackages()
                         }
-
-                        task.totalSize = totalSize
-                        task.totalDownloadedSize = totalDownloaded
-                        task.totalProgress = Double(totalDownloaded) / Double(totalSize)
-                        task.totalSpeed = 0
-
-                        let allCompleted = task.productsToDownload.allSatisfy {
-                            product in product.packages.allSatisfy { $0.downloaded }
+                        await networkManager?.saveTask(task)
+                        await MainActor.run {
+                            networkManager?.objectWillChange.send()
                         }
-
-                        if allCompleted {
-                            task.setStatus(.completed(DownloadStatus.CompletionInfo(
-                                timestamp: Date(),
-                                totalTime: Date().timeIntervalSince(task.createAt),
-                                totalSize: totalSize
-                            )))
-                        }
-
-                        product.updateCompletedPackages()
-                        networkManager?.saveTask(task)
-                        networkManager?.objectWillChange.send()
+                        continuation.resume()
                     }
-
-                    continuation.resume()
                 },
                 progressHandler: { [weak networkManager] bytesWritten, totalBytesWritten, totalBytesExpectedToWrite in
                     Task { @MainActor in
@@ -444,8 +452,8 @@ class DownloadUtils {
                         startTime: Date(),
                         estimatedTimeRemaining: nil
                     )))
-                    networkManager?.saveTask(task)
                 }
+                await networkManager?.saveTask(task)
 
                 await progress.increment()
 
@@ -487,8 +495,8 @@ class DownloadUtils {
                     totalTime: Date().timeIntervalSince(task.createAt),
                     totalSize: task.totalSize
                 )))
-                networkManager?.saveTask(task)
             }
+            await networkManager?.saveTask(task)
         }
     }
 
@@ -925,6 +933,18 @@ class DownloadUtils {
 
         let (errorMessage, isRecoverable) = classifyError(error)
 
+        if isRecoverable,
+           let downloadTask = await cancelTracker.downloadTasks[taskId] {
+            let resumeData = await withCheckedContinuation { continuation in
+                downloadTask.cancel(byProducingResumeData: { data in
+                    continuation.resume(returning: data)
+                })
+            }
+            if let resumeData = resumeData {
+                await cancelTracker.storeResumeData(taskId, data: resumeData)
+            }
+        }
+
         if isRecoverable && task.retryCount < NetworkConstants.maxRetryAttempts {
             task.retryCount += 1
             let nextRetryDate = Date().addingTimeInterval(TimeInterval(NetworkConstants.retryDelay / 1_000_000_000))
@@ -946,22 +966,22 @@ class DownloadUtils {
                 }
             }
         } else {
+            task.setStatus(.failed(DownloadStatus.FailureInfo(
+                message: errorMessage,
+                error: error,
+                timestamp: Date(),
+                recoverable: isRecoverable
+            )))
+
+            if let currentPackage = task.currentPackage {
+                let destinationDir = task.directory
+                    .appendingPathComponent("\(task.sapCode)")
+                let fileURL = destinationDir.appendingPathComponent(currentPackage.fullPackageName)
+                try? FileManager.default.removeItem(at: fileURL)
+            }
+
+            await networkManager?.saveTask(task)
             await MainActor.run {
-                task.setStatus(.failed(DownloadStatus.FailureInfo(
-                    message: errorMessage,
-                    error: error,
-                    timestamp: Date(),
-                    recoverable: isRecoverable
-                )))
-
-                if let currentPackage = task.currentPackage {
-                    let destinationDir = task.directory
-                        .appendingPathComponent("\(task.sapCode)")
-                    let fileURL = destinationDir.appendingPathComponent(currentPackage.fullPackageName)
-                    try? FileManager.default.removeItem(at: fileURL)
-                }
-
-                networkManager?.saveTask(task)
                 networkManager?.updateDockBadge()
                 networkManager?.objectWillChange.send()
             }
@@ -973,7 +993,7 @@ class DownloadUtils {
         case let networkError as NetworkError:
             switch networkError {
             case .noConnection:
-                    return (String(localized: "网络连接已断开"), true)
+                return (String(localized: "网络连接已断开"), true)
             case .timeout:
                 return (String(localized: "下载超时"), true)
             case .serverUnreachable:
@@ -987,12 +1007,14 @@ class DownloadUtils {
             }
         case let urlError as URLError:
             switch urlError.code {
-            case .notConnectedToInternet:
+            case .notConnectedToInternet, .networkConnectionLost, .dataNotAllowed:
                 return (String(localized: "网络连接已断开"), true)
             case .timedOut:
                 return (String(localized: "连接超时"), true)
             case .cancelled:
                 return (String(localized: "下载已取消"), false)
+            case .cannotConnectToHost, .dnsLookupFailed:
+                return (String(localized: "无法连接到服务器"), true)
             default:
                 return (urlError.localizedDescription, true)
             }

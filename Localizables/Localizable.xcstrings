@@ -11,6 +11,7 @@
 
     },
     "(可能导致处理 Setup 组件失败)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -21,6 +22,7 @@
       }
     },
     "(将导致无法使用安装功能)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -286,7 +288,6 @@
 
     },
     "Debug 模式" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1384,7 +1385,6 @@
       }
     },
     "将执行的命令：" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1425,7 +1425,6 @@
       }
     },
     "展开全部" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1446,6 +1445,7 @@
       }
     },
     "已处理" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1456,6 +1456,7 @@
       }
     },
     "已备份" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1661,7 +1662,6 @@
       }
     },
     "折叠全部" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1889,6 +1889,9 @@
           }
         }
       }
+    },
+    "无法连接到服务器" : {
+
     },
     "无法连接到服务器: %@" : {
       "comment" : "Server unreachable",
@@ -2583,6 +2586,7 @@
       }
     },
     "程序意外退出" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2601,6 +2605,9 @@
           }
         }
       }
+    },
+    "程序退出" : {
+
     },
     "程序重启后自动暂停" : {
       "localizations" : {

@@ -11,7 +11,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             if event.modifierFlags.contains(.command) && event.characters?.lowercased() == "q" {
                 if let mainWindow = NSApp.mainWindow,
                    mainWindow.sheets.isEmpty && !mainWindow.isSheet {
-                    self?.handleQuitCommand()
+                    _ = self?.applicationShouldTerminate(NSApp)
                     return nil
                 }
             }
@@ -19,19 +19,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    @MainActor private func handleQuitCommand() {
-        guard let manager = networkManager else {
-            NSApplication.shared.terminate(nil)
-            return
-        }
-
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard let manager = networkManager else { return .terminateNow }
+        
         let hasActiveDownloads = manager.downloadTasks.contains { task in
-            if case .downloading = task.totalStatus {
-                return true
-            }
+            if case .downloading = task.totalStatus { return true }
             return false
         }
-
+        
         if hasActiveDownloads {
             Task {
                 for task in manager.downloadTasks {
@@ -40,6 +35,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                             taskId: task.id,
                             reason: .other(String(localized: "程序即将退出"))
                         )
+                        await manager.saveTask(task)
                     }
                 }
 
@@ -68,6 +64,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             NSApplication.shared.terminate(nil)
         }
+        return .terminateCancel
     }
     
     deinit {

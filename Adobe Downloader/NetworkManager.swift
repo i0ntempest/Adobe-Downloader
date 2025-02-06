@@ -99,22 +99,21 @@ class NetworkManager: ObservableObject {
         
         downloadTasks.append(task)
         updateDockBadge()
-        saveTask(task)
+        await saveTask(task)
         
         do {
             try await downloadUtils.handleDownload(task: task, productInfo: productInfo, allowedPlatform: StorageData.shared.allowedPlatform, saps: saps)
         } catch {
+            task.setStatus(.failed(DownloadStatus.FailureInfo(
+                message: error.localizedDescription,
+                error: error,
+                timestamp: Date(),
+                recoverable: true
+            )))
+            await saveTask(task)
             await MainActor.run {
-                task.setStatus(.failed(DownloadStatus.FailureInfo(
-                    message: error.localizedDescription,
-                    error: error,
-                    timestamp: Date(),
-                    recoverable: true
-                )))
-                saveTask(task)
                 objectWillChange.send()
             }
-            throw error
         }
     }
 
@@ -136,7 +135,7 @@ class NetworkManager: ObservableObject {
                        timestamp: Date(),
                        recoverable: false
                    )))
-                   saveTask(task)
+                   await saveTask(task)
                }
                
                if removeFiles {
@@ -352,19 +351,59 @@ class NetworkManager: ObservableObject {
         }
     }
 
-    func saveTask(_ task: NewDownloadTask) {
-        TaskPersistenceManager.shared.saveTask(task)
+    func loadSavedTasks() {
+        Task {
+            let savedTasks = TaskPersistenceManager.shared.loadTasks()
+            await MainActor.run {
+                for task in savedTasks {
+                    for product in task.productsToDownload {
+                        product.updateCompletedPackages()
+                    }
+                }
+                downloadTasks.append(contentsOf: savedTasks)
+                updateDockBadge()
+            }
+        }
+    }
+
+    func saveTask(_ task: NewDownloadTask) async {
+        await TaskPersistenceManager.shared.saveTask(task)
         objectWillChange.send()
     }
 
-    func loadSavedTasks() {
-        let savedTasks = TaskPersistenceManager.shared.loadTasks()
-        for task in savedTasks {
-            for product in task.productsToDownload {
-                product.updateCompletedPackages()
+    func configureNetworkMonitor() {
+        monitor.pathUpdateHandler = { [weak self] path in
+            let task = { @MainActor @Sendable [weak self] in
+                guard let self else { return }
+                let wasConnected = self.isConnected
+                self.isConnected = path.status == .satisfied
+                switch (wasConnected, self.isConnected) {
+                    case (false, true): 
+                        await self.resumePausedTasks()
+                    case (true, false): 
+                        await self.pauseActiveTasks()
+                    default: break
+                }
+            }
+            Task(operation: task)
+        }
+        monitor.start(queue: .global(qos: .utility))
+    }
+
+    private func resumePausedTasks() async {
+        for task in downloadTasks {
+            if case .paused(let info) = task.status,
+               info.reason == .networkIssue {
+                await downloadUtils.resumeDownloadTask(taskId: task.id)
             }
         }
-        downloadTasks.append(contentsOf: savedTasks)
-        updateDockBadge()
+    }
+    
+    private func pauseActiveTasks() async {
+        for task in downloadTasks {
+            if case .downloading = task.status {
+                await downloadUtils.pauseDownloadTask(taskId: task.id, reason: .networkIssue)
+            }
+        }
     }
 }

@@ -23,7 +23,7 @@ class TaskPersistenceManager {
             : "Adobe Downloader \(sapCode)_\(version)-\(language)-\(platform)-task.json"
     }
     
-    func saveTask(_ task: NewDownloadTask) {
+    func saveTask(_ task: NewDownloadTask) async {
         let fileName = getTaskFileName(
             sapCode: task.sapCode,
             version: task.version,
@@ -34,12 +34,10 @@ class TaskPersistenceManager {
         
         var resumeDataDict: [String: Data]? = nil
         
-        Task {
-            if let currentPackage = task.currentPackage,
-               let cancelTracker = self.cancelTracker,
-               let resumeData = await cancelTracker.getResumeData(task.id) {
-                resumeDataDict = [currentPackage.id.uuidString: resumeData]
-            }
+        if let currentPackage = task.currentPackage,
+           let cancelTracker = self.cancelTracker,
+           let resumeData = await cancelTracker.getResumeData(task.id) {
+            resumeDataDict = [currentPackage.id.uuidString: resumeData]
         }
         
         let taskData = TaskData(
@@ -151,13 +149,13 @@ class TaskPersistenceManager {
             
             let initialStatus: DownloadStatus
             switch taskData.totalStatus {
-            case .completed:
-                initialStatus = taskData.totalStatus
-            case .failed:
-                initialStatus = taskData.totalStatus
+            case .completed(let info):
+                initialStatus = .completed(info)
+            case .failed(let info):
+                initialStatus = .failed(info)
             case .downloading:
                 initialStatus = .paused(DownloadStatus.PauseInfo(
-                    reason: .other(String(localized: "程序意外退出")),
+                    reason: .other(String(localized: "程序退出")),
                     timestamp: Date(),
                     resumable: true
                 ))
