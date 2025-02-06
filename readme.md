@@ -59,6 +59,14 @@
 
 并不需要，Adobe Downloader已完成了全自动处理且备份 setup 组件的功能
 
+<a href="https://star-history.com/#X1a0He/Adobe-Downloader&Timeline">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=X1a0He/Adobe-Downloader&type=Timeline&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=X1a0He/Adobe-Downloader&type=Timeline" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=X1a0He/Adobe-Downloader&type=Timeline" />
+ </picture>
+</a>
+
 ## 📔 最新日志
 
 - 更多关于 App 的更新日志，请查看 [Update Log](update-log.md)
