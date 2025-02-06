@@ -356,7 +356,7 @@ class NetworkManager: ObservableObject {
         guard !hasLoadedSavedTasks else { return }
         
         Task {
-            let savedTasks = TaskPersistenceManager.shared.loadTasks()
+            let savedTasks = await TaskPersistenceManager.shared.loadTasks()
             await MainActor.run {
                 for task in savedTasks {
                     for product in task.productsToDownload {

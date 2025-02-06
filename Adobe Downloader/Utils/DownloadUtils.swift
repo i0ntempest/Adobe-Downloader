@@ -589,39 +589,41 @@ class DownloadUtils {
                         return
                     }
                     
-                    Task { @MainActor in
-                        aproPackage.downloadedSize = aproPackage.downloadSize
-                        aproPackage.progress = 1.0
-                        aproPackage.status = .completed
-                        aproPackage.downloaded = true
+                    Task {
+                        await MainActor.run {
+                            aproPackage.downloadedSize = aproPackage.downloadSize
+                            aproPackage.progress = 1.0
+                            aproPackage.status = .completed
+                            aproPackage.downloaded = true
 
-                        var totalDownloaded: Int64 = 0
-                        var totalSize: Int64 = 0
+                            var totalDownloaded: Int64 = 0
+                            var totalSize: Int64 = 0
 
-                        totalSize += aproPackage.downloadSize
-                        if aproPackage.downloaded {
-                            totalDownloaded += aproPackage.downloadSize
-                        }
+                            totalSize += aproPackage.downloadSize
+                            if aproPackage.downloaded {
+                                totalDownloaded += aproPackage.downloadSize
+                            }
 
-                        task.totalSize = totalSize
-                        task.totalDownloadedSize = totalDownloaded
-                        task.totalProgress = Double(totalDownloaded) / Double(totalSize)
-                        task.totalSpeed = 0
+                            task.totalSize = totalSize
+                            task.totalDownloadedSize = totalDownloaded
+                            task.totalProgress = Double(totalDownloaded) / Double(totalSize)
+                            task.totalSpeed = 0
 
-                        let allCompleted = task.productsToDownload.allSatisfy { product in
-                            product.packages.allSatisfy { $0.downloaded }
-                        }
-
-                        if allCompleted {
                             task.setStatus(.completed(DownloadStatus.CompletionInfo(
                                 timestamp: Date(),
                                 totalTime: Date().timeIntervalSince(task.createAt),
                                 totalSize: totalSize
                             )))
+                            
+                            task.objectWillChange.send()
                         }
-
-                        task.objectWillChange.send()
-                        networkManager?.objectWillChange.send()
+                        
+                        await networkManager?.saveTask(task)
+                        
+                        await MainActor.run {
+                            networkManager?.updateDockBadge()
+                            networkManager?.objectWillChange.send()
+                        }
                         continuation.resume()
                     }
                 },
@@ -648,6 +650,10 @@ class DownloadUtils {
 
                             task.objectWillChange.send()
                             networkManager?.objectWillChange.send()
+                            
+                            Task {
+                                await networkManager?.saveTask(task)
+                            }
                         }
                     }
                 }

@@ -93,7 +93,7 @@ class TaskPersistenceManager {
         }
     }
     
-    func loadTasks() -> [NewDownloadTask] {
+    func loadTasks() async -> [NewDownloadTask] {
         var tasks: [NewDownloadTask] = []
         
         do {
@@ -102,7 +102,7 @@ class TaskPersistenceManager {
                 let fileName = file.lastPathComponent
                 if let cachedTask = taskCache[fileName] {
                     tasks.append(cachedTask)
-                } else if let task = loadTask(from: file) {
+                } else if let task = await loadTask(from: file) {
                     taskCache[fileName] = task
                     tasks.append(task)
                 }
@@ -114,7 +114,7 @@ class TaskPersistenceManager {
         return tasks
     }
     
-    private func loadTask(from url: URL) -> NewDownloadTask? {
+    private func loadTask(from url: URL) async -> NewDownloadTask? {
         do {
             let data = try Data(contentsOf: url)
             let decoder = JSONDecoder()
@@ -218,6 +218,61 @@ class TaskPersistenceManager {
         
         taskCache.removeValue(forKey: fileName)
         try? fileManager.removeItem(at: fileURL)
+    }
+    
+    func createExistingProgramTask(sapCode: String, version: String, language: String, displayName: String, platform: String, directory: URL) async {
+        let fileName = getTaskFileName(
+            sapCode: sapCode,
+            version: version,
+            language: language,
+            platform: platform
+        )
+        
+        let product = ProductsToDownload(
+            sapCode: sapCode,
+            version: version,
+            buildGuid: "",
+            applicationJson: ""
+        )
+        
+        let package = Package(
+            type: "",
+            fullPackageName: "",
+            downloadSize: 0,
+            downloadURL: "",
+            packageVersion: version
+        )
+        package.downloaded = true
+        package.progress = 1.0
+        package.status = .completed
+        
+        product.packages = [package]
+        
+        let task = NewDownloadTask(
+            sapCode: sapCode,
+            version: version,
+            language: language,
+            displayName: displayName,
+            directory: directory,
+            productsToDownload: [product],
+            retryCount: 0,
+            createAt: Date(),
+            totalStatus: .completed(DownloadStatus.CompletionInfo(
+                timestamp: Date(),
+                totalTime: 0,
+                totalSize: 0
+            )),
+            totalProgress: 1.0,
+            totalDownloadedSize: 0,
+            totalSize: 0,
+            totalSpeed: 0,
+            currentPackage: package,
+            platform: platform
+        )
+        task.displayInstallButton = true
+        
+        taskCache[fileName] = task
+        await saveTask(task)
     }
 }
 

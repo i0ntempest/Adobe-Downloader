@@ -261,62 +261,19 @@ final class AppCardViewModel: ObservableObject {
             return
         }
 
-        var productsToDownload: [ProductsToDownload] = []
-        let mainProduct = ProductsToDownload(
-            sapCode: sap.sapCode,
-            version: pendingVersion,
-            buildGuid: productInfo.buildGuid
-        )
-        productsToDownload.append(mainProduct)
-
-        for dependency in productInfo.dependencies {
-            if let dependencyVersions = networkManager.saps[dependency.sapCode]?.versions {
-                let sortedVersions = dependencyVersions.sorted { first, second in
-                    first.value.productVersion.compare(second.value.productVersion, options: .numeric) == .orderedDescending
-                }
-                
-                var buildGuid = ""
-                for (_, versionInfo) in sortedVersions where versionInfo.baseVersion == dependency.version {
-                    if StorageData.shared.allowedPlatform.contains(versionInfo.apPlatform) {
-                        buildGuid = versionInfo.buildGuid
-                        break
-                    }
-                }
-                
-                if !buildGuid.isEmpty {
-                    let dependencyProduct = ProductsToDownload(
-                        sapCode: dependency.sapCode,
-                        version: dependency.version,
-                        buildGuid: buildGuid
-                    )
-                    productsToDownload.append(dependencyProduct)
-                }
-            }
-        }
-
-        let completedTask = NewDownloadTask(
+        await TaskPersistenceManager.shared.createExistingProgramTask(
             sapCode: sap.sapCode,
             version: pendingVersion,
             language: pendingLanguage,
             displayName: sap.displayName,
-            directory: path,
-            productsToDownload: productsToDownload,
-            retryCount: 0,
-            createAt: Date(),
-            totalStatus: .completed(DownloadStatus.CompletionInfo(
-                timestamp: Date(),
-                totalTime: 0,
-                totalSize: 0
-            )),
-            totalProgress: 1.0,
-            totalDownloadedSize: 0,
-            totalSize: 0,
-            totalSpeed: 0,
-            platform: ""
+            platform: productInfo.apPlatform,
+            directory: path
         )
-
+        
+        let savedTasks = await TaskPersistenceManager.shared.loadTasks()
         await MainActor.run {
-            networkManager.downloadTasks.append(completedTask)
+            networkManager.downloadTasks = savedTasks
+            networkManager.updateDockBadge()
             networkManager.objectWillChange.send()
         }
     }
