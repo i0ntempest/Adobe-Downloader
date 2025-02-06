@@ -6,6 +6,7 @@ class TaskPersistenceManager {
     private let fileManager = FileManager.default
     private var tasksDirectory: URL
     private weak var cancelTracker: CancelTracker?
+    private var taskCache: [String: NewDownloadTask] = [:]
     
     private init() {
         let containerURL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
@@ -30,6 +31,7 @@ class TaskPersistenceManager {
             language: task.language,
             platform: task.platform
         )
+        taskCache[fileName] = task
         let fileURL = tasksDirectory.appendingPathComponent(fileName)
         
         var resumeDataDict: [String: Data]? = nil
@@ -97,7 +99,11 @@ class TaskPersistenceManager {
         do {
             let files = try fileManager.contentsOfDirectory(at: tasksDirectory, includingPropertiesForKeys: nil)
             for file in files where file.pathExtension == "json" {
-                if let task = loadTask(from: file) {
+                let fileName = file.lastPathComponent
+                if let cachedTask = taskCache[fileName] {
+                    tasks.append(cachedTask)
+                } else if let task = loadTask(from: file) {
+                    taskCache[fileName] = task
                     tasks.append(task)
                 }
             }
@@ -210,6 +216,7 @@ class TaskPersistenceManager {
         )
         let fileURL = tasksDirectory.appendingPathComponent(fileName)
         
+        taskCache.removeValue(forKey: fileName)
         try? fileManager.removeItem(at: fileURL)
     }
 }

@@ -22,6 +22,7 @@ class NetworkManager: ObservableObject {
     internal var monitor = NWPathMonitor()
     internal var isFetchingProducts = false
     private let installManager = InstallManager()
+    private var hasLoadedSavedTasks = false
     
     private var defaultDirectory: String {
         get { StorageData.shared.defaultDirectory }
@@ -352,6 +353,8 @@ class NetworkManager: ObservableObject {
     }
 
     func loadSavedTasks() {
+        guard !hasLoadedSavedTasks else { return }
+        
         Task {
             let savedTasks = TaskPersistenceManager.shared.loadTasks()
             await MainActor.run {
@@ -362,6 +365,7 @@ class NetworkManager: ObservableObject {
                 }
                 downloadTasks.append(contentsOf: savedTasks)
                 updateDockBadge()
+                hasLoadedSavedTasks = true
             }
         }
     }

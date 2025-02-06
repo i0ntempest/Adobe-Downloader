@@ -468,7 +468,7 @@ struct DownloadProgressView: View {
                         .controlSize(.regular)
                         #endif
 
-                        if case .completed = task.status {
+                        if case .completed = task.status, task.sapCode != "APRO" {
                             Button(action: {
                                 showCommandLineInstall.toggle()
                             }) {
