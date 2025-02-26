@@ -71,4 +71,25 @@ struct AppStatics {
             return "Unknown Architecture"
         #endif
     }()
+    
+    /// 比较两个版本号
+    /// - Parameters:
+    ///   - version1: 第一个版本号
+    ///   - version2: 第二个版本号
+    /// - Returns: 负值表示version1<version2，0表示相等，正值表示version1>version2
+    static func compareVersions(_ version1: String, _ version2: String) -> Int {
+        let components1 = version1.split(separator: ".").map { Int($0) ?? 0 }
+        let components2 = version2.split(separator: ".").map { Int($0) ?? 0 }
+        
+        let maxLength = max(components1.count, components2.count)
+        let paddedComponents1 = components1 + Array(repeating: 0, count: maxLength - components1.count)
+        let paddedComponents2 = components2 + Array(repeating: 0, count: maxLength - components2.count)
+        
+        for i in 0..<maxLength {
+            if paddedComponents1[i] != paddedComponents2[i] {
+                return paddedComponents1[i] - paddedComponents2[i]
+            }
+        }
+        return 0
+    }
 }

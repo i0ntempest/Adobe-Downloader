@@ -113,23 +113,7 @@ private struct VersionListView: View {
     private var filteredVersions: [(key: String, value: Sap.Versions)] {
         sap.versions
             .filter { StorageData.shared.allowedPlatform.contains($0.value.apPlatform) }
-            .sorted { compareVersions($0.key, $1.key) > 0 }
-    }
-    
-    private func compareVersions(_ version1: String, _ version2: String) -> Int {
-        let components1 = version1.split(separator: ".").map { Int($0) ?? 0 }
-        let components2 = version2.split(separator: ".").map { Int($0) ?? 0 }
-        
-        let maxLength = max(components1.count, components2.count)
-        let paddedComponents1 = components1 + Array(repeating: 0, count: maxLength - components1.count)
-        let paddedComponents2 = components2 + Array(repeating: 0, count: maxLength - components2.count)
-        
-        for i in 0..<maxLength {
-            if paddedComponents1[i] != paddedComponents2[i] {
-                return paddedComponents1[i] - paddedComponents2[i]
-            }
-        }
-        return 0
+            .sorted { AppStatics.compareVersions($0.key, $1.key) > 0 }
     }
     
     private func handleVersionSelect(_ version: String) {

@@ -45,6 +45,9 @@ class NetworkService {
 
         let result: ProductsData = try await Task.detached(priority: .userInitiated) {
             let parseResult = try JSONParser.parse(jsonString: jsonString)
+            // 测试新API
+            try NewJSONParser.parseStiProducts(jsonString: jsonString)
+            try NewJSONParser.parseCcmProducts(jsonString: jsonString)
             let products = parseResult.products, cdn = parseResult.cdn
             
             let sapCodes = products.values

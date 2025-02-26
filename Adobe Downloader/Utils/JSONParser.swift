@@ -7,16 +7,10 @@
 
 import Foundation
 
-struct ParseResult {
-    var products: [String: Sap]
-    var cdn: String
-}
-
-enum ParserError: Error {
-    case missingCDN
-    case invalidXML
-    case missingRequired
-}
+ struct ParseResult {
+     var products: [String: Sap]
+     var cdn: String
+ }
 
 class JSONParser {
     static func parse(jsonString: String) throws -> ParseResult {
@@ -25,6 +19,7 @@ class JSONParser {
             throw ParserError.invalidJSON
         }
         let apiVersion = Int(StorageData.shared.apiVersion) ?? 6
+        
         return try parseProductsJSON(jsonObject: jsonObject, apiVersion: apiVersion)
     }
     
@@ -174,8 +169,4 @@ class JSONParser {
         
         return ParseResult(products: products, cdn: cdn)
     }
-}
-
-extension ParserError {
-    static let invalidJSON = ParserError.invalidXML
 }
