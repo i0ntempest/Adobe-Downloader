@@ -4,7 +4,6 @@ import Sparkle
 @main
 struct Adobe_DownloaderApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @StateObject private var networkManager = NetworkManager()
     @State private var showBackupAlert = false
     @State private var showTipsSheet = false
     @State private var showLanguagePicker = false
@@ -17,6 +16,9 @@ struct Adobe_DownloaderApp: App {
     private let updaterController: SPUStandardUpdaterController
 
     init() {
+        globalNetworkService = NewNetworkService()
+        globalNetworkManager = NetworkManager()
+        globalNewDownloadUtils = NewDownloadUtils()
         updaterController = SPUStandardUpdaterController(
             startingUpdater: true,
             updaterDelegate: nil,
@@ -56,7 +58,7 @@ struct Adobe_DownloaderApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environmentObject(networkManager)
+                .environmentObject(globalNetworkManager)
                 .frame(minWidth: 792, minHeight: 600)
                 .tint(.blue)
                 .task {
@@ -64,7 +66,7 @@ struct Adobe_DownloaderApp: App {
                 }
                 .sheet(isPresented: $showCreativeCloudAlert) {
                     ShouldExistsSetUpView()
-                        .environmentObject(networkManager)
+                        .environmentObject(globalNetworkManager)
                 }
                 .alert("Setup未备份提示", isPresented: $showBackupAlert) {
                     Button("确定") {
@@ -84,7 +86,7 @@ struct Adobe_DownloaderApp: App {
                         showTipsSheet: $showTipsSheet,
                         showLanguagePicker: $showLanguagePicker
                     )
-                    .environmentObject(networkManager)
+                    .environmentObject(globalNetworkManager)
                     .sheet(isPresented: $showLanguagePicker) {
                         LanguagePickerView(languages: AppStatics.supportedLanguages) { language in
                             storage.defaultLanguage = language
@@ -103,7 +105,7 @@ struct Adobe_DownloaderApp: App {
 
         Settings {
             AboutView(updater: updaterController.updater)
-                .environmentObject(networkManager)
+                .environmentObject(globalNetworkManager)
         }
     }
     
@@ -111,8 +113,7 @@ struct Adobe_DownloaderApp: App {
         PrivilegedHelperManager.shared.checkInstall()
         
         await MainActor.run {
-            appDelegate.networkManager = networkManager
-            networkManager.loadSavedTasks()
+            globalNetworkManager.loadSavedTasks()
         }
 
         let needsBackup = !ModifySetup.isSetupBackup()

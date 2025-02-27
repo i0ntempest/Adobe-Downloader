@@ -301,43 +301,45 @@ struct DownloadProgressView: View {
     }
 
     private func loadIcon() {
-        if let sap = networkManager.saps[task.sapCode],
-           let bestIcon = sap.getBestIcon(),
-           let iconURL = URL(string: bestIcon.url) {
-            
-            if let cachedImage = IconCache.shared.getIcon(for: bestIcon.url) {
-                self.iconImage = cachedImage
-                return
-            }
-            
-            Task {
-                do {
-                    var request = URLRequest(url: iconURL)
-                    request.timeoutInterval = 10
-                    
-                    let (data, response) = try await URLSession.shared.data(for: request)
-                    
-                    guard let httpResponse = response as? HTTPURLResponse,
-                          (200...299).contains(httpResponse.statusCode),
-                          let image = NSImage(data: data) else {
-                        throw URLError(.badServerResponse)
-                    }
-                    
-                    IconCache.shared.setIcon(image, for: bestIcon.url)
-                    
-                    await MainActor.run {
-                        self.iconImage = image
-                    }
-                } catch {
-                    if let localImage = NSImage(named: task.sapCode) {
+        let product = globalCcmResult.products.first { $0.id == task.productId }
+        if product != nil {
+            if let bestIcon = product.getBestIcon(),
+               let iconURL = URL(string: bestIcon.url) {
+                
+                if let cachedImage = IconCache.shared.getIcon(for: bestIcon.url) {
+                    self.iconImage = cachedImage
+                    return
+                }
+                
+                Task {
+                    do {
+                        var request = URLRequest(url: iconURL)
+                        request.timeoutInterval = 10
+                        
+                        let (data, response) = try await URLSession.shared.data(for: request)
+                        
+                        guard let httpResponse = response as? HTTPURLResponse,
+                              (200...299).contains(httpResponse.statusCode),
+                              let image = NSImage(data: data) else {
+                            throw URLError(.badServerResponse)
+                        }
+                        
+                        IconCache.shared.setIcon(image, for: bestIcon.url)
+                        
                         await MainActor.run {
-                            self.iconImage = localImage
+                            self.iconImage = image
+                        }
+                    } catch {
+                        if let localImage = NSImage(named: task.sapCode) {
+                            await MainActor.run {
+                                self.iconImage = localImage
+                            }
                         }
                     }
                 }
+            } else if let localImage = NSImage(named: task.productId) {
+                self.iconImage = localImage
             }
-        } else if let localImage = NSImage(named: task.sapCode) {
-            self.iconImage = localImage
         }
     }
 
@@ -377,7 +379,7 @@ struct DownloadProgressView: View {
                         HStack(spacing: 4) {
                             Text(task.displayName)
                                 .font(.headline)
-                            Text(task.version)
+                            Text(task.productVersion)
                                 .foregroundColor(.secondary)
                         }
                         
@@ -430,7 +432,7 @@ struct DownloadProgressView: View {
                     .progressViewStyle(.linear)
             }
 
-            if !task.productsToDownload.isEmpty {
+            if !task.dependenciesToDownload.isEmpty {
                 Divider()
                 
                 VStack(alignment: .leading, spacing: 6) {
@@ -547,7 +549,7 @@ struct DownloadProgressView: View {
 }
 
 struct ProductRow: View {
-    @ObservedObject var product: ProductsToDownload
+    @ObservedObject var dependencies: DependenciesToDownload
     let isCurrentProduct: Bool
     @Binding var expandedProducts: Set<String>
     
@@ -687,146 +689,4 @@ struct PackageRow: View {
         .background(Color(NSColor.controlBackgroundColor))
         .cornerRadius(6)
     }
-}
-
-#Preview("下载中") {
-    let product = ProductsToDownload(
-        sapCode: "AUDT",
-        version: "25.0",
-        buildGuid: "123"
-    )
-    product.packages = [
-        Package(
-            type: "Application",
-            fullPackageName: "AdobeAudition25All",
-            downloadSize: 878454797,
-            downloadURL: "https://example.com/download",
-            packageVersion: "25.0.0.1"
-        )
-    ]
-    
-    return DownloadProgressView(
-        task: NewDownloadTask(
-            sapCode: "AUDT",
-            version: "25.0",
-            language: "zh_CN",
-            displayName: "Adobe Audition",
-            directory: URL(fileURLWithPath: "/Users/test/Downloads/Adobe Audition_25.0-zh_CN-macuniversal"),
-            productsToDownload: [product],
-            createAt: Date(),
-            totalStatus: .downloading(DownloadStatus.DownloadInfo(
-                fileName: "AdobeAudition25All_stripped.zip",
-                currentPackageIndex: 0,
-                totalPackages: 2,
-                startTime: Date(),
-                estimatedTimeRemaining: nil
-            )),
-            totalProgress: 0.45,
-            totalDownloadedSize: 457424883,
-            totalSize: 878454797,
-            totalSpeed: 1024 * 1024 * 2,
-            platform: "macuniversal"
-        ),
-        onCancel: {},
-        onPause: {},
-        onResume: {},
-        onRetry: {},
-        onRemove: {}
-    )
-    .environmentObject(NetworkManager())
-}
-
-#Preview("已完成") {
-    let product = ProductsToDownload(
-        sapCode: "AUDT",
-        version: "25.0",
-        buildGuid: "123"
-    )
-    let package = Package(
-        type: "Application",
-        fullPackageName: "AdobeAudition25All",
-        downloadSize: 878454797,
-        downloadURL: "https://example.com/download",
-        packageVersion: "25.0.0.1"
-    )
-    package.status = .completed
-    package.progress = 1.0
-    package.downloadedSize = 878454797
-    package.downloaded = true
-    product.packages = [package]
-    
-    return DownloadProgressView(
-        task: NewDownloadTask(
-            sapCode: "AUDT",
-            version: "25.0",
-            language: "zh_CN",
-            displayName: "Adobe Audition",
-            directory: URL(fileURLWithPath: "/Users/test/Downloads/Adobe Audition_25.0-zh_CN-macuniversal"),
-            productsToDownload: [product],
-            createAt: Date(),
-            totalStatus: .completed(DownloadStatus.CompletionInfo(
-                timestamp: Date(),
-                totalTime: 120,
-                totalSize: 878454797
-            )),
-            totalProgress: 1.0,
-            totalDownloadedSize: 878454797,
-            totalSize: 878454797,
-            totalSpeed: 0,
-            platform: "macuniversal"
-        ),
-        onCancel: {},
-        onPause: {},
-        onResume: {},
-        onRetry: {},
-        onRemove: {}
-    )
-    .environmentObject(NetworkManager())
-}
-
-#Preview("暂停") {
-    let product = ProductsToDownload(
-        sapCode: "AUDT",
-        version: "25.0",
-        buildGuid: "123"
-    )
-    let package = Package(
-        type: "Application",
-        fullPackageName: "AdobeAudition25All",
-        downloadSize: 878454797,
-        downloadURL: "https://example.com/download",
-        packageVersion: "25.0.0.1"
-    )
-    package.status = .paused
-    package.progress = 0.52
-    package.downloadedSize = 457424883
-    product.packages = [package]
-    
-    return DownloadProgressView(
-        task: NewDownloadTask(
-            sapCode: "AUDT",
-            version: "25.0",
-            language: "zh_CN",
-            displayName: "Adobe Audition",
-            directory: URL(fileURLWithPath: "/Users/test/Downloads/Adobe Audition_25.0-zh_CN-macuniversal"),
-            productsToDownload: [product],
-            createAt: Date(),
-            totalStatus: .paused(DownloadStatus.PauseInfo(
-                reason: .userRequested,
-                timestamp: Date(),
-                resumable: true
-            )),
-            totalProgress: 0.52,
-            totalDownloadedSize: 457424883,
-            totalSize: 878454797,
-            totalSpeed: 0,
-            platform: "macuniversal"
-        ),
-        onCancel: {},
-        onPause: {},
-        onResume: {},
-        onRetry: {},
-        onRemove: {}
-    )
-    .environmentObject(NetworkManager())
 }

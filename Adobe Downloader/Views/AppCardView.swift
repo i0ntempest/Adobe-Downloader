@@ -468,38 +468,6 @@ private struct SheetModifier: ViewModifier {
     }
 }
 
-#Preview {
-    let networkManager = NetworkManager()
-    let sap = Sap(
-        hidden: false,
-        displayName: "Photoshop",
-        sapCode: "PHSP",
-        versions: [
-            "25.0.0": Sap.Versions(
-                sapCode: "PHSP",
-                baseVersion: "25.0.0",
-                productVersion: "25.0.0",
-                apPlatform: "macuniversal",
-                dependencies: [
-                    Sap.Versions.Dependencies(sapCode: "ACR", version: "9.6"),
-                    Sap.Versions.Dependencies(sapCode: "COCM", version: "1.0"),
-                    Sap.Versions.Dependencies(sapCode: "COSY", version: "2.4.1")
-                ],
-                buildGuid: ""
-            )
-        ],
-        icons: [
-            Sap.ProductIcon(
-                size: "192x192",
-                url: "https://ffc-static-cdn.oobesaas.adobe.com/icons/PHSP/25.0.0/192x192.png"
-            )
-        ]
-    )
-    
-    return AppCardView(sap: sap)
-        .environmentObject(networkManager)
-}
-
 struct AlertModifier: ViewModifier {
     @ObservedObject var viewModel: AppCardViewModel
     let confirmRedownload: Bool

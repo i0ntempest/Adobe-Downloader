@@ -27,19 +27,19 @@ struct VersionPickerView: View {
     @StorageValue(\.downloadAppleSilicon) private var downloadAppleSilicon
     @State private var expandedVersions: Set<String> = []
     
-    private let sap: Sap
+    private let product: Product
     private let onSelect: (String) -> Void
     
-    init(sap: Sap, onSelect: @escaping (String) -> Void) {
-        self.sap = sap
+    init(product: Product, onSelect: @escaping (String) -> Void) {
+        self.product = product
         self.onSelect = onSelect
     }
     
     var body: some View {
         VStack(spacing: 0) {
-            HeaderView(sap: sap, downloadAppleSilicon: downloadAppleSilicon)
+            HeaderView(product: product, downloadAppleSilicon: downloadAppleSilicon)
             VersionListView(
-                sap: sap,
+                product: product,
                 expandedVersions: $expandedVersions,
                 onSelect: onSelect,
                 dismiss: dismiss
@@ -50,7 +50,7 @@ struct VersionPickerView: View {
 }
 
 private struct HeaderView: View {
-    let sap: Sap
+    let product: Product
     let downloadAppleSilicon: Bool
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var networkManager: NetworkManager
@@ -58,7 +58,7 @@ private struct HeaderView: View {
     var body: some View {
         VStack {
             HStack {
-                Text("\(sap.displayName)")
+                Text("\(product.displayName)")
                     .font(.headline)
                 Text("选择版本")
                     .foregroundColor(.secondary)
@@ -86,7 +86,7 @@ private struct HeaderView: View {
 
 private struct VersionListView: View {
     @EnvironmentObject private var networkManager: NetworkManager
-    let sap: Sap
+    let product: Product
     @Binding var expandedVersions: Set<String>
     let onSelect: (String) -> Void
     let dismiss: DismissAction
@@ -96,7 +96,7 @@ private struct VersionListView: View {
             LazyVStack(spacing: VersionPickerConstants.verticalSpacing) {
                 ForEach(filteredVersions, id: \.key) { version, info in
                     VersionRow(
-                        sap: sap,
+                        product: product,
                         version: version,
                         info: info,
                         isExpanded: expandedVersions.contains(version),
@@ -110,10 +110,26 @@ private struct VersionListView: View {
         .background(Color(NSColor.windowBackgroundColor))
     }
     
-    private var filteredVersions: [(key: String, value: Sap.Versions)] {
-        sap.versions
-            .filter { StorageData.shared.allowedPlatform.contains($0.value.apPlatform) }
-            .sorted { AppStatics.compareVersions($0.key, $1.key) > 0 }
+    private var filteredVersions: [(key: String, value: Product.Platform)] {
+        // 获取支持的平台
+        let platforms = product.platforms.filter { platform in
+            StorageData.shared.allowedPlatform.contains(platform.id) && 
+            platform.languageSet.first != nil
+        }
+        
+        // 如果没有支持的平台，返回空数组
+        if platforms.isEmpty {
+            return []
+        }
+        
+        // 将平台按版本号降序排序
+        return platforms.map { platform in
+            // 使用第一个语言集的 productVersion 作为版本号
+            (key: platform.languageSet.first?.productVersion ?? "", value: platform)
+        }.sorted { pair1, pair2 in
+            // 按版本号降序排序
+            AppStatics.compareVersions(pair1.key, pair2.key) > 0
+        }
     }
     
     private func handleVersionSelect(_ version: String) {
@@ -133,19 +149,18 @@ private struct VersionListView: View {
 }
 
 private struct VersionRow: View {
-    @EnvironmentObject private var networkManager: NetworkManager
     @StorageValue(\.defaultLanguage) private var defaultLanguage
     
-    let sap: Sap
+    let product: Product
     let version: String
-    let info: Sap.Versions
+    let info: Product.Platform
     let isExpanded: Bool
     let onSelect: (String) -> Void
     let onToggle: (String) -> Void
     
     private var existingPath: URL? {
-        networkManager.isVersionDownloaded(
-            sap: sap,
+        globalNetworkManager.isVersionDownloaded(
+            product: product,
             version: version,
             language: defaultLanguage
         )
@@ -176,7 +191,8 @@ private struct VersionRow: View {
     }
     
     private func handleSelect() {
-        if info.dependencies.isEmpty {
+        let dependencies = info.languageSet.first?.dependencies ?? []
+        if dependencies.isEmpty {
             onSelect(version)
         } else {
             onToggle(version)
@@ -186,7 +202,7 @@ private struct VersionRow: View {
 
 private struct VersionHeader: View {
     let version: String
-    let info: Sap.Versions
+    let info: Product.Platform
     let isExpanded: Bool
     let hasExistingPath: Bool
     let onSelect: () -> Void
@@ -195,12 +211,13 @@ private struct VersionHeader: View {
     var body: some View {
         Button(action: onSelect) {
             HStack {
-                VersionInfo(version: version, platform: info.apPlatform)
+                VersionInfo(version: version, platform: info.id)
                 Spacer()
                 ExistingPathButton(isVisible: hasExistingPath)
                 ExpandButton(
                     isExpanded: isExpanded,
-                    hasDependencies: !info.dependencies.isEmpty
+                    onToggle: onToggle,
+                    hasDependencies: !(info.languageSet.first?.dependencies.isEmpty ?? true)
                 )
             }
             .padding(.vertical, VersionPickerConstants.buttonPadding)
@@ -243,11 +260,14 @@ private struct ExistingPathButton: View {
 
 private struct ExpandButton: View {
     let isExpanded: Bool
+    let onToggle: () -> Void
     let hasDependencies: Bool
     
     var body: some View {
-        Image(systemName: iconName)
-            .foregroundColor(.secondary)
+        Button(action: onToggle) {
+            Image(systemName: iconName)
+                .foregroundColor(.secondary)
+        }
     }
     
     private var iconName: String {
@@ -259,7 +279,7 @@ private struct ExpandButton: View {
 }
 
 private struct VersionDetails: View {
-    let info: Sap.Versions
+    let info: Product.Platform
     let version: String
     let onSelect: (String) -> Void
     
@@ -271,7 +291,7 @@ private struct VersionDetails: View {
                 .padding(.top, 8)
                 .padding(.leading, 16)
             
-            DependenciesList(dependencies: info.dependencies)
+            DependenciesList(dependencies: info.languageSet.first?.dependencies ?? [])
             
             DownloadButton(version: version, onSelect: onSelect)
         }
@@ -281,15 +301,15 @@ private struct VersionDetails: View {
 }
 
 private struct DependenciesList: View {
-    let dependencies: [Sap.Versions.Dependencies]
-    
+    let dependencies: [Product.Platform.LanguageSet.Dependency]
+
     var body: some View {
         ForEach(dependencies, id: \.sapCode) { dependency in
             HStack(spacing: 8) {
                 Image(systemName: "cube.box")
                     .foregroundColor(.blue)
                     .frame(width: 16)
-                Text("\(dependency.sapCode) (\(dependency.version))")
+                Text("\(dependency.sapCode) (\(dependency.baseVersion))")
                     .font(.caption)
                 Spacer()
             }
@@ -309,56 +329,5 @@ private struct DownloadButton: View {
         .buttonStyle(.borderedProminent)
         .padding(.top, 8)
         .padding(.leading, 16)
-    }
-}
-
-struct VersionPickerView_Previews: PreviewProvider {
-    static var previews: some View {
-        let networkManager = NetworkManager()
-        networkManager.cdn = "https://example.cdn.adobe.com"
-        
-        let previewSap = Sap(
-            hidden: false,
-            displayName: "Photoshop",
-            sapCode: "PHSP",
-            versions: [
-                "26.0.0": Sap.Versions(
-                    sapCode: "PHSP",
-                    baseVersion: "26.0.0",
-                    productVersion: "26.0.0",
-                    apPlatform: "macuniversal",
-                    dependencies: [
-                        Sap.Versions.Dependencies(sapCode: "ACR", version: "9.6"),
-                        Sap.Versions.Dependencies(sapCode: "COCM", version: "1.0"),
-                        Sap.Versions.Dependencies(sapCode: "COSY", version: "2.4.1")
-                    ],
-                    buildGuid: "b382ef03-c44a-4fd4-a9a1-3119ab0474b4"
-                ),
-                "25.0.0": Sap.Versions(
-                    sapCode: "PHSP",
-                    baseVersion: "25.0.0",
-                    productVersion: "25.0.0",
-                    apPlatform: "macuniversal",
-                    dependencies: [
-                        Sap.Versions.Dependencies(sapCode: "ACR", version: "9.5"),
-                        Sap.Versions.Dependencies(sapCode: "COCM", version: "1.0")
-                    ],
-                    buildGuid: "a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6"
-                ),
-                "24.0.0": Sap.Versions(
-                    sapCode: "PHSP",
-                    baseVersion: "24.0.0",
-                    productVersion: "24.0.0",
-                    apPlatform: "macuniversal",
-                    dependencies: [],
-                    buildGuid: "q1w2e3r4-t5y6-u7i8-o9p0-a1s2d3f4g5h6"
-                )
-            ],
-            icons: []
-        )
-        
-        return VersionPickerView(sap: previewSap) { _ in }
-            .environmentObject(networkManager)
-            .previewDisplayName("Version Picker")
     }
 }

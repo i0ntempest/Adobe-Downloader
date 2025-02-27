@@ -1,13 +1,12 @@
 import SwiftUI
 
 struct ContentView: View {
-    @EnvironmentObject private var networkManager: NetworkManager
     @State private var isRefreshing = false
     @State private var errorMessage: String?
     @State private var showDownloadManager = false
     @State private var searchText = ""
     @State private var currentApiVersion = StorageData.shared.apiVersion
-    @State private var cachedProducts: [Sap] = []
+    @State private var cachedProducts: [UniqueProduct] = []
 
     private var apiVersion: String {
         get { StorageData.shared.apiVersion }
@@ -17,14 +16,14 @@ struct ContentView: View {
         }
     }
 
-    private var filteredProducts: [Sap] {
+    private var filteredProducts: [UniqueProduct] {
         if searchText.isEmpty {
             return cachedProducts
         }
 
         return cachedProducts.filter {
             $0.displayName.localizedCaseInsensitiveContains(searchText) ||
-            $0.sapCode.localizedCaseInsensitiveContains(searchText)
+            $0.id.localizedCaseInsensitiveContains(searchText)
         }
     }
 
@@ -33,10 +32,21 @@ struct ContentView: View {
     }
 
     private func updateProductsCache() {
-        let products = networkManager.saps.values
+        // 先获取有效的产品
+        let validProducts = globalCcmResult.products
             .filter { $0.hasValidVersions(allowedPlatform: StorageData.shared.allowedPlatform) }
+        
+        // 使用字典合并相同ID的产品
+        var uniqueProductsDict = [String: UniqueProduct]()
+        for product in validProducts {
+            uniqueProductsDict[product.id] = UniqueProduct(id: product.id, displayName: product.displayName)
+        }
+        
+        // 转换为数组并按显示名称排序
+        let uniqueProducts = Array(uniqueProductsDict.values)
             .sorted { $0.displayName < $1.displayName }
-        cachedProducts = products
+            
+        cachedProducts = uniqueProducts
     }
 
     var body: some View {
@@ -47,7 +57,7 @@ struct ContentView: View {
                     set: { newValue in
                         StorageData.shared.downloadAppleSilicon = newValue
                         Task {
-                            await networkManager.fetchProducts()
+                            await globalNetworkManager.fetchProducts()
                         }
                     }
                 )) {
@@ -106,8 +116,8 @@ struct ContentView: View {
                     .buttonStyle(.borderless)
                     .overlay(
                         Group {
-                            if !networkManager.downloadTasks.isEmpty {
-                                Text("\(networkManager.downloadTasks.count)")
+                            if !globalNetworkManager.downloadTasks.isEmpty {
+                                Text("\(globalNetworkManager.downloadTasks.count)")
                                     .font(.caption2)
                                     .padding(3)
                                     .background(Color.blue)
@@ -138,7 +148,7 @@ struct ContentView: View {
                 Color(NSColor.windowBackgroundColor)
                     .ignoresSafeArea()
 
-                switch networkManager.loadingState {
+                switch globalNetworkManager.loadingState {
                 case .idle, .loading:
                     ProgressView("正在加载...")
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -160,7 +170,7 @@ struct ContentView: View {
                             .padding(.bottom, 10)
 
                         Button(action: {
-                            networkManager.retryFetchData()
+                            globalNetworkManager.retryFetchData()
                         }) {
                             HStack() {
                                 Image(systemName: "arrow.clockwise")
@@ -216,16 +226,16 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showDownloadManager) {
             DownloadManagerView()
-                .environmentObject(networkManager)
+                .environmentObject(globalNetworkManager)
         }
         .onAppear {
-            if networkManager.saps.isEmpty {
+            if globalCcmResult.products.isEmpty {
                 refreshData()
             } else {
                 updateProductsCache()
             }
         }
-        .onChange(of: networkManager.saps) { _ in
+        .onChange(of: globalNetworkManager.saps) { _ in
             updateProductsCache()
         }
     }
@@ -235,7 +245,7 @@ struct ContentView: View {
         errorMessage = nil
 
         Task {
-            await networkManager.fetchProducts()
+            await globalNetworkManager.fetchProducts()
             await MainActor.run {
                 updateProductsCache()
                 isRefreshing = false
@@ -274,4 +284,3 @@ struct SearchField: View {
         .environmentObject(networkManager)
         .frame(width: 792, height: 600)
 }
-

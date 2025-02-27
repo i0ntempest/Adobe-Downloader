@@ -14,14 +14,21 @@ import Foundation
 */
 
 class NewJSONParser {
-    static func parse(jsonString: String) throws -> NewParseResult {
+    static func parse(jsonString: String) throws {
         guard let jsonData = jsonString.data(using: .utf8),
               let jsonObject = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any] else {
             throw ParserError.invalidJSON
         }
         let apiVersion = Int(StorageData.shared.apiVersion) ?? 6
-        return try parseSti(jsonObject: jsonObject, apiVersion: apiVersion)
-//        return try parseCcm(jsonObject: jsonObject, apiVersion: apiVersion)
+        globalStiResult = try parseSti(jsonObject: jsonObject, apiVersion: apiVersion)
+        globalCcmResult = try parseCcm(jsonObject: jsonObject, apiVersion: apiVersion)
+        
+        // 更新全局 CDN
+        if !globalCcmResult.cdn.isEmpty {
+            globalCdn = globalCcmResult.cdn
+        } else if !globalStiResult.cdn.isEmpty {
+            globalCdn = globalStiResult.cdn
+        }
     }
 
     static func parseStiProducts(jsonString: String) throws {
@@ -32,6 +39,9 @@ class NewJSONParser {
         let apiVersion = Int(StorageData.shared.apiVersion) ?? 6
         let result = try parseSti(jsonObject: jsonObject, apiVersion: apiVersion)
         globalStiResult = result
+        
+        // 更新全局 CDN
+        globalCdn = result.cdn
     }
 
     static func parseCcmProducts(jsonString: String) throws {
@@ -42,6 +52,9 @@ class NewJSONParser {
         let apiVersion = Int(StorageData.shared.apiVersion) ?? 6
         let result = try parseCcm(jsonObject: jsonObject, apiVersion: apiVersion)
         globalCcmResult = result
+        
+        // 更新全局 CDN
+        globalCdn = result.cdn
     }
 
     private static func parseSti(jsonObject: [String: Any], apiVersion: Int) throws -> NewParseResult {
@@ -273,8 +286,8 @@ class NewJSONParser {
                                 var productVersion = ""
                                 var buildGuid = ""
                                 
-                                if let stiProducts = globalStiResult?.products {
-                                    let matchingProducts = stiProducts.filter { $0.id == sapCode }
+                                if !globalStiResult.products.isEmpty {
+                                    let matchingProducts = globalStiResult.products.filter { $0.id == sapCode }
 
                                     if let latestProduct = matchingProducts.sorted(by: {
                                         return AppStatics.compareVersions($0.version, $1.version) < 0

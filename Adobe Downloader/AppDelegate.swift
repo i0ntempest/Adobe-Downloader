@@ -3,7 +3,6 @@ import SwiftUI
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var eventMonitor: Any?
-    var networkManager: NetworkManager?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.mainMenu = nil
@@ -20,22 +19,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        guard let manager = networkManager else { return .terminateNow }
-        
-        let hasActiveDownloads = manager.downloadTasks.contains { task in
+        let hasActiveDownloads = globalNetworkManager.downloadTasks.contains { task in
             if case .downloading = task.totalStatus { return true }
             return false
         }
         
         if hasActiveDownloads {
             Task {
-                for task in manager.downloadTasks {
+                for task in globalNetworkManager.downloadTasks {
                     if case .downloading = task.totalStatus {
-                        await manager.downloadUtils.pauseDownloadTask(
+                        await globalNewDownloadUtils.pauseDownloadTask(
                             taskId: task.id,
                             reason: .other(String(localized: "程序即将退出"))
                         )
-                        await manager.saveTask(task)
+                        await globalNetworkManager.saveTask(task)
                     }
                 }
 
@@ -50,9 +47,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     let response = alert.runModal()
                     if response == .alertSecondButtonReturn {
                         Task {
-                            for task in manager.downloadTasks {
+                            for task in globalNetworkManager.downloadTasks {
                                 if case .paused = task.totalStatus {
-                                    await manager.downloadUtils.resumeDownloadTask(taskId: task.id)
+                                    await globalNewDownloadUtils.resumeDownloadTask(taskId: task.id)
                                 }
                             }
                         }
@@ -71,6 +68,5 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let monitor = eventMonitor {
             NSEvent.removeMonitor(monitor)
         }
-        networkManager = nil
     }
 } 

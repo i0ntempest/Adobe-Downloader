@@ -26,8 +26,8 @@ class TaskPersistenceManager {
     
     func saveTask(_ task: NewDownloadTask) async {
         let fileName = getTaskFileName(
-            sapCode: task.sapCode,
-            version: task.version,
+            sapCode: task.productId,
+            version: task.productVersion,
             language: task.language,
             platform: task.platform
         )
@@ -43,12 +43,12 @@ class TaskPersistenceManager {
         }
         
         let taskData = TaskData(
-            sapCode: task.sapCode,
-            version: task.version,
+            sapCode: task.productId,
+            version: task.productVersion,
             language: task.language,
             displayName: task.displayName,
             directory: task.directory,
-            productsToDownload: task.productsToDownload.map { product in
+            productsToDownload: task.dependenciesToDownload.map { product in
                 ProductData(
                     sapCode: product.sapCode,
                     version: product.version,
@@ -120,8 +120,8 @@ class TaskPersistenceManager {
             let decoder = JSONDecoder()
             let taskData = try decoder.decode(TaskData.self, from: data)
             
-            let products = taskData.productsToDownload.map { productData -> ProductsToDownload in
-                let product = ProductsToDownload(
+            let products = taskData.productsToDownload.map { productData -> DependenciesToDownload in
+                let product = DependenciesToDownload(
                     sapCode: productData.sapCode,
                     version: productData.version,
                     buildGuid: productData.buildGuid,
@@ -174,12 +174,12 @@ class TaskPersistenceManager {
             }
             
             let task = NewDownloadTask(
-                sapCode: taskData.sapCode,
-                version: taskData.version,
+                productId: taskData.sapCode,
+                productVersion: taskData.version,
                 language: taskData.language,
                 displayName: taskData.displayName,
                 directory: taskData.directory,
-                productsToDownload: products,
+                dependenciesToDownload: products,
                 retryCount: taskData.retryCount,
                 createAt: taskData.createAt,
                 totalStatus: initialStatus,
@@ -209,8 +209,8 @@ class TaskPersistenceManager {
     
     func removeTask(_ task: NewDownloadTask) {
         let fileName = getTaskFileName(
-            sapCode: task.sapCode,
-            version: task.version,
+            sapCode: task.productId,
+            version: task.productVersion,
             language: task.language,
             platform: task.platform
         )
@@ -228,7 +228,7 @@ class TaskPersistenceManager {
             platform: platform
         )
         
-        let product = ProductsToDownload(
+        let product = DependenciesToDownload(
             sapCode: sapCode,
             version: version,
             buildGuid: "",
@@ -249,12 +249,12 @@ class TaskPersistenceManager {
         product.packages = [package]
         
         let task = NewDownloadTask(
-            sapCode: sapCode,
-            version: version,
+            productId: sapCode,
+            productVersion: version,
             language: language,
             displayName: displayName,
             directory: directory,
-            productsToDownload: [product],
+            dependenciesToDownload: [product],
             retryCount: 0,
             createAt: Date(),
             totalStatus: .completed(DownloadStatus.CompletionInfo(

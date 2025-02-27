@@ -8,15 +8,10 @@ import SwiftUI
 class NetworkManager: ObservableObject {
     typealias ProgressUpdate = (bytesWritten: Int64, totalWritten: Int64, expectedToWrite: Int64)
     @Published var isConnected = false
-    @Published var saps: [String: Sap] = [:]
-    @Published var cdn: String = ""
-    @Published var sapCodes: [SapCodes] = []
     @Published var loadingState: LoadingState = .idle
     @Published var downloadTasks: [NewDownloadTask] = []
     @Published var installationState: InstallationState = .idle
     @Published var installCommand: String = ""
-    private let cancelTracker = CancelTracker()
-    internal var downloadUtils: DownloadUtils!
     internal var progressObservers: [UUID: NSKeyValueObservation] = [:]
     internal var activeDownloadTaskId: UUID?
     internal var monitor = NWPathMonitor()
@@ -46,26 +41,24 @@ class NetworkManager: ObservableObject {
         case failed(Error)
     }
 
-    private let networkService: NetworkService
-
-    init(networkService: NetworkService = NetworkService(),
-         downloadUtils: DownloadUtils? = nil) {
-        
-        self.networkService = networkService
-        self.downloadUtils = downloadUtils ?? DownloadUtils(networkManager: self, cancelTracker: cancelTracker)
-        
-        TaskPersistenceManager.shared.setCancelTracker(cancelTracker)
+    init() {
+        TaskPersistenceManager.shared.setCancelTracker(globalCancelTracker)
         configureNetworkMonitor()
     }
 
     func fetchProducts() async {
         loadingState = .loading
         do {
-            let (saps, cdn, sapCodes) = try await networkService.fetchProductsData()
+            let (saps, sapCodes) = try await globalNetworkService.fetchProductsData()
+
+            let (newProducts, uniqueProducts) = try await globalNetworkService.fetchProductsData()
+            print("新产品数量: \(newProducts.count), 唯一产品数量: \(uniqueProducts.count), CDN: \(globalCdn)")
+            for uniqueProduct in uniqueProducts {
+                print("新唯一产品: \(uniqueProduct)")
+            }
+
+
             await MainActor.run {
-                self.saps = saps
-                self.cdn = cdn
-                self.sapCodes = sapCodes
                 self.loadingState = .success
             }
         } catch {
@@ -74,17 +67,19 @@ class NetworkManager: ObservableObject {
             }
         }
     }
-    func startDownload(sap: Sap, selectedVersion: String, language: String, destinationURL: URL) async throws {
-        guard let productInfo = self.saps[sap.sapCode]?.versions[selectedVersion] else { 
-            throw NetworkError.invalidData("无法获取产品信息") 
+    func startDownload(productId: String, selectedVersion: String, language: String, destinationURL: URL) async throws {
+        // 从 globalCcmResult 中获取 productId 对应的 ProductInfo
+        guard let productInfo = globalCcmResult.products.first(where: { $0.id == productId }) else {
+            throw NetworkError.productNotFound
         }
+
         let task = NewDownloadTask(
-            sapCode: sap.sapCode,
-            version: selectedVersion,
+            productId: productInfo.id,
+            productVersion: selectedVersion,
             language: language,
-            displayName: sap.displayName,
+            displayName: productInfo.displayName,
             directory: destinationURL,
-            productsToDownload: [],
+            dependenciesToDownload: [],
             createAt: Date(),
             totalStatus: .preparing(DownloadStatus.PrepareInfo(
                 message: "正在准备下载...",
@@ -95,15 +90,14 @@ class NetworkManager: ObservableObject {
             totalDownloadedSize: 0,
             totalSize: 0,
             totalSpeed: 0,
-            platform: productInfo.apPlatform
-        )
-        
+            platform: "")
+
         downloadTasks.append(task)
         updateDockBadge()
         await saveTask(task)
         
         do {
-            try await downloadUtils.handleDownload(task: task, productInfo: productInfo, allowedPlatform: StorageData.shared.allowedPlatform, saps: saps)
+            try await globalNewDownloadUtils.handleDownload(task: task, productInfo: productInfo, allowedPlatform: StorageData.shared.allowedPlatform)
         } catch {
             task.setStatus(.failed(DownloadStatus.FailureInfo(
                 message: error.localizedDescription,
@@ -118,16 +112,10 @@ class NetworkManager: ObservableObject {
         }
     }
 
-    var cdnUrl: String {
-        get async {
-            await MainActor.run { cdn }
-        }
-    }
-
    func removeTask(taskId: UUID, removeFiles: Bool = true) {
        Task {
-           await cancelTracker.cancel(taskId)
-           
+           await globalCancelTracker.cancel(taskId)
+
            if let task = downloadTasks.first(where: { $0.id == taskId }) {
                if task.status.isActive {
                    task.setStatus(.failed(DownloadStatus.FailureInfo(
@@ -165,11 +153,8 @@ class NetworkManager: ObservableObject {
         
         while retryCount < maxRetries {
             do {
-                let (saps, cdn, sapCodes) = try await networkService.fetchProductsData()
+                let (saps, sapCodes) = try await globalNetworkService.fetchProductsData()
                 await MainActor.run {
-                    self.saps = saps
-                    self.cdn = cdn
-                    self.sapCodes = sapCodes
                     self.loadingState = .success
                     self.isFetchingProducts = false
                 }
@@ -302,10 +287,10 @@ class NetworkManager: ObservableObject {
     }
 
     func getApplicationInfo(buildGuid: String) async throws -> String {
-        return try await networkService.getApplicationInfo(buildGuid: buildGuid)
+        return try await globalNetworkService.getApplicationInfo(buildGuid: buildGuid)
     }
 
-    func isVersionDownloaded(sap: Sap, version: String, language: String) -> URL? {
+    func isVersionDownloaded(product: Product, version: String, language: String) -> URL? {
         if let task = downloadTasks.first(where: {
             $0.sapCode == sap.sapCode &&
             $0.version == version &&
