@@ -59,6 +59,21 @@ struct Product: Codable, Equatable {
                 var baseVersion: String
                 var productVersion: String
                 var buildGuid: String
+                var isMatchPlatform: Bool
+                var targetPlatform: String
+                var selectedPlatform: String
+                var selectedReason: String
+                
+                init(sapCode: String, baseVersion: String, productVersion: String, buildGuid: String, isMatchPlatform: Bool = false, targetPlatform: String = "", selectedPlatform: String = "", selectedReason: String = "") {
+                    self.sapCode = sapCode
+                    self.baseVersion = baseVersion
+                    self.productVersion = productVersion
+                    self.buildGuid = buildGuid
+                    self.isMatchPlatform = isMatchPlatform
+                    self.targetPlatform = targetPlatform
+                    self.selectedPlatform = selectedPlatform
+                    self.selectedReason = selectedReason
+                }
             }
         }
 

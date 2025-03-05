@@ -1,19 +1,12 @@
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject private var networkManager = globalNetworkManager
     @State private var isRefreshing = false
     @State private var errorMessage: String?
     @State private var showDownloadManager = false
     @State private var searchText = ""
     @State private var currentApiVersion = StorageData.shared.apiVersion
-
-    private var apiVersion: String {
-        get { StorageData.shared.apiVersion }
-        set {
-            StorageData.shared.apiVersion = newValue
-            refreshData()
-        }
-    }
 
     private var filteredProducts: [UniqueProduct] {
         if searchText.isEmpty { return globalUniqueProducts }
@@ -32,7 +25,7 @@ struct ContentView: View {
         errorMessage = nil
 
         Task {
-            await globalNetworkManager.fetchProducts()
+            await networkManager.fetchProducts()
             await MainActor.run { isRefreshing = false }
         }
     }
@@ -45,7 +38,7 @@ struct ContentView: View {
                     set: { newValue in
                         StorageData.shared.downloadAppleSilicon = newValue
                         Task {
-                            await globalNetworkManager.fetchProducts()
+                            await networkManager.fetchProducts()
                         }
                     }
                 )) { Text("Apple Silicon") }
@@ -102,8 +95,8 @@ struct ContentView: View {
                     .buttonStyle(.borderless)
                     .overlay(
                         Group {
-                            if !globalNetworkManager.downloadTasks.isEmpty {
-                                Text("\(globalNetworkManager.downloadTasks.count)")
+                            if !networkManager.downloadTasks.isEmpty {
+                                Text("\(networkManager.downloadTasks.count)")
                                     .font(.caption2)
                                     .padding(3)
                                     .background(Color.blue)
@@ -134,7 +127,7 @@ struct ContentView: View {
                 Color(NSColor.windowBackgroundColor)
                     .ignoresSafeArea()
 
-                switch globalNetworkManager.loadingState {
+                switch networkManager.loadingState {
                 case .idle, .loading:
                     ProgressView("正在加载...")
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -156,7 +149,7 @@ struct ContentView: View {
                             .padding(.bottom, 10)
 
                         Button(action: {
-                            globalNetworkManager.retryFetchData()
+                            networkManager.retryFetchData()
                         }) {
                             HStack() {
                                 Image(systemName: "arrow.clockwise")

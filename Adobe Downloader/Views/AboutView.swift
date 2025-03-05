@@ -15,10 +15,10 @@ private enum AboutViewConstants {
     static let subtitleFontSize: CGFloat = 14
     static let linkFontSize: CGFloat = 14
     static let licenseFontSize: CGFloat = 12
-    
+
     static let verticalSpacing: CGFloat = 12
     static let formPadding: CGFloat = 8
-    
+
     static let links: [(title: String, url: String)] = [
         ("@X1a0He", "https://t.me/X1a0He_bot"),
         ("Github: Adobe Downloader", "https://github.com/X1a0He/Adobe-Downloader"),
@@ -30,7 +30,7 @@ private enum AboutViewConstants {
 struct ExternalLinkView: View {
     let title: String
     let url: String
-    
+
     var body: some View {
         Link(title, destination: URL(string: url)!)
             .font(.system(size: AboutViewConstants.linkFontSize))
@@ -41,11 +41,11 @@ struct ExternalLinkView: View {
 struct AboutView: View {
     private let updater: SPUUpdater
     @State private var selectedTab = "general_settings"
-    
+
     init(updater: SPUUpdater) {
         self.updater = updater
     }
-    
+
     var body: some View {
         TabView(selection: $selectedTab) {
             GeneralSettingsView(updater: updater)
@@ -53,19 +53,19 @@ struct AboutView: View {
                     Label("通用", systemImage: "gear")
                 }
                 .tag("general_settings")
-            
+
             CleanupView()
                 .tabItem {
                     Label("清理工具", systemImage: "trash")
                 }
                 .tag("cleanup_view")
-            
+
             QAView()
                 .tabItem {
                     Label("常见问题", systemImage: "questionmark.circle")
                 }
                 .tag("qa_view")
-            
+
             AboutAppView()
                 .tabItem {
                     Label("关于", systemImage: "info.circle")
@@ -84,7 +84,7 @@ struct AboutAppView: View {
     private var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
     }
-    
+
     var body: some View {
         VStack(spacing: AboutViewConstants.verticalSpacing) {
             appIconSection
@@ -95,31 +95,31 @@ struct AboutAppView: View {
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-    
+
     private var appIconSection: some View {
         Image(nsImage: NSApp.applicationIconImage)
             .resizable()
             .frame(width: AboutViewConstants.appIconSize, height: AboutViewConstants.appIconSize)
     }
-    
+
     private var appInfoSection: some View {
         Group {
             Text("Adobe Downloader \(appVersion)")
                 .font(.system(size: AboutViewConstants.titleFontSize))
                 .bold()
-            
+
             Text("By X1a0He. ❤️ Love from China. 🇨🇳")
                 .font(.system(size: AboutViewConstants.subtitleFontSize))
                 .foregroundColor(.secondary)
         }
     }
-    
+
     private var linksSection: some View {
         ForEach(AboutViewConstants.links, id: \.url) { link in
             ExternalLinkView(title: link.title, url: link.url)
         }
     }
-    
+
     private var licenseSection: some View {
         Text("GNU通用公共许可证GPL v3.")
             .font(.system(size: AboutViewConstants.licenseFontSize))
@@ -130,7 +130,7 @@ struct AboutAppView: View {
 struct PulsingCircle: View {
     let color: Color
     @State private var scale: CGFloat = 1.0
-    
+
     var body: some View {
         Circle()
             .fill(color)
@@ -171,25 +171,25 @@ final class GeneralSettingsViewModel: ObservableObject {
         get { StorageData.shared.defaultLanguage }
         set { StorageData.shared.defaultLanguage = newValue }
     }
-    
+
     var defaultDirectory: String {
         get { StorageData.shared.defaultDirectory }
         set { StorageData.shared.defaultDirectory = newValue }
     }
-    
+
     var useDefaultLanguage: Bool {
         get { StorageData.shared.useDefaultLanguage }
         set { StorageData.shared.useDefaultLanguage = newValue }
     }
-    
+
     var useDefaultDirectory: Bool {
         get { StorageData.shared.useDefaultDirectory }
         set { StorageData.shared.useDefaultDirectory = newValue }
     }
-    
+
     var confirmRedownload: Bool {
         get { StorageData.shared.confirmRedownload }
-        set { 
+        set {
             StorageData.shared.confirmRedownload = newValue
             objectWillChange.send()
         }
@@ -215,9 +215,9 @@ final class GeneralSettingsViewModel: ObservableObject {
         self.automaticallyChecksForUpdates = updater.automaticallyChecksForUpdates
         self.automaticallyDownloadsUpdates = updater.automaticallyDownloadsUpdates
         self.downloadAppleSilicon = StorageData.shared.downloadAppleSilicon
-        
+
         self.helperConnectionStatus = .connecting
-        
+
         PrivilegedHelperManager.shared.$connectionState
             .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
@@ -231,9 +231,9 @@ final class GeneralSettingsViewModel: ObservableObject {
                 }
             }
             .store(in: &cancellables)
-        
+
         PrivilegedHelperManager.shared.executeCommand("whoami") { _ in }
-        
+
         NotificationCenter.default.publisher(for: .storageDidChange)
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
@@ -277,60 +277,40 @@ struct GeneralSettingsView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                DownloadSettingsView(viewModel: viewModel)
-                HelperSettingsView(viewModel: viewModel,
-                                showHelperAlert: $showHelperAlert,
-                                helperAlertMessage: $helperAlertMessage,
-                                helperAlertSuccess: $helperAlertSuccess)
-                CCSettingsView(viewModel: viewModel)
-                UpdateSettingsView(viewModel: viewModel)
-                CleanConfigView()
-            }
-            .padding()
+        GeneralSettingsContent(
+            viewModel: viewModel,
+            showHelperAlert: $showHelperAlert,
+            helperAlertMessage: $helperAlertMessage,
+            helperAlertSuccess: $helperAlertSuccess
+        )
+    }
+}
+
+private struct GeneralSettingsContent: View {
+    @ObservedObject var viewModel: GeneralSettingsViewModel
+    @Binding var showHelperAlert: Bool
+    @Binding var helperAlertMessage: String
+    @Binding var helperAlertSuccess: Bool
+    
+    var body: some View {
+        Form {
+            DownloadSettingsView(viewModel: viewModel)
+            HelperSettingsView(viewModel: viewModel,
+                            showHelperAlert: $showHelperAlert,
+                            helperAlertMessage: $helperAlertMessage,
+                            helperAlertSuccess: $helperAlertSuccess)
+            CCSettingsView(viewModel: viewModel)
+            UpdateSettingsView(viewModel: viewModel)
+            CleanConfigView()
         }
+        .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .alert(helperAlertSuccess ? "操作成功" : "操作失败", isPresented: $showHelperAlert) {
-            Button("确定") { }
-        } message: {
-            Text(helperAlertMessage)
-        }
-        .alert("需要下载 Setup 组件", isPresented: $viewModel.showDownloadAlert) {
-            Button("取消", role: .cancel) { }
-            Button("下载") {
-                Task {
-                    await downloadSetup(shouldProcess: false)
-                }
-            }
-        } message: {
-            Text("检测到系统中不存在 Setup 组件，需要先下载组件才能继续操作。")
-        }
-        .alert("确认下载并处理", isPresented: $viewModel.showDownloadConfirmAlert) {
-            Button("取消", role: .cancel) { }
-            Button("确定") {
-                Task {
-                    await downloadSetup(shouldProcess: true)
-                }
-            }
-        } message: {
-            Text("确定要下载并处理 X1a0He CC 吗？这将完成下载并自动对 Setup 组件进行处理")
-        }
-        .alert("确认下载", isPresented: $viewModel.showReprocessConfirmAlert) {
-            Button("取消", role: .cancel) { }
-            Button("确定") {
-                Task {
-                    await downloadSetup(shouldProcess: false)
-                }
-            }
-        } message: {
-            Text("确定要下载 X1a0He CC 吗？下载完成后需要手动处理。")
-        }
-        .alert(viewModel.isSuccess ? "操作成功" : "操作失败", isPresented: $viewModel.showAlert) {
-            Button("确定") { }
-        } message: {
-            Text(viewModel.alertMessage)
-        }
+        .modifier(GeneralSettingsAlerts(
+            viewModel: viewModel,
+            showHelperAlert: $showHelperAlert,
+            helperAlertMessage: $helperAlertMessage,
+            helperAlertSuccess: $helperAlertSuccess
+        ))
         .task {
             viewModel.setupVersion = ModifySetup.checkComponentVersion()
         }
@@ -338,33 +318,89 @@ struct GeneralSettingsView: View {
             viewModel.objectWillChange.send()
         }
     }
+}
+
+private struct GeneralSettingsAlerts: ViewModifier {
+    @ObservedObject var viewModel: GeneralSettingsViewModel
+    @Binding var showHelperAlert: Bool
+    @Binding var helperAlertMessage: String
+    @Binding var helperAlertSuccess: Bool
+    @EnvironmentObject private var networkManager: NetworkManager
     
-    private func downloadSetup(shouldProcess: Bool) async {
+    func body(content: Content) -> some View {
+        content
+            .alert(helperAlertSuccess ? "操作成功" : "操作失败", isPresented: $showHelperAlert) {
+                Button("确定") { }
+            } message: {
+                Text(helperAlertMessage)
+            }
+            .alert("需要下载 Setup 组件", isPresented: $viewModel.showDownloadAlert) {
+                Button("取消", role: .cancel) { }
+                Button("下载") {
+                    Task {
+                        startDownloadSetup(shouldProcess: false)
+                    }
+                }
+            } message: {
+                Text("检测到系统中不存在 Setup 组件，需要先下载组件才能继续操作。")
+            }
+            .alert("确认下载并处理", isPresented: $viewModel.showDownloadConfirmAlert) {
+                Button("取消", role: .cancel) { }
+                Button("确定") {
+                    Task {
+                        startDownloadSetup(shouldProcess: true)
+                    }
+                }
+            } message: {
+                Text("确定要下载并处理 X1a0He CC 吗？这将完成下载并自动对 Setup 组件进行处理")
+            }
+            .alert("确认下载", isPresented: $viewModel.showReprocessConfirmAlert) {
+                Button("取消", role: .cancel) { }
+                Button("确定") {
+                    Task {
+                        startDownloadSetup(shouldProcess: false)
+                    }
+                }
+            } message: {
+                Text("确定要下载 X1a0He CC 吗？下载完成后需要手动处理。")
+            }
+            .alert(viewModel.isSuccess ? "操作成功" : "操作失败", isPresented: $viewModel.showAlert) {
+                Button("确定") { }
+            } message: {
+                Text(viewModel.alertMessage)
+            }
+    }
+    
+    private func startDownloadSetup(shouldProcess: Bool) {
         viewModel.isDownloadingSetup = true
         viewModel.isCancelled = false
-        do {
-            try await globalNewDownloadUtils.downloadX1a0HeCCPackages(
-                progressHandler: { progress, status in
-                    viewModel.setupDownloadProgress = progress
-                    viewModel.setupDownloadStatus = status
-                },
-                cancellationHandler: { viewModel.isCancelled },
-                shouldProcess: shouldProcess
-            )
-            viewModel.setupVersion = ModifySetup.checkComponentVersion()
-            viewModel.isSuccess = true
-            viewModel.alertMessage = shouldProcess ? 
-                String(localized: "X1a0He CC 下载并处理成功") : 
-                String(localized: "X1a0He CC 下载成功")
-        } catch NetworkError.cancelled {
-            viewModel.isSuccess = false
-            viewModel.alertMessage = String(localized: "下载已取消")
-        } catch {
-            viewModel.isSuccess = false
-            viewModel.alertMessage = error.localizedDescription
+        
+        Task {
+            do {
+                try await globalNewDownloadUtils.downloadX1a0HeCCPackages(
+                    progressHandler: { progress, status in
+                        viewModel.setupDownloadProgress = progress
+                        viewModel.setupDownloadStatus = status
+                    },
+                    cancellationHandler: { viewModel.isCancelled },
+                    shouldProcess: shouldProcess
+                )
+                viewModel.setupVersion = ModifySetup.checkComponentVersion()
+                viewModel.isSuccess = true
+                viewModel.alertMessage = String(localized: shouldProcess ? 
+                                              "X1a0He CC 下载并处理成功" : 
+                                              "X1a0He CC 下载成功")
+            } catch NetworkError.cancelled {
+                viewModel.isSuccess = false
+                viewModel.alertMessage = String(localized: "下载已取消")
+            } catch {
+                viewModel.isSuccess = false
+                viewModel.alertMessage = error.localizedDescription
+            }
+            
+            viewModel.showAlert = true
+            viewModel.isDownloadingSetup = false
         }
-        viewModel.showAlert = true
-        viewModel.isDownloadingSetup = false
     }
 }
 
@@ -438,9 +474,9 @@ struct UpdateSettingsView: View {
                         .foregroundColor(.secondary)
                 }
                 .font(.system(size: 12))
-                
+
                 Divider()
-                
+
                 AutoUpdateRow(viewModel: viewModel)
                 Divider()
                 AutoDownloadRow(viewModel: viewModel)
@@ -454,19 +490,50 @@ struct CleanConfigView: View {
     @State private var showConfirmation = false
     @State private var showAlert = false
     @State private var alertMessage = ""
+    @State private var chipInfo: String = ""
     
+    private func getChipInfo() -> String {
+        var size = 0
+        sysctlbyname("machdep.cpu.brand_string", nil, &size, nil, 0)
+        var machine = [CChar](repeating: 0, count: size)
+        sysctlbyname("machdep.cpu.brand_string", &machine, &size, nil, 0)
+        let chipName = String(cString: machine)
+        
+        if chipName.contains("Apple") {
+            return chipName
+        } else {
+            return chipName.components(separatedBy: "@")[0].trimmingCharacters(in: .whitespaces)
+        }
+    }
+
     var body: some View {
-        GroupBox(label: Text("重置程序").padding(.bottom, 8)) {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Button("重置程序") {
-                        showConfirmation = true
+        HStack(spacing: 12) {
+            GroupBox(label: Text("重置程序").padding(.bottom, 8)) {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Button("重置程序") {
+                            showConfirmation = true
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.red)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.red)
                 }
+                .padding(8)
             }
-            .padding(8)
+            
+            GroupBox(label: Text("系统信息").padding(.bottom, 8)) {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Image(systemName: "desktopcomputer")
+                            .foregroundColor(.blue)
+                        Text("macOS \(ProcessInfo.processInfo.operatingSystemVersionString)")
+                        Text("[\(chipInfo.isEmpty ? "加载中..." : chipInfo)]")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                }
+                .padding(8)
+            }
         }
         .alert("确认重置程序", isPresented: $showConfirmation) {
             Button("取消", role: .cancel) { }
@@ -481,26 +548,29 @@ struct CleanConfigView: View {
         } message: {
             Text(alertMessage)
         }
+        .onAppear {
+            chipInfo = getChipInfo()
+        }
     }
-    
+
     private func cleanConfig() {
         do {
-            let downloadsURL = try FileManager.default.url(for: .downloadsDirectory, 
-                                                         in: .userDomainMask, 
-                                                         appropriateFor: nil, 
+            let downloadsURL = try FileManager.default.url(for: .downloadsDirectory,
+                                                         in: .userDomainMask,
+                                                         appropriateFor: nil,
                                                          create: false)
             let scriptURL = downloadsURL.appendingPathComponent("clean-config.sh")
-            
+
             guard let scriptPath = Bundle.main.path(forResource: "clean-config", ofType: "sh"),
                   let scriptContent = try? String(contentsOfFile: scriptPath, encoding: .utf8) else {
                 throw NSError(domain: "ScriptError", code: 1, userInfo: [NSLocalizedDescriptionKey: "无法读取脚本文件"])
             }
-            
+
             try scriptContent.write(to: scriptURL, atomically: true, encoding: .utf8)
-            
-            try FileManager.default.setAttributes([.posixPermissions: 0o755], 
+
+            try FileManager.default.setAttributes([.posixPermissions: 0o755],
                                                 ofItemAtPath: scriptURL.path)
-            
+
             if PrivilegedHelperManager.getHelperStatus {
                 PrivilegedHelperManager.shared.executeCommand("open -a Terminal \(scriptURL.path)") { output in
                     if output.isEmpty {
@@ -514,7 +584,7 @@ struct CleanConfigView: View {
                 }
             } else {
                 let terminalURL = URL(fileURLWithPath: "/System/Applications/Utilities/Terminal.app")
-                NSWorkspace.shared.open([scriptURL], 
+                NSWorkspace.shared.open([scriptURL],
                                         withApplicationAt: terminalURL,
                                            configuration: NSWorkspace.OpenConfiguration()) { _, error in
                     if let error = error {
@@ -522,13 +592,13 @@ struct CleanConfigView: View {
                         showAlert = true
                         return
                     }
-                    
+
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                         exit(0)
                     }
                 }
             }
-            
+
         } catch {
             alertMessage = "清空配置失败: \(error.localizedDescription)"
             showAlert = true
@@ -541,7 +611,7 @@ private class PreviewUpdater: SPUUpdater {
         let hostBundle = Bundle.main
         let applicationBundle = Bundle.main
         let userDriver = SPUStandardUserDriver(hostBundle: hostBundle, delegate: nil)
-        
+
         super.init(
             hostBundle: hostBundle,
             applicationBundle: applicationBundle,
@@ -549,12 +619,12 @@ private class PreviewUpdater: SPUUpdater {
             delegate: nil
         )
     }
-    
+
     override var automaticallyChecksForUpdates: Bool {
         get { true }
         set { }
     }
-    
+
     override var automaticallyDownloadsUpdates: Bool {
         get { true }
         set { }
@@ -644,13 +714,12 @@ struct RedownloadConfirmRow: View {
 
 struct ArchitectureSettingRow: View {
     @ObservedObject var viewModel: GeneralSettingsViewModel
-    @EnvironmentObject private var networkManager: NetworkManager
 
     var body: some View {
         HStack {
             Toggle("下载 Apple Silicon 架构", isOn: $viewModel.downloadAppleSilicon)
                 .padding(.leading, 5)
-                .disabled(networkManager.loadingState == .loading)
+                .disabled(globalNetworkManager.loadingState == .loading)
             Spacer()
             Text("当前架构: \(AppStatics.cpuArchitecture)")
                 .foregroundColor(.secondary)
@@ -659,7 +728,7 @@ struct ArchitectureSettingRow: View {
         }
         .onChange(of: viewModel.downloadAppleSilicon) { newValue in
             Task {
-                await networkManager.fetchProducts()
+                await globalNetworkManager.fetchProducts()
             }
         }
     }
@@ -671,7 +740,7 @@ struct HelperStatusRow: View {
     @Binding var helperAlertMessage: String
     @Binding var helperAlertSuccess: Bool
     @State private var isReinstallingHelper = false
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
@@ -687,13 +756,13 @@ struct HelperStatusRow: View {
                         .foregroundColor(.red)
                 }
                 Spacer()
-                
+
                 if isReinstallingHelper {
                     ProgressView()
                         .scaleEffect(0.7)
                         .frame(width: 16, height: 16)
                 }
-                
+
                 Button(action: {
                     isReinstallingHelper = true
                     PrivilegedHelperManager.shared.removeInstallHelper()
@@ -709,13 +778,13 @@ struct HelperStatusRow: View {
                 .disabled(isReinstallingHelper)
                 .help("完全卸载并重新安装 Helper")
             }
-            
+
             if !PrivilegedHelperManager.getHelperStatus {
                 Text("Helper 未安装将导致无法执行需要管理员权限的操作")
                     .font(.caption)
                     .foregroundColor(.red)
             }
-            
+
             Divider()
 
             HStack {
@@ -724,11 +793,11 @@ struct HelperStatusRow: View {
                     .padding(.horizontal, 4)
                 Text(helperStatusText)
                     .foregroundColor(helperStatusColor)
-                
+
                 Spacer()
-                
+
                 Button(action: {
-                    if PrivilegedHelperManager.getHelperStatus && 
+                    if PrivilegedHelperManager.getHelperStatus &&
                        viewModel.helperConnectionStatus != .connected {
                         PrivilegedHelperManager.shared.reconnectHelper { success, message in
                             helperAlertSuccess = success
@@ -739,14 +808,14 @@ struct HelperStatusRow: View {
                 }) {
                     Text("重新连接")
                 }
-                .disabled(!PrivilegedHelperManager.getHelperStatus || 
+                .disabled(!PrivilegedHelperManager.getHelperStatus ||
                          viewModel.helperConnectionStatus == .connected ||
                          isReinstallingHelper)
                 .help("尝试重新连接到已安装的 Helper")
             }
         }
     }
-    
+
     private var helperStatusColor: Color {
         switch viewModel.helperConnectionStatus {
         case .connected: return .green
@@ -755,7 +824,7 @@ struct HelperStatusRow: View {
         case .checking: return .orange
         }
     }
-    
+
     private var helperStatusText: String {
         switch viewModel.helperConnectionStatus {
         case .connected: return String(localized: "运行正常")
@@ -768,6 +837,21 @@ struct HelperStatusRow: View {
 
 struct SetupComponentRow: View {
     @ObservedObject var viewModel: GeneralSettingsViewModel
+    @State private var chipInfo: String = ""
+    
+    private func getChipInfo() -> String {
+        var size = 0
+        sysctlbyname("machdep.cpu.brand_string", nil, &size, nil, 0)
+        var machine = [CChar](repeating: 0, count: size)
+        sysctlbyname("machdep.cpu.brand_string", &machine, &size, nil, 0)
+        let chipName = String(cString: machine)
+        
+        if chipName.contains("Apple") {
+            return chipName
+        } else {
+            return chipName.components(separatedBy: "@")[0].trimmingCharacters(in: .whitespaces)
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -825,7 +909,6 @@ struct SetupComponentRow: View {
                 Image(systemName: "info.circle.fill")
                     .foregroundColor(.blue)
                 Text("\(viewModel.setupVersion)")
-                Text(" [\(AppStatics.cpuArchitecture)]")
                 Spacer()
 
                 if viewModel.isDownloadingSetup {
@@ -845,7 +928,7 @@ struct SetupComponentRow: View {
                             Label("下载并处理", systemImage: "arrow.down.circle.fill")
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        
+
                         Button(action: {
                             viewModel.showReprocessConfirmAlert = true
                         }) {
@@ -861,6 +944,9 @@ struct SetupComponentRow: View {
                     .help("选择下载 X1a0He CC 的方式")
                 }
             }
+        }
+        .onAppear {
+            chipInfo = getChipInfo()
         }
     }
 }
@@ -901,22 +987,22 @@ struct QAView: View {
                         question: String(localized: "为什么需要安装 Helper？"),
                         answer: String(localized: "Helper 是一个具有管理员权限的辅助工具，用于执行需要管理员权限的操作，如修改系统文件等。没有 Helper 将无法正常使用软件的某些功能。")
                     )
-                    
+
                     QAItem(
                         question: String(localized: "为什么需要下载 Setup 组件？"),
                         answer: String(localized: "Setup 组件是 Adobe 官方的安装程序组件，我们需要对其进行修改以实现绕过验证的功能。如果没有下载并处理 Setup 组件，将无法使用安装功能。")
                     )
-                    
+
                     QAItem(
                         question: String(localized: "为什么有时候下载会失败？"),
                         answer: String(localized: "下载失败可能有多种原因：\n1. 网络连接不稳定\n2. Adobe 服务器响应超时\n3. 本地磁盘空间不足\n建议您检查网络连接并重试，如果问题持续存在，可以尝试使用代理或 VPN。")
                     )
-                    
+
                     QAItem(
                         question: String(localized: "如何修复安装失败的问题？"),
                         answer: String(localized: "如果安装失败，您可以尝试以下步骤：\n1. 确保已正确安装并连接 Helper\n2. 确保已下载并处理 Setup 组件\n3. 检查磁盘剩余空间是否充足\n4. 尝试重新下载并安装\n如果问题仍然存在，可以尝试重新安装 Helper 和重新处理 Setup 组件。")
                     )
-                    
+
                     QAItem(
                         question: String(localized: "为什么我安装的时候会遇到错误代码，错误代码表示什么意思？"),
                         answer: String(localized: "• 错误 2700：不太可能会出现，除非 Setup 组件处理失败了\n• 错误 107：所下载的文件架构与系统架构不一致或者安装文件被损坏\n• 错误 103：出现权限问题，请确保 Helper 状态正常\n• 错误 182：文件不齐全或文件被损坏，或者你的Setup组件不一致，请重新下载 X1a0He CC\n• 错误 133：系统磁盘空间不足\n• 错误 -1：Setup 组件未处理或处理失败，请联系开发者\n• 错误 195：所下载的产品不支持你当前的系统\n• 错误 146：请在 Mac 系统设置中给予 Adobe Downloader 全磁盘权限\n• 错误 255：Setup 组件需要更新，请联系开发者解决")
@@ -932,18 +1018,18 @@ struct QAView: View {
 struct QAItem: View {
     let question: String
     let answer: String
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(question)
                 .font(.headline)
                 .foregroundColor(.primary)
-            
+
             Text(answer)
                 .font(.body)
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
-            
+
             Divider()
         }
     }
@@ -955,14 +1041,14 @@ struct CleanupLog: Identifiable {
     let command: String
     let status: LogStatus
     let message: String
-    
+
     enum LogStatus {
         case running
         case success
         case error
         case cancelled
     }
-    
+
     static func getCleanupDescription(for command: String) -> String {
         if command.contains("Library/Logs") || command.contains("DiagnosticReports") {
             if command.contains("Adobe Creative Cloud") {
@@ -1012,7 +1098,7 @@ struct CleanupView: View {
     @State private var expandedOptions = Set<CleanupOption>()
     @State private var isCancelled = false
     @State private var isLogExpanded = false
-    
+
     enum CleanupOption: String, CaseIterable, Identifiable {
         case adobeApps = "Adobe 应用程序"
         case adobeCreativeCloud = "Adobe Creative Cloud"
@@ -1024,9 +1110,9 @@ struct CleanupView: View {
         case adobeKeychain = "Adobe 钥匙串"
         case adobeGenuineService = "Adobe 正版验证服务"
         case adobeHosts = "Adobe Hosts"
-        
+
         var id: String { self.rawValue }
-        
+
         var localizedName: String {
             switch self {
             case .adobeApps:
@@ -1051,7 +1137,7 @@ struct CleanupView: View {
                 return String(localized: "Adobe Hosts")
             }
         }
-        
+
         var commands: [String] {
             switch self {
             case .adobeApps:
@@ -1218,7 +1304,7 @@ struct CleanupView: View {
                 ]
             }
         }
-        
+
         var description: String {
             switch self {
             case .adobeApps:
@@ -1244,7 +1330,7 @@ struct CleanupView: View {
             }
         }
     }
-    
+
     var body: some View {
         VStack(alignment: .leading) {
             Text("选择要清理的内容")
@@ -1254,7 +1340,7 @@ struct CleanupView: View {
             Text("注意：清理过程不会影响 Adobe Downloader 的文件和下载数据")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
-            
+
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading) {
                     ForEach(CleanupOption.allCases) { option in
@@ -1284,7 +1370,7 @@ struct CleanupView: View {
                                     }
                                     .disabled(isProcessing)
                                     .labelsHidden()
-                                    
+
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(option.localizedName)
                                             .font(.system(size: 14, weight: .medium))
@@ -1292,9 +1378,9 @@ struct CleanupView: View {
                                             .font(.system(size: 12))
                                             .foregroundColor(.secondary)
                                     }
-                                    
+
                                     Spacer()
-                                    
+
                                     Image(systemName: expandedOptions.contains(option) ? "chevron.down" : "chevron.right")
                                         .foregroundColor(.secondary)
                                         .rotationEffect(.degrees(expandedOptions.contains(option) ? 0 : -90))
@@ -1305,7 +1391,7 @@ struct CleanupView: View {
                             }
                             .buttonStyle(.plain)
                             .disabled(isProcessing)
-                            
+
                             if expandedOptions.contains(option) {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text("将执行的命令：")
@@ -1313,7 +1399,7 @@ struct CleanupView: View {
                                         .foregroundColor(.secondary)
                                         .padding(.top, 4)
                                         .padding(.horizontal, 6)
-                                    
+
                                     ForEach(option.commands, id: \.self) { command in
                                         Text(command)
                                             .font(.system(size: 11, design: .monospaced))
@@ -1343,7 +1429,7 @@ struct CleanupView: View {
                                 }
                                 .disabled(isProcessing)
                                 .labelsHidden()
-                                
+
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(option.localizedName)
                                         .font(.system(size: 14, weight: .medium))
@@ -1351,7 +1437,7 @@ struct CleanupView: View {
                                         .font(.system(size: 12))
                                         .foregroundColor(.secondary)
                                 }
-                                
+
                                 Spacer()
                             }
                             .padding(.vertical, 8)
@@ -1363,10 +1449,10 @@ struct CleanupView: View {
                     }
                 }
             }
-            
+
             Divider()
                 .padding(.vertical, 8)
-            
+
             VStack(alignment: .leading, spacing: 8) {
                 if isProcessing {
                     HStack {
@@ -1375,7 +1461,7 @@ struct CleanupView: View {
                                 .font(.system(size: 12))
                         }
                         .progressViewStyle(LinearProgressViewStyle())
-                        
+
                         Button(action: {
                             isCancelled = true
                         }) {
@@ -1383,7 +1469,7 @@ struct CleanupView: View {
                         }
                         .disabled(isCancelled)
                     }
-                    
+
                     if let lastLog = cleanupLogs.last {
                         #if DEBUG
                         Text("当前执行：\(lastLog.command)")
@@ -1400,7 +1486,7 @@ struct CleanupView: View {
                         #endif
                     }
                 }
-                
+
                 VStack(alignment: .leading, spacing: 4) {
                     Button(action: {
                         withAnimation {
@@ -1410,15 +1496,15 @@ struct CleanupView: View {
                         HStack {
                             Text("最近日志：")
                                 .font(.system(size: 12, weight: .medium))
-                            
+
                             if isProcessing {
                                 Text("正在执行...")
                                     .font(.system(size: 12))
                                     .foregroundColor(.secondary)
                             }
-                            
+
                             Spacer()
-                            
+
                             Image(systemName: isLogExpanded ? "chevron.down" : "chevron.right")
                                 .foregroundColor(.secondary)
                         }
@@ -1426,7 +1512,7 @@ struct CleanupView: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    
+
                     ScrollView {
                         VStack(alignment: .leading, spacing: 4) {
                             if cleanupLogs.isEmpty {
@@ -1457,7 +1543,7 @@ struct CleanupView: View {
                 .background(Color(NSColor.textBackgroundColor))
                 .cornerRadius(6)
             }
-            
+
             HStack {
                 Button(action: {
                     selectedOptions = Set(CleanupOption.allCases)
@@ -1465,14 +1551,14 @@ struct CleanupView: View {
                     Text("全选")
                 }
                 .disabled(isProcessing)
-                
+
                 Button(action: {
                     selectedOptions.removeAll()
                 }) {
                     Text("取消全选")
                 }
                 .disabled(isProcessing)
-                
+
                 #if DEBUG
                 Button(action: {
                     if expandedOptions.count == CleanupOption.allCases.count {
@@ -1485,9 +1571,9 @@ struct CleanupView: View {
                 }
                 .disabled(isProcessing)
                 #endif
-                
+
                 Spacer()
-                
+
                 Button(action: {
                     if !selectedOptions.isEmpty {
                         showConfirmation = true
@@ -1516,15 +1602,15 @@ struct CleanupView: View {
             )
         }
     }
-    
+
     private func cleanupSelectedItems() {
         isProcessing = true
         cleanupLogs.removeAll()
         currentCommandIndex = 0
         isCancelled = false
-        
+
         let userHome = NSHomeDirectory()
-        
+
         var commands: [String] = []
         for option in selectedOptions {
             let userCommands = option.commands.map { command in
@@ -1534,10 +1620,10 @@ struct CleanupView: View {
         }
 
         totalCommands = commands.count
-        
+
         executeNextCommand(commands: commands)
     }
-    
+
     private func executeNextCommand(commands: [String]) {
         guard currentCommandIndex < commands.count else {
             DispatchQueue.main.async {
@@ -1548,7 +1634,7 @@ struct CleanupView: View {
             }
             return
         }
-        
+
         if isCancelled {
             DispatchQueue.main.async {
                 isProcessing = false
@@ -1558,7 +1644,7 @@ struct CleanupView: View {
             }
             return
         }
-        
+
         let command = commands[currentCommandIndex]
         cleanupLogs.append(CleanupLog(
             timestamp: Date(),
@@ -1566,7 +1652,7 @@ struct CleanupView: View {
             status: .running,
             message: String(localized: "正在执行...")
         ))
-        
+
         let timeoutTimer = DispatchSource.makeTimerSource(queue: .global())
         timeoutTimer.schedule(deadline: .now() + 30)
         timeoutTimer.setEventHandler { [self] in
@@ -1584,7 +1670,7 @@ struct CleanupView: View {
             }
         }
         timeoutTimer.resume()
-        
+
         PrivilegedHelperManager.shared.executeCommand(command) { [self] output in
             timeoutTimer.cancel()
             DispatchQueue.main.async {
@@ -1616,7 +1702,7 @@ struct CleanupView: View {
             }
         }
     }
-    
+
     private func statusIcon(for status: CleanupLog.LogStatus) -> String {
         switch status {
         case .running:
@@ -1629,7 +1715,7 @@ struct CleanupView: View {
             return "xmark.circle.fill"
         }
     }
-    
+
     private func statusColor(for status: CleanupLog.LogStatus) -> Color {
         switch status {
         case .running:
@@ -1642,7 +1728,7 @@ struct CleanupView: View {
             return .orange
         }
     }
-    
+
     private func timeString(from date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm:ss"
@@ -1653,16 +1739,16 @@ struct CleanupView: View {
 struct LogEntryView: View {
     let log: CleanupLog
     @State private var showCopyButton = false
-    
+
     var body: some View {
         HStack {
             Image(systemName: statusIcon(for: log.status))
                 .foregroundColor(statusColor(for: log.status))
-            
+
             Text(timeString(from: log.timestamp))
                 .font(.system(size: 11))
                 .foregroundColor(.secondary)
-            
+
             #if DEBUG
             Text(log.command)
                 .font(.system(size: 11, design: .monospaced))
@@ -1674,15 +1760,15 @@ struct LogEntryView: View {
                 .lineLimit(1)
                 .truncationMode(.middle)
             #endif
-            
+
             Spacer()
-            
+
             if log.status == .error && !log.message.isEmpty {
                 HStack(spacing: 4) {
                     Text(truncatedErrorMessage(log.message))
                         .font(.system(size: 11))
                         .foregroundColor(.secondary)
-                    
+
                     Button(action: {
                         copyToClipboard(log.message)
                     }) {
@@ -1701,7 +1787,7 @@ struct LogEntryView: View {
         .padding(.vertical, 4)
         .padding(.horizontal, 8)
     }
-    
+
     private func truncatedErrorMessage(_ message: String) -> String {
         if message.hasPrefix("执行失败：") {
             let errorMessage = String(message.dropFirst(5))
@@ -1711,12 +1797,12 @@ struct LogEntryView: View {
         }
         return message
     }
-    
+
     private func copyToClipboard(_ message: String) {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(message, forType: .string)
     }
-    
+
     private func statusIcon(for status: CleanupLog.LogStatus) -> String {
         switch status {
         case .running:
@@ -1729,7 +1815,7 @@ struct LogEntryView: View {
             return "xmark.circle.fill"
         }
     }
-    
+
     private func statusColor(for status: CleanupLog.LogStatus) -> Color {
         switch status {
         case .running:
@@ -1742,7 +1828,7 @@ struct LogEntryView: View {
             return .orange
         }
     }
-    
+
     private func timeString(from date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm:ss"
@@ -1777,3 +1863,4 @@ struct LogEntryView: View {
     AboutView(updater: PreviewUpdater())
         .environmentObject(NetworkManager())
 }
+

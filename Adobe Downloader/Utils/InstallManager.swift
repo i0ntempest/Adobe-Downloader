@@ -7,7 +7,7 @@
     Adobe Exit Code
     107: 架构不一致或安装文件被损坏
     103: 权限问题
-    182: 可能是文件不全或者出错了
+    182: 表示创建的包不包含要安装的包
     133: 磁盘空间不足
  */
 import Foundation
@@ -115,15 +115,15 @@ actor InstallManager {
                                     let errorMessage: String
                                     switch exitCode {
                                     case 107:
-                                        errorMessage = String(localized: "安装失败: 架构或版本不一致 (退出代码: \(exitCode))")
+                                        errorMessage = String(localized: "架构或版本不一致 (退出代码: \(exitCode))")
                                     case 103:
-                                        errorMessage = String(localized: "安装失败: 权限问题 (退出代码: \(exitCode))")
+                                        errorMessage = String(localized: "权限问题 (退出代码: \(exitCode))")
                                     case 182:
-                                        errorMessage = String(localized: "安装失败: 安装文件不完整或损坏 (退出代码: \(exitCode))")
+                                        errorMessage = String(localized: "安装文件不完整或损坏 (退出代码: \(exitCode))")
                                     case -1:
-                                        errorMessage = String(localized: "安装失败: Setup 组件未被处理 (退出代码: \(exitCode))")
+                                        errorMessage = String(localized: "Setup 组件未被处理 (退出代码: \(exitCode))")
                                     default:
-                                        errorMessage = String(localized: "安装失败 (退出代码: \(exitCode))")
+                                        errorMessage = String(localized: "(退出代码: \(exitCode))")
                                     }
                                     progressHandler(0.0, errorMessage)
                                     continuation.resume(throwing: InstallError.installationFailed(errorMessage))

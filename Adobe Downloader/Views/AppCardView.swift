@@ -369,13 +369,54 @@ private struct ProductInfoView: View {
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
             
-            HStack(spacing: 4) {
-                let product = findProduct(id: viewModel.uniqueProduct.id)
-                let versions = Set(product?.platforms.first?.languageSet.map { $0.productVersion } ?? [])
-                let dependenciesCount = product?.platforms.first?.languageSet.first?.dependencies.count ?? 0
-                Text("可用版本: \(versions.count)")
-                Text("|")
-                Text("依赖包: \(dependenciesCount)")
+            let products = findProducts(id: viewModel.uniqueProduct.id)
+            let versions = products.compactMap { product -> String? in
+                let platforms = product.platforms.filter { platform in
+                    StorageData.shared.allowedPlatform.contains(platform.id)
+                }
+                return platforms.isEmpty ? nil : product.version
+            }
+            let uniqueVersions = Set(versions)
+            
+            let dependenciesCount = products.first?.platforms.first?.languageSet.first?.dependencies.count ?? 0
+            let minOSVersion = products.first?.platforms.first?.range.first?.min ?? ""
+            let modulesCount = products.first?.platforms.first?.modules.count ?? 0
+            
+            HStack(spacing: 12) {
+                HStack(spacing: 2) {
+                    Image(systemName: "tag")
+                    Text("\(uniqueVersions.count)")
+                }
+
+                if dependenciesCount > 0 {
+                    Text("•")
+                        .foregroundColor(.gray)
+                    
+                    HStack(spacing: 2) {
+                        Image(systemName: "shippingbox")
+                        Text("\(dependenciesCount)")
+                    }
+                }
+
+                if !minOSVersion.isEmpty {
+                    Text("•")
+                        .foregroundColor(.gray)
+                    
+                    HStack(spacing: 2) {
+                        Image(systemName: "macwindow")
+                        Text(minOSVersion.replacingOccurrences(of: "-", with: ""))
+                    }
+                }
+                
+                if modulesCount > 0 {
+                    Text("•")
+                        .foregroundColor(.gray)
+                    
+                    HStack(spacing: 2) {
+                        Image(systemName: "square.stack.3d.up")
+                        Text("\(modulesCount)")
+                    }
+                }
             }
             .font(.caption)
             .foregroundColor(.secondary)
@@ -431,7 +472,7 @@ private struct SheetModifier: ViewModifier {
         content
             .sheet(isPresented: $viewModel.showVersionPicker) {
                 if let product = findProduct(id: viewModel.uniqueProduct.id) {
-                    VersionPickerView(product: product) { version in
+                    VersionPickerView(productId: viewModel.uniqueProduct.id) { version in
                         Task {
                             await viewModel.handleDownloadRequest(
                                 version,

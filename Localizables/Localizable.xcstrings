@@ -4,13 +4,14 @@
     "" : {
 
     },
-    " [%@]" : {
-
-    },
     "(%@)" : {
 
     },
+    "(%lld)" : {
+
+    },
     "(可能导致处理 Setup 组件失败)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -21,6 +22,7 @@
       }
     },
     "(将导致无法使用安装功能)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -29,6 +31,12 @@
           }
         }
       }
+    },
+    "(退出代码: %lld)" : {
+
+    },
+    "[%@]" : {
+
     },
     "/" : {
 
@@ -127,6 +135,9 @@
         }
       }
     },
+    "•" : {
+
+    },
     "• 错误 2700：不太可能会出现，除非 Setup 组件处理失败了\n• 错误 107：所下载的文件架构与系统架构不一致或者安装文件被损坏\n• 错误 103：出现权限问题，请确保 Helper 状态正常\n• 错误 182：文件不齐全或文件被损坏，或者你的Setup组件不一致，请重新下载 X1a0He CC\n• 错误 133：系统磁盘空间不足\n• 错误 -1：Setup 组件未处理或处理失败，请联系开发者\n• 错误 195：所下载的产品不支持你当前的系统\n• 错误 146：请在 Mac 系统设置中给予 Adobe Downloader 全磁盘权限\n• 错误 255：Setup 组件需要更新，请联系开发者解决" : {
       "localizations" : {
         "en" : {
@@ -137,10 +148,14 @@
         }
       }
     },
-    "|" : {
+    "✅" : {
+
+    },
+    "❌" : {
 
     },
     "🔔 即将下载 %@ (%@) 版本 🔔" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -286,11 +301,16 @@
     "Apple Silicon" : {
 
     },
+    "base: %@" : {
+
+    },
+    "buildGuid:" : {
+
+    },
     "By X1a0He. ❤️ Love from China. 🇨🇳" : {
 
     },
     "Debug 模式" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -421,7 +441,19 @@
         }
       }
     },
+    "Intel" : {
+
+    },
+    "macOS %@" : {
+
+    },
+    "Match:" : {
+
+    },
     "OK" : {
+
+    },
+    "Reason:" : {
 
     },
     "Setup 组件安装成功" : {
@@ -455,6 +487,9 @@
         }
       }
     },
+    "Setup 组件未被处理 (退出代码: %lld)" : {
+
+    },
     "Setup未备份提示" : {
       "localizations" : {
         "en" : {
@@ -464,6 +499,12 @@
           }
         }
       }
+    },
+    "Target:" : {
+
+    },
+    "v%@" : {
+
     },
     "v4" : {
 
@@ -478,6 +519,7 @@
 
     },
     "X1a0He CC 下载并处理成功" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -488,6 +530,7 @@
       }
     },
     "X1a0He CC 下载成功" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -640,6 +683,7 @@
     },
     "下载此版本" : {
       "comment" : "版本选择页面",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -837,6 +881,7 @@
       }
     },
     "依赖包:" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -847,6 +892,7 @@
       }
     },
     "依赖包: %lld" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -855,6 +901,9 @@
           }
         }
       }
+    },
+    "依赖组件" : {
+
     },
     "修改 Setup 组件失败" : {
       "localizations" : {
@@ -1088,6 +1137,7 @@
       }
     },
     "可用版本: %lld" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1116,6 +1166,9 @@
           }
         }
       }
+    },
+    "可选模块" : {
+
     },
     "命令行安装" : {
       "localizations" : {
@@ -1270,6 +1323,7 @@
       }
     },
     "安装失败 (退出代码: %lld)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1290,6 +1344,7 @@
       }
     },
     "安装失败: Setup 组件未被处理 (退出代码: %lld)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1300,6 +1355,7 @@
       }
     },
     "安装失败: 安装文件不完整或损坏 (退出代码: %lld)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1310,6 +1366,7 @@
       }
     },
     "安装失败: 权限问题 (退出代码: %lld)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1320,6 +1377,7 @@
       }
     },
     "安装失败: 架构或版本不一致 (退出代码: %lld)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1348,6 +1406,9 @@
           }
         }
       }
+    },
+    "安装文件不完整或损坏 (退出代码: %lld)" : {
+
     },
     "安装程序已存在" : {
       "localizations" : {
@@ -1392,7 +1453,6 @@
       }
     },
     "将执行的命令：" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1433,7 +1493,6 @@
       }
     },
     "展开全部" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1454,6 +1513,7 @@
       }
     },
     "已处理" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1464,6 +1524,7 @@
       }
     },
     "已备份" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1669,7 +1730,6 @@
       }
     },
     "折叠全部" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2107,6 +2167,15 @@
           }
         }
       }
+    },
+    "权限问题 (退出代码: %lld)" : {
+
+    },
+    "架构或版本不一致 (退出代码: %lld)" : {
+
+    },
+    "查看持久化文件" : {
+
     },
     "检查中" : {
       "localizations" : {
@@ -2673,6 +2742,9 @@
         }
       }
     },
+    "系统信息" : {
+
+    },
     "继续" : {
       "localizations" : {
         "en" : {
@@ -2745,6 +2817,9 @@
           }
         }
       }
+    },
+    "获取到 %lld 个版本" : {
+
     },
     "获取到 %lld 款产品" : {
       "localizations" : {

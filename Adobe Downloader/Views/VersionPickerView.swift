@@ -8,8 +8,8 @@ import SwiftUI
 
 private enum VersionPickerConstants {
     static let headerPadding: CGFloat = 5
-    static let viewWidth: CGFloat = 400
-    static let viewHeight: CGFloat = 500
+    static let viewWidth: CGFloat = 500
+    static let viewHeight: CGFloat = 600
     static let iconSize: CGFloat = 32
     static let verticalSpacing: CGFloat = 8
     static let horizontalSpacing: CGFloat = 12
@@ -26,19 +26,19 @@ struct VersionPickerView: View {
     @StorageValue(\.downloadAppleSilicon) private var downloadAppleSilicon
     @State private var expandedVersions: Set<String> = []
     
-    private let product: Product
+    private let productId: String
     private let onSelect: (String) -> Void
     
-    init(product: Product, onSelect: @escaping (String) -> Void) {
-        self.product = product
+    init(productId: String, onSelect: @escaping (String) -> Void) {
+        self.productId = productId
         self.onSelect = onSelect
     }
     
     var body: some View {
         VStack(spacing: 0) {
-            VersionPickerHeaderView(product: product, downloadAppleSilicon: downloadAppleSilicon)
+            VersionPickerHeaderView(productId: productId, downloadAppleSilicon: downloadAppleSilicon)
             VersionListView(
-                product: product,
+                productId: productId,
                 expandedVersions: $expandedVersions,
                 onSelect: onSelect,
                 dismiss: dismiss
@@ -49,16 +49,32 @@ struct VersionPickerView: View {
 }
 
 private struct VersionPickerHeaderView: View {
-    let product: Product
+    let productId: String
     let downloadAppleSilicon: Bool
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var networkManager: NetworkManager
     
     var body: some View {
         VStack {
             HStack {
-                Text("\(product.displayName)")
-                    .font(.headline)
+                if let product = findProduct(id: productId) {
+                    if let icon = product.getBestIcon() {
+                        AsyncImage(url: URL(string: icon.value)) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 24, height: 24)
+                        } placeholder: {
+                            Image(systemName: "app.fill")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 24, height: 24)
+                                .foregroundColor(.blue)
+                        }
+                    }
+                    
+                    Text("\(product.displayName)")
+                        .font(.headline)
+                }
                 Text("选择版本")
                     .foregroundColor(.secondary)
                 Spacer()
@@ -68,10 +84,20 @@ private struct VersionPickerHeaderView: View {
             }
             .padding(.bottom, VersionPickerConstants.headerPadding)
             
-            Text("🔔 即将下载 \(downloadAppleSilicon ? "Apple Silicon" : "Intel") (\(platformText)) 版本 🔔")
-                .font(.caption)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.bottom, 10)
+            HStack(spacing: 6) {
+                Image(systemName: downloadAppleSilicon ? "m.square" : "x.square")
+                    .foregroundColor(.blue)
+                Text(downloadAppleSilicon ? "Apple Silicon" : "Intel")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                Text("•")
+                    .foregroundColor(.secondary)
+                Text(platformText)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.bottom, 10)
         }
         .padding(.horizontal)
         .padding(.top)
@@ -84,51 +110,64 @@ private struct VersionPickerHeaderView: View {
 }
 
 private struct VersionListView: View {
-    @EnvironmentObject private var networkManager: NetworkManager
-    let product: Product
+    let productId: String
     @Binding var expandedVersions: Set<String>
     let onSelect: (String) -> Void
     let dismiss: DismissAction
     
     var body: some View {
         ScrollView(showsIndicators: false) {
-            LazyVStack(spacing: VersionPickerConstants.verticalSpacing) {
-                ForEach(filteredVersions, id: \.key) { version, info in
-                    VersionRow(
-                        product: product,
-                        version: version,
-                        info: info,
-                        isExpanded: expandedVersions.contains(version),
-                        onSelect: handleVersionSelect,
-                        onToggle: handleVersionToggle
-                    )
+            VStack(spacing: 0) {
+                LazyVStack(spacing: VersionPickerConstants.verticalSpacing) {
+                    ForEach(filteredVersions, id: \.key) { version, info in
+                        VersionRow(
+                            productId: productId,
+                            version: version,
+                            info: info,
+                            isExpanded: expandedVersions.contains(version),
+                            onSelect: handleVersionSelect,
+                            onToggle: handleVersionToggle
+                        )
+                    }
                 }
+                .padding()
+
+                HStack(spacing: 8) {
+                    Capsule()
+                        .fill(Color.secondary.opacity(0.2))
+                        .frame(width: 6, height: 6)
+                    Text("获取到 \(filteredVersions.count) 个版本")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                }
+                .padding(.bottom, 16)
             }
-            .padding()
         }
         .background(Color(NSColor.windowBackgroundColor))
     }
     
     private var filteredVersions: [(key: String, value: Product.Platform)] {
-        // 获取支持的平台
-        let platforms = product.platforms.filter { platform in
-            StorageData.shared.allowedPlatform.contains(platform.id) && 
-            platform.languageSet.first != nil
-        }
-        
-        // 如果没有支持的平台，返回空数组
-        if platforms.isEmpty {
+        let products = findProducts(id: productId)
+        if products.isEmpty {
             return []
         }
+
+        var versionPlatformMap: [String: Product.Platform] = [:]
         
-        // 将平台按版本号降序排序
-        return platforms.map { platform in
-            // 使用第一个语言集的 productVersion 作为版本号
-            (key: platform.languageSet.first?.productVersion ?? "", value: platform)
-        }.sorted { pair1, pair2 in
-            // 按版本号降序排序
-            AppStatics.compareVersions(pair1.key, pair2.key) > 0
+        for product in products {
+            let platforms = product.platforms.filter { platform in
+                StorageData.shared.allowedPlatform.contains(platform.id)
+            }
+            
+            if let firstPlatform = platforms.first {
+                versionPlatformMap[product.version] = firstPlatform
+            }
         }
+
+        return versionPlatformMap.map { (key: $0.key, value: $0.value) }
+            .sorted { pair1, pair2 in
+                AppStatics.compareVersions(pair1.key, pair2.key) > 0
+            }
     }
     
     private func handleVersionSelect(_ version: String) {
@@ -150,7 +189,7 @@ private struct VersionListView: View {
 private struct VersionRow: View {
     @StorageValue(\.defaultLanguage) private var defaultLanguage
     
-    let product: Product
+    let productId: String
     let version: String
     let info: Product.Platform
     let isExpanded: Bool
@@ -159,7 +198,7 @@ private struct VersionRow: View {
     
     private var existingPath: URL? {
         globalNetworkManager.isVersionDownloaded(
-            productId: product.id,
+            productId: productId,
             version: version,
             language: defaultLanguage
         )
@@ -172,7 +211,7 @@ private struct VersionRow: View {
                 info: info,
                 isExpanded: isExpanded,
                 hasExistingPath: existingPath != nil,
-                onSelect: handleSelect,
+                onSelect: { onToggle(version) },
                 onToggle: { onToggle(version) }
             )
             
@@ -188,15 +227,6 @@ private struct VersionRow: View {
         .background(Color(NSColor.controlBackgroundColor))
         .cornerRadius(VersionPickerConstants.cornerRadius)
     }
-    
-    private func handleSelect() {
-        let dependencies = info.languageSet.first?.dependencies ?? []
-        if dependencies.isEmpty {
-            onSelect(version)
-        } else {
-            onToggle(version)
-        }
-    }
 }
 
 private struct VersionHeader: View {
@@ -207,16 +237,20 @@ private struct VersionHeader: View {
     let onSelect: () -> Void
     let onToggle: () -> Void
     
+    private var hasDependencies: Bool {
+        !(info.languageSet.first?.dependencies.isEmpty ?? true)
+    }
+    
     var body: some View {
         Button(action: onSelect) {
             HStack {
-                VersionInfo(version: version, platform: info.id)
+                VersionInfo(version: version, platform: info.id, info: info)
                 Spacer()
                 ExistingPathButton(isVisible: hasExistingPath)
                 ExpandButton(
                     isExpanded: isExpanded,
                     onToggle: onToggle,
-                    hasDependencies: !(info.languageSet.first?.dependencies.isEmpty ?? true)
+                    hasDependencies: hasDependencies
                 )
             }
             .padding(.vertical, VersionPickerConstants.buttonPadding)
@@ -229,14 +263,46 @@ private struct VersionHeader: View {
 private struct VersionInfo: View {
     let version: String
     let platform: String
+    let info: Product.Platform
+    
+    private var productVersion: String? {
+        info.languageSet.first?.productVersion
+    }
+    
+    private var buildGuid: String? {
+        info.languageSet.first?.buildGuid
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(version)
-                .font(.headline)
-            Text(platform)
-                .font(.caption)
-                .foregroundColor(.secondary)
+            HStack(spacing: 6) {
+                Text(version)
+                    .font(.headline)
+                
+                if let pv = productVersion, pv != version {
+                    Text("•")
+                        .foregroundColor(.secondary)
+                    Text("v\(pv)")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                }
+            }
+
+            HStack(spacing: 4) {
+                Text(platform)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                if let guid = buildGuid {
+                    Text("•")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Text(guid)
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .textSelection(.enabled)
+                }
+            }
         }
     }
 }
@@ -263,17 +329,10 @@ private struct ExpandButton: View {
     let hasDependencies: Bool
     
     var body: some View {
-        Button(action: onToggle) {
-            Image(systemName: iconName)
-                .foregroundColor(.secondary)
-        }
-    }
-    
-    private var iconName: String {
-        if !hasDependencies {
-            return "chevron.right"
-        }
-        return isExpanded ? "chevron.down" : "chevron.right"
+        Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
+            .foregroundColor(.secondary)
+            .contentShape(Rectangle())
+            .onTapGesture(perform: onToggle)
     }
 }
 
@@ -282,15 +341,56 @@ private struct VersionDetails: View {
     let version: String
     let onSelect: (String) -> Void
     
+    private var hasDependencies: Bool {
+        !(info.languageSet.first?.dependencies.isEmpty ?? true)
+    }
+    
+    private var hasModules: Bool {
+        !(info.modules.isEmpty)
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: VersionPickerConstants.verticalSpacing) {
-            Text("依赖包:")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .padding(.top, 8)
-                .padding(.leading, 16)
-            
-            DependenciesList(dependencies: info.languageSet.first?.dependencies ?? [])
+            if hasDependencies || hasModules {
+                VStack(alignment: .leading, spacing: 8) {
+                    if hasDependencies {
+                        HStack(spacing: 4) {
+                            Image(systemName: "shippingbox")
+                                .foregroundColor(.blue)
+                            Text("依赖组件")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text("(\(info.languageSet.first?.dependencies.count ?? 0))")
+                                .font(.caption)
+                                .foregroundColor(.blue)
+                        }
+                        DependenciesList(dependencies: info.languageSet.first?.dependencies ?? [])
+                            .padding(.leading, 8)
+                    }
+                    
+                    if hasModules {
+                        if hasDependencies {
+                            Divider()
+                                .padding(.vertical, 4)
+                        }
+                        
+                        HStack(spacing: 4) {
+                            Image(systemName: "square.stack.3d.up")
+                                .foregroundColor(.blue)
+                            Text("可选模块")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text("(\(info.modules.count))")
+                                .font(.caption)
+                                .foregroundColor(.blue)
+                        }
+                        ModulesList(modules: info.modules)
+                            .padding(.leading, 8)
+                    }
+                }
+                .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
+                .cornerRadius(6)
+            }
             
             DownloadButton(version: version, onSelect: onSelect)
         }
@@ -304,15 +404,118 @@ private struct DependenciesList: View {
 
     var body: some View {
         ForEach(dependencies, id: \.sapCode) { dependency in
-            HStack(spacing: 8) {
-                Image(systemName: "cube.box")
-                    .foregroundColor(.blue)
-                    .frame(width: 16)
-                Text("\(dependency.sapCode) (\(dependency.baseVersion))")
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    getPlatformIcon(for: dependency.selectedPlatform)
+                        .foregroundColor(.blue)
+                        .frame(width: 16)
+                    
+                    Text(dependency.sapCode)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                    
+                    Text("v\(dependency.productVersion)")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                }
+
+                HStack(spacing: 8) {
+                    if dependency.baseVersion != dependency.productVersion {
+                        Text("base: \(dependency.baseVersion)")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    if !dependency.buildGuid.isEmpty {
+                        HStack(spacing: 4) {
+                            Text("buildGuid:")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            Text(dependency.buildGuid)
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                                .textSelection(.enabled)
+                        }
+                    }
+                }
+                .padding(.leading, 22)
+                
+                // 第三行：调试信息（仅在 DEBUG 模式下显示）
+                #if DEBUG
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 4) {
+                        Text("Match:")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Text(dependency.isMatchPlatform ? "✅" : "❌")
+                            .font(.caption2)
+                        
+                        Text("•")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                            
+                        Text("Target:")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Text(dependency.targetPlatform)
+                            .font(.caption2)
+                            .foregroundColor(.blue)
+                    }
+                    
+                    if !dependency.selectedReason.isEmpty {
+                        HStack(spacing: 4) {
+                            Text("Reason:")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            Text(dependency.selectedReason)
+                                .font(.caption2)
+                                .foregroundColor(.orange)
+                        }
+                    }
+                }
+                .padding(.leading, 22)
+                #endif
+            }
+            .padding(.vertical, 4)
+        }
+    }
+    
+    private func getPlatformIcon(for platform: String) -> Image {
+        switch platform {
+        case "macarm64":
+            return Image(systemName: "m.square")
+        case "macuniversal":
+            return Image(systemName: "m.circle")
+        case "osx10", "osx10-64":
+            return Image(systemName: "x.square")
+        default:
+            return Image(systemName: "questionmark.square")
+        }
+    }
+}
+
+private struct ModulesList: View {
+    let modules: [Product.Platform.Module]
+    
+    var body: some View {
+        ForEach(modules, id: \.id) { module in
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(Color.blue.opacity(0.2))
+                    .frame(width: 6, height: 6)
+                
+                Text(module.displayName)
                     .font(.caption)
+                
+                if !module.deploymentType.isEmpty {
+                    Text("(\(module.deploymentType))")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
                 Spacer()
             }
-            .padding(.leading, 24)
+            .padding(.vertical, 2)
         }
     }
 }
@@ -322,11 +525,10 @@ private struct DownloadButton: View {
     let onSelect: (String) -> Void
     
     var body: some View {
-        Button("下载此版本") {
+        Button("下载") {
             onSelect(version)
         }
         .buttonStyle(.borderedProminent)
         .padding(.top, 8)
-        .padding(.leading, 16)
     }
 }

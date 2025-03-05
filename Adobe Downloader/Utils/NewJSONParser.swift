@@ -283,31 +283,69 @@ class NewJSONParser {
                                     return Product.Platform.LanguageSet.Dependency(sapCode: "",baseVersion: "",productVersion: "",buildGuid: "")
                                 }
 
+                                let targetPlatform = AppStatics.isAppleSilicon ? "macarm64" : "osx10-64"
+                                let cacheKey = DependencyCacheKey(sapCode: sapCode, targetPlatform: targetPlatform)
+
+                                if let cachedDependency = globalDependencyCache[cacheKey] {
+                                    return cachedDependency
+                                }
+
                                 var productVersion = ""
                                 var buildGuid = ""
+                                var isMatchPlatform = false
+                                var selectedPlatform = ""
+                                var selectedReason = ""
                                 
                                 if !globalStiResult.products.isEmpty {
                                     let matchingProducts = globalStiResult.products.filter { $0.id == sapCode }
-
+                                    
                                     if let latestProduct = matchingProducts.sorted(by: {
-                                        return AppStatics.compareVersions($0.version, $1.version) < 0
-                                    }).last {
-                                        let targetPlatformId = AppStatics.isAppleSilicon ? "macarm64" : "osx10-64"
-                                        let _ = latestProduct.platforms.map { $0.id }
-                                        if let matchingPlatform = latestProduct.platforms.first(where: { $0.id == targetPlatformId }),
+                                        return AppStatics.compareVersions($0.version, $1.version) > 0
+                                    }).first {
+                                        if let matchingPlatform = latestProduct.platforms.first(where: { platform in
+                                            platform.id == targetPlatform || platform.id == "macuniversal"
+                                        }),
                                            let firstLanguageSet = matchingPlatform.languageSet.first {
                                             productVersion = firstLanguageSet.productVersion
                                             buildGuid = firstLanguageSet.buildGuid
+                                            isMatchPlatform = true
+                                            selectedPlatform = matchingPlatform.id
+                                            selectedReason = matchingPlatform.id == "macuniversal" ? 
+                                                "成功匹配通用平台 macuniversal（支持所有 Mac 平台）" : 
+                                                "成功匹配目标平台"
+                                        } else {
+                                            if let firstAvailablePlatform = latestProduct.platforms.first,
+                                               let firstLanguageSet = firstAvailablePlatform.languageSet.first {
+                                                productVersion = firstLanguageSet.productVersion
+                                                buildGuid = firstLanguageSet.buildGuid
+                                                isMatchPlatform = false
+                                                selectedPlatform = firstAvailablePlatform.id
+                                                selectedReason = "当前依赖所有版本中无匹配平台，使用可用平台: \(firstAvailablePlatform.id)"
+                                            } else {
+                                                selectedReason = "未找到任何可用平台"
+                                            }
                                         }
+                                    } else {
+                                        selectedReason = "未找到最新版本产品"
                                     }
+                                } else {
+                                    selectedReason = "globalStiResult.products 为空"
                                 }
                                 
-                                return Product.Platform.LanguageSet.Dependency(
+                                let dependency = Product.Platform.LanguageSet.Dependency(
                                     sapCode: sapCode, 
                                     baseVersion: baseVersion, 
                                     productVersion: productVersion,
-                                    buildGuid: buildGuid
+                                    buildGuid: buildGuid,
+                                    isMatchPlatform: isMatchPlatform,
+                                    targetPlatform: targetPlatform,
+                                    selectedPlatform: selectedPlatform,
+                                    selectedReason: selectedReason
                                 )
+
+                                globalDependencyCache[cacheKey] = dependency
+                                
+                                return dependency
                             }
                             newLanguageSet.dependencies.append(contentsOf: dependencies)
                         }

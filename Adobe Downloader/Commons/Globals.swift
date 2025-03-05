@@ -16,6 +16,25 @@ private var _globalNetworkManager: NetworkManager?
 private var _globalNewDownloadUtils: NewDownloadUtils?
 private var _globalCancelTracker: CancelTracker?
 
+struct DependencyCacheKey: Hashable {
+    let sapCode: String
+    let targetPlatform: String
+}
+
+private var _globalDependencyCache: [DependencyCacheKey: Product.Platform.LanguageSet.Dependency]?
+
+var globalDependencyCache: [DependencyCacheKey: Product.Platform.LanguageSet.Dependency] {
+    get {
+        if _globalDependencyCache == nil {
+            _globalDependencyCache = [:]
+        }
+        return _globalDependencyCache!
+    }
+    set {
+        _globalDependencyCache = newValue
+    }
+}
+
 // 计算属性，确保总是返回有效实例
 var globalStiResult: NewParseResult {
     get {
