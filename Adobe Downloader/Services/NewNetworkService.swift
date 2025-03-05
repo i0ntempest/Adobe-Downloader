@@ -55,13 +55,9 @@ class NewNetworkService {
 
             let products = globalCcmResult.products
             
-            if products.isEmpty {
-                return ([], [])
-            }
+            if products.isEmpty { return ([], []) }
 
-            let validProducts = products.filter { 
-                $0.hasValidVersions(allowedPlatform: StorageData.shared.allowedPlatform) 
-            }
+            let validProducts = products.filter { $0.hasValidVersions(allowedPlatform: StorageData.shared.allowedPlatform) }
 
             var uniqueProductsDict = [String: UniqueProduct]()
             for product in validProducts {

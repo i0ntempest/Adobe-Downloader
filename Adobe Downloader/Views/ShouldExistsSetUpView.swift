@@ -20,7 +20,7 @@ struct ShouldExistsSetUpView: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            HeaderView()
+            SetupAlertHeaderView()
             MessageView()
             ButtonsView(
                 isDownloading: $isDownloading,
@@ -47,17 +47,19 @@ struct ShouldExistsSetUpView: View {
     }
 }
 
-private struct HeaderView: View {
+private struct SetupAlertHeaderView: View {
     var body: some View {
-        Image(systemName: "exclamationmark.triangle.fill")
-            .font(.system(size: 64))
-            .foregroundColor(.orange)
-            .padding(.bottom, 5)
-            .frame(alignment: .bottomTrailing)
+        VStack {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 64))
+                .foregroundColor(.orange)
+                .padding(.bottom, 5)
+                .frame(alignment: .bottomTrailing)
 
-        Text("未检测到 Adobe CC 组件")
-            .font(.system(size: 24))
-            .bold()
+            Text("未检测到 Adobe CC 组件")
+                .font(.system(size: 24))
+                .bold()
+        }
     }
 }
 
@@ -176,7 +178,7 @@ private struct ButtonsView: View {
         isCancelled = false
         Task {
             do {
-                try await networkManager.downloadUtils.downloadX1a0HeCCPackages(
+                try await globalNewDownloadUtils.downloadX1a0HeCCPackages(
                     progressHandler: { progress, status in
                         Task { @MainActor in
                             downloadProgress = progress

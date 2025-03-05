@@ -6,7 +6,6 @@
 import SwiftUI
 
 struct DownloadProgressView: View {
-    @EnvironmentObject private var networkManager: NetworkManager
     @ObservedObject var task: NewDownloadTask
     let onCancel: () -> Void
     let onPause: () -> Void
@@ -26,7 +25,7 @@ struct DownloadProgressView: View {
     private var statusLabel: some View {
         Text(task.status.description)
             .font(.caption)
-            .foregroundColor(statusColor)
+            .foregroundColor(.white)
             .padding(.vertical, 2)
             .padding(.horizontal, 6)
             .background(statusBackgroundColor)
@@ -131,7 +130,7 @@ struct DownloadProgressView: View {
                                 showInstallPrompt = false
                                 isInstalling = true
                                 Task {
-                                    await networkManager.installProduct(at: task.directory)
+                                    await globalNetworkManager.installProduct(at: task.directory)
                                 }
                             } catch {
                                 showSetupProcessAlert = true
@@ -145,7 +144,7 @@ struct DownloadProgressView: View {
                                     showInstallPrompt = false
                                     isInstalling = true
                                     Task {
-                                        await networkManager.installProduct(at: task.directory)
+                                        await globalNetworkManager.installProduct(at: task.directory)
                                     }
                                 } catch {
                                     showSetupProcessAlert = true
@@ -205,7 +204,7 @@ struct DownloadProgressView: View {
                             showInstallPrompt = false
                             isInstalling = true
                             Task {
-                                await networkManager.installProduct(at: task.directory)
+                                await globalNetworkManager.installProduct(at: task.directory)
                             }
                         }
                         .buttonStyle(.borderedProminent)
@@ -217,18 +216,18 @@ struct DownloadProgressView: View {
         }
         .sheet(isPresented: $isInstalling) {
             Group {
-                if case .installing(let progress, let status) = networkManager.installationState {
+                if case .installing(let progress, let status) = globalNetworkManager.installationState {
                     InstallProgressView(
                         productName: task.displayName,
                         progress: progress,
                         status: status,
                         onCancel: {
-                            networkManager.cancelInstallation()
+                            globalNetworkManager.cancelInstallation()
                             isInstalling = false
                         },
                         onRetry: nil
                     )
-                } else if case .completed = networkManager.installationState {
+                } else if case .completed = globalNetworkManager.installationState {
                     InstallProgressView(
                         productName: task.displayName,
                         progress: 1.0,
@@ -238,7 +237,7 @@ struct DownloadProgressView: View {
                         },
                         onRetry: nil
                     )
-                } else if case .failed(let error) = networkManager.installationState {
+                } else if case .failed(let error) = globalNetworkManager.installationState {
                     InstallProgressView(
                         productName: task.displayName,
                         progress: 0,
@@ -248,7 +247,7 @@ struct DownloadProgressView: View {
                         },
                         onRetry: {
                             Task {
-                                await networkManager.retryInstallation(at: task.directory)
+                                await globalNetworkManager.retryInstallation(at: task.directory)
                             }
                         }
                     )
@@ -258,7 +257,7 @@ struct DownloadProgressView: View {
                         progress: 0,
                         status: String(localized: "准备安装..."),
                         onCancel: {
-                            networkManager.cancelInstallation()
+                            globalNetworkManager.cancelInstallation()
                             isInstalling = false
                         },
                         onRetry: nil
@@ -301,12 +300,12 @@ struct DownloadProgressView: View {
     }
 
     private func loadIcon() {
-        let product = globalCcmResult.products.first { $0.id == task.productId }
+        let product = findProduct(id: task.productId)
         if product != nil {
-            if let bestIcon = product.getBestIcon(),
-               let iconURL = URL(string: bestIcon.url) {
-                
-                if let cachedImage = IconCache.shared.getIcon(for: bestIcon.url) {
+            if let bestIcon = product?.getBestIcon(),
+               let iconURL = URL(string: bestIcon.value) {
+
+                if let cachedImage = IconCache.shared.getIcon(for: bestIcon.value) {
                     self.iconImage = cachedImage
                     return
                 }
@@ -324,13 +323,13 @@ struct DownloadProgressView: View {
                             throw URLError(.badServerResponse)
                         }
                         
-                        IconCache.shared.setIcon(image, for: bestIcon.url)
-                        
+                        IconCache.shared.setIcon(image, for: bestIcon.value)
+
                         await MainActor.run {
                             self.iconImage = image
                         }
                     } catch {
-                        if let localImage = NSImage(named: task.sapCode) {
+                        if let localImage = NSImage(named: task.productId) {
                             await MainActor.run {
                                 self.iconImage = localImage
                             }
@@ -357,184 +356,20 @@ struct DownloadProgressView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 12) {
-                Group {
-                    if let iconImage = iconImage {
-                        Image(nsImage: iconImage)
-                            .resizable()
-                            .interpolation(.high)
-                            .aspectRatio(contentMode: .fit)
-                    } else {
-                        Image(systemName: "app.fill")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .frame(width: 32, height: 32)
-                .onAppear(perform: loadIcon)
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 8) {
-                        HStack(spacing: 4) {
-                            Text(task.displayName)
-                                .font(.headline)
-                            Text(task.productVersion)
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        statusLabel
-                        
-                        Spacer()
-                    }
-                    
-                    Text(formatPath(task.directory.path))
-                        .font(.caption)
-                        .foregroundColor(.blue)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                        .onTapGesture {
-                            openInFinder(task.directory.path)
-                        }
-                        .help(task.directory.path)
-                }
-            }
+            TaskHeaderView(iconImage: iconImage, task: task, loadIcon: loadIcon, formatPath: formatPath, openInFinder: openInFinder)
 
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    HStack(spacing: 4) {
-                        Text(task.formattedDownloadedSize)
-                        Text("/")
-                        Text(task.formattedTotalSize)
-                    }
-                    
-                    Spacer()
-                    
-                    if task.totalSpeed > 0 {
-                        Text(formatRemainingTime(
-                            totalSize: task.totalSize,
-                            downloadedSize: task.totalDownloadedSize,
-                            speed: task.totalSpeed
-                        ))
-                        .foregroundColor(.secondary)
-                    }
-                    
-                    Text("\(Int(task.totalProgress * 100))%")
-                    
-                    if task.totalSpeed > 0 {
-                        Text(formatSpeed(task.totalSpeed))
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .font(.caption)
-                
-                ProgressView(value: task.totalProgress)
-                    .progressViewStyle(.linear)
-            }
+            TaskProgressView(task: task, formatRemainingTime: formatRemainingTime, formatSpeed: formatSpeed)
 
             if !task.dependenciesToDownload.isEmpty {
                 Divider()
-                
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Button(action: { 
-                            withAnimation {
-                                isPackageListExpanded.toggle()
-                            }
-                        }) {
-                            HStack {
-                                Image(systemName: isPackageListExpanded ? "chevron.down" : "chevron.right")
-                                    .foregroundColor(.secondary)
-                                Text("产品和包列表")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        
-                        Spacer()
-                        
-                        #if DEBUG
-                        Button(action: {
-                            let containerURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-                            let tasksDirectory = containerURL.appendingPathComponent("Adobe Downloader/tasks", isDirectory: true)
-                            let fileName = "\(task.sapCode == "APRO" ? "Adobe Downloader \(task.sapCode)_\(task.version)_\(task.platform)" : "Adobe Downloader \(task.sapCode)_\(task.version)-\(task.language)-\(task.platform)")-task.json"
-                            let fileURL = tasksDirectory.appendingPathComponent(fileName)
-                            NSWorkspace.shared.selectFile(fileURL.path, inFileViewerRootedAtPath: tasksDirectory.path)
-                        }) {
-                            Label("查看持久化文件", systemImage: "doc.text.magnifyingglass")
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .tint(.blue)
-                        .controlSize(.regular)
-                        #endif
-
-                        if case .completed = task.status, task.sapCode != "APRO" {
-                            Button(action: {
-                                showCommandLineInstall.toggle()
-                            }) {
-                                Label("命令行安装", systemImage: "terminal")
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.purple)
-                            .controlSize(.regular)
-                            .popover(isPresented: $showCommandLineInstall, arrowEdge: .bottom) {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Button("复制命令") {
-                                        let setupPath = "/Library/Application Support/Adobe/Adobe Desktop Common/HDBox/Setup"
-                                        let driverPath = "\(task.directory.path)/driver.xml"
-                                        let command = "sudo \"\(setupPath)\" --install=1 --driverXML=\"\(driverPath)\""
-                                        let pasteboard = NSPasteboard.general
-                                        pasteboard.clearContents()
-                                        pasteboard.setString(command, forType: .string)
-                                        showCopiedAlert = true
-                                        
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                                            showCopiedAlert = false
-                                        }
-                                    }
-
-                                    if showCopiedAlert {
-                                        Text("已复制")
-                                            .font(.caption)
-                                            .foregroundColor(.green)
-                                    }
-
-                                    let setupPath = "/Library/Application Support/Adobe/Adobe Desktop Common/HDBox/Setup"
-                                    let driverPath = "\(task.directory.path)/driver.xml"
-                                    let command = "sudo \"\(setupPath)\" --install=1 --driverXML=\"\(driverPath)\""
-                                    Text(command)
-                                        .font(.system(.caption, design: .monospaced))
-                                        .foregroundColor(.secondary)
-                                        .textSelection(.enabled)
-                                        .padding(8)
-                                        .background(Color.secondary.opacity(0.1))
-                                        .cornerRadius(6)
-                                }
-                                .padding()
-                                .frame(width: 400)
-                            }
-                        }
-                        
-                        actionButtons
-                    }
-                    
-                    if isPackageListExpanded {
-                        ScrollView(showsIndicators: false) {
-                            VStack(alignment: .leading, spacing: 8) {
-                                ForEach(task.productsToDownload, id: \.sapCode) { product in
-                                    ProductRow(
-                                        product: product,
-                                        isCurrentProduct: task.currentPackage?.id == product.packages.first?.id,
-                                        expandedProducts: $expandedProducts
-                                    )
-                                }
-                            }
-                        }
-                        .frame(maxHeight: 200)
-                    }
-                }
+                PackageListView(
+                    task: task,
+                    isPackageListExpanded: $isPackageListExpanded,
+                    showCommandLineInstall: $showCommandLineInstall,
+                    showCopiedAlert: $showCopiedAlert,
+                    expandedProducts: $expandedProducts,
+                    actionButtons: AnyView(actionButtons)
+                )
             }
         }
         .padding()
@@ -548,8 +383,256 @@ struct DownloadProgressView: View {
     }
 }
 
+private struct TaskHeaderView: View {
+    let iconImage: NSImage?
+    let task: NewDownloadTask
+    let loadIcon: () -> Void
+    let formatPath: (String) -> String
+    let openInFinder: (String) -> Void
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Group {
+                if let iconImage = iconImage {
+                    Image(nsImage: iconImage)
+                        .resizable()
+                        .interpolation(.high)
+                        .aspectRatio(contentMode: .fit)
+                } else {
+                    Image(systemName: "app.fill")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .frame(width: 32, height: 32)
+            .onAppear(perform: loadIcon)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    HStack(spacing: 4) {
+                        Text(task.displayName)
+                            .font(.headline)
+                        Text(task.productVersion)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    statusLabel
+                    
+                    Spacer()
+                }
+                
+                Text(formatPath(task.directory.path))
+                    .font(.caption)
+                    .foregroundColor(.blue)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .onTapGesture {
+                        openInFinder(task.directory.path)
+                    }
+                    .help(task.directory.path)
+            }
+        }
+    }
+    
+    private var statusLabel: some View {
+        Text(task.status.description)
+            .font(.caption)
+            .foregroundColor(.white)
+            .padding(.vertical, 2)
+            .padding(.horizontal, 6)
+            .background(statusBackgroundColor)
+            .cornerRadius(4)
+    }
+    
+    private var statusBackgroundColor: Color {
+        switch task.status {
+        case .downloading:
+            return Color.blue
+        case .preparing:
+            return Color.purple.opacity(0.8)
+        case .completed:
+            return Color.green.opacity(0.8)
+        case .failed:
+            return Color.red.opacity(0.8)
+        case .paused:
+            return Color.orange.opacity(0.8)
+        case .waiting:
+            return Color.gray.opacity(0.8)
+        case .retrying:
+            return Color.yellow.opacity(0.8)
+        }
+    }
+}
+
+private struct TaskProgressView: View {
+    let task: NewDownloadTask
+    let formatRemainingTime: (Int64, Int64, Double) -> String
+    let formatSpeed: (Double) -> String
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                HStack(spacing: 4) {
+                    Text(task.formattedDownloadedSize)
+                    Text("/")
+                    Text(task.formattedTotalSize)
+                }
+                
+                Spacer()
+                
+                if task.totalSpeed > 0 {
+                    Text(formatRemainingTime(
+                        task.totalSize,
+                        task.totalDownloadedSize,
+                        task.totalSpeed
+                    ))
+                    .foregroundColor(.secondary)
+                }
+                
+                Text("\(Int(task.totalProgress * 100))%")
+                
+                if task.totalSpeed > 0 {
+                    Text(formatSpeed(task.totalSpeed))
+                        .foregroundColor(.secondary)
+                }
+            }
+            .font(.caption)
+            
+            ProgressView(value: task.totalProgress)
+                .progressViewStyle(.linear)
+        }
+    }
+}
+
+private struct PackageListView: View {
+    let task: NewDownloadTask
+    @Binding var isPackageListExpanded: Bool
+    @Binding var showCommandLineInstall: Bool
+    @Binding var showCopiedAlert: Bool
+    @Binding var expandedProducts: Set<String>
+    let actionButtons: AnyView
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Button(action: { 
+                    withAnimation {
+                        isPackageListExpanded.toggle()
+                    }
+                }) {
+                    HStack {
+                        Image(systemName: isPackageListExpanded ? "chevron.down" : "chevron.right")
+                            .foregroundColor(.secondary)
+                        Text("产品和包列表")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                
+                Spacer()
+                
+                #if DEBUG
+                Button(action: {
+                    let containerURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+                    let tasksDirectory = containerURL.appendingPathComponent("Adobe Downloader/tasks", isDirectory: true)
+                    let fileName = "\(task.productId == "APRO" ? "Adobe Downloader \(task.productId)_\(task.productVersion)_\(task.platform)" : "Adobe Downloader \(task.productId)_\(task.productVersion)-\(task.language)-\(task.platform)")-task.json"
+                    let fileURL = tasksDirectory.appendingPathComponent(fileName)
+                    NSWorkspace.shared.selectFile(fileURL.path, inFileViewerRootedAtPath: tasksDirectory.path)
+                }) {
+                    Label("查看持久化文件", systemImage: "doc.text.magnifyingglass")
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.blue)
+                .controlSize(.regular)
+                #endif
+
+                if case .completed = task.status, task.productId != "APRO" {
+                    CommandLineInstallButton(
+                        task: task,
+                        showCommandLineInstall: $showCommandLineInstall,
+                        showCopiedAlert: $showCopiedAlert
+                    )
+                }
+                
+                actionButtons
+            }
+            
+            if isPackageListExpanded {
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(task.dependenciesToDownload, id: \.sapCode) { product in
+                            ProductRow(
+                                product: product,
+                                isCurrentProduct: task.currentPackage?.id == product.packages.first?.id,
+                                expandedProducts: $expandedProducts
+                            )
+                        }
+                    }
+                }
+                .frame(maxHeight: 200)
+            }
+        }
+    }
+}
+
+private struct CommandLineInstallButton: View {
+    let task: NewDownloadTask
+    @Binding var showCommandLineInstall: Bool
+    @Binding var showCopiedAlert: Bool
+    
+    var body: some View {
+        Button(action: {
+            showCommandLineInstall.toggle()
+        }) {
+            Label("命令行安装", systemImage: "terminal")
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(.purple)
+        .controlSize(.regular)
+        .popover(isPresented: $showCommandLineInstall, arrowEdge: .bottom) {
+            VStack(alignment: .leading, spacing: 8) {
+                Button("复制命令") {
+                    let setupPath = "/Library/Application Support/Adobe/Adobe Desktop Common/HDBox/Setup"
+                    let driverPath = "\(task.directory.path)/driver.xml"
+                    let command = "sudo \"\(setupPath)\" --install=1 --driverXML=\"\(driverPath)\""
+                    let pasteboard = NSPasteboard.general
+                    pasteboard.clearContents()
+                    pasteboard.setString(command, forType: .string)
+                    showCopiedAlert = true
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        showCopiedAlert = false
+                    }
+                }
+
+                if showCopiedAlert {
+                    Text("已复制")
+                        .font(.caption)
+                        .foregroundColor(.green)
+                }
+
+                let setupPath = "/Library/Application Support/Adobe/Adobe Desktop Common/HDBox/Setup"
+                let driverPath = "\(task.directory.path)/driver.xml"
+                let command = "sudo \"\(setupPath)\" --install=1 --driverXML=\"\(driverPath)\""
+                Text(command)
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundColor(.secondary)
+                    .textSelection(.enabled)
+                    .padding(8)
+                    .background(Color.secondary.opacity(0.1))
+                    .cornerRadius(6)
+            }
+            .padding()
+            .frame(width: 400)
+        }
+    }
+}
+
 struct ProductRow: View {
-    @ObservedObject var dependencies: DependenciesToDownload
+    @ObservedObject var product: DependenciesToDownload
     let isCurrentProduct: Bool
     @Binding var expandedProducts: Set<String>
     

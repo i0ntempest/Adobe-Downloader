@@ -244,6 +244,9 @@ class NewDownloadUtils {
                         if condition.contains("[OSArchitecture]==\(AppStatics.architectureSymbol)") {
                             shouldDownload = true
                         }
+                        if condition.contains("[OSArchitecture]==x64") {
+                            shouldDownload = true
+                        }
                         if condition.contains(installLanguage) || task.language == "ALL" {
                             shouldDownload = true
                         }
@@ -311,7 +314,6 @@ class NewDownloadUtils {
         if !FileManager.default.fileExists(atPath: driverPath.path) {
             if let productInfo = globalCcmResult.products.first(where: { $0.id == task.productId && $0.version == task.productVersion }) {
                 let driverXml = generateDriverXML(
-                    sapCode: task.productId,
                     version: task.productVersion,
                     language: task.language,
                     productInfo: productInfo,
@@ -412,19 +414,19 @@ class NewDownloadUtils {
 
     func handleError(_ taskId: UUID, _ error: Error) async {
         let task = await globalNetworkManager.downloadTasks.first(where: { $0.id == taskId })
-        guard task != nil else { return }
+        guard let task = task else { return }
 
         let (errorMessage, isRecoverable) = classifyError(error)
 
         if isRecoverable,
-           let downloadTask = await globalCancelTracker?.downloadTasks[taskId] {
+           let downloadTask = await globalCancelTracker.downloadTasks[taskId] {
             let resumeData = await withCheckedContinuation { continuation in
                 downloadTask.cancel(byProducingResumeData: { data in
                     continuation.resume(returning: data)
                 })
             }
             if let resumeData = resumeData {
-                await globalCancelTracker?.storeResumeData(taskId, data: resumeData)
+                await globalCancelTracker.storeResumeData(taskId, data: resumeData)
             }
         }
 
@@ -441,7 +443,7 @@ class NewDownloadUtils {
             Task {
                 do {
                     try await Task.sleep(nanoseconds: NetworkConstants.retryDelay)
-                    if await !(globalCancelTracker?.isCancelled(taskId) ?? false) {
+                    if await globalCancelTracker.isCancelled(taskId) == false {
                         await resumeDownloadTask(taskId: taskId)
                     }
                 } catch {
@@ -458,7 +460,7 @@ class NewDownloadUtils {
 
             if let currentPackage = task.currentPackage {
                 let destinationDir = task.directory
-                    .appendingPathComponent("\(task.productId)")
+                    .appendingPathComponent("\(task.productId ?? "")")
                 let fileURL = destinationDir.appendingPathComponent(currentPackage.fullPackageName)
                 try? FileManager.default.removeItem(at: fileURL)
             }
@@ -473,16 +475,18 @@ class NewDownloadUtils {
 
     func resumeDownloadTask(taskId: UUID) async {
         let task = await globalNetworkManager.downloadTasks.first(where: { $0.id == taskId })
-        guard task != nil else { return }
+        guard let task = task else { return }
 
         await MainActor.run {
+            let totalPackages = task.dependenciesToDownload.reduce(0) { $0 + $1.packages.count }
             task.setStatus(.downloading(DownloadStatus.DownloadInfo(
                 fileName: task.currentPackage?.fullPackageName ?? "",
                 currentPackageIndex: 0,
-                totalPackages: task.dependenciesToDownload.reduce(0) { $0 + $1.packages.count },
+                totalPackages: totalPackages,
                 startTime: Date(),
                 estimatedTimeRemaining: nil
             )))
+            task.objectWillChange.send()
         }
 
         await globalNetworkManager.saveTask(task)
@@ -491,7 +495,7 @@ class NewDownloadUtils {
         }
 
         if task.productId == "APRO" {
-            if let resumeData = await globalCancelTracker?.getResumeData(taskId),
+            if let resumeData = await globalCancelTracker.getResumeData(taskId),
                let currentPackage = task.currentPackage,
                let product = task.dependenciesToDownload.first {
                 try? await downloadPackage(
@@ -598,9 +602,9 @@ class NewDownloadUtils {
 
                             product.updateCompletedPackages()
                         }
-                        await globalNetworkManager.saveTask(task)
+                        await globalNetworkManager?.saveTask(task)
                         await MainActor.run {
-                            globalNetworkManager.objectWillChange.send()
+                            globalNetworkManager?.objectWillChange.send()
                         }
                         continuation.resume()
                     }
@@ -643,7 +647,7 @@ class NewDownloadUtils {
                             lastUpdateTime = now
                             lastBytes = totalBytesWritten
 
-                            globalNetworkManager.objectWillChange.send()
+                            globalNetworkManager?.objectWillChange.send()
                         }
                     }
                 }
@@ -664,27 +668,27 @@ class NewDownloadUtils {
                     return
                 }
 
-                await globalCancelTracker?.registerTask(task.id, task: downloadTask, session: session)
-                await globalCancelTracker?.clearResumeData(task.id)
+                await globalCancelTracker.registerTask(task.id, task: downloadTask, session: session)
+                await globalCancelTracker.clearResumeData(task.id)
                 downloadTask.resume()
             }
         }
     }
 
-    func generateDriverXML(sapCode: String, version: String, language: String, productInfo: Product, displayName: String) -> String {
+    func generateDriverXML(version: String, language: String, productInfo: Product, displayName: String) -> String {
         // 获取匹配的 platform 和 languageSet
-        guard let platform = productInfo.platforms.first(where: { $0.id == "mac" }),
-              let languageSet = platform.languageSet.first else {
+        guard let platform = globalProducts.first(where: { $0.id == productInfo.id })?.platforms.first?.id,
+              let languageSet = globalProducts.first(where: { $0.id == productInfo.id })?.platforms.first?.languageSet else {
             return ""
         }
         
         // 构建依赖列表
-        let dependencies = languageSet.dependencies.map { dependency in
+        let dependencies = languageSet.first?.dependencies.map { dependency in
             """
                 <Dependency>
-                    <SAPCode>\(dependency.sapCode)</SAPCode>
-                    <BaseVersion>\(dependency.baseVersion)</BaseVersion>
-                    <EsdDirectory>\(dependency.sapCode)</EsdDirectory>
+                    <SAPCode>\(productInfo.id)</SAPCode>
+                    <BaseVersion>\(languageSet.first?.baseVersion)</BaseVersion>
+                    <EsdDirectory>\(productInfo.id)</EsdDirectory>
                 </Dependency>
             """
         }.joined(separator: "\n")
@@ -693,10 +697,10 @@ class NewDownloadUtils {
         <DriverInfo>
             <ProductInfo>
                 <n>Adobe \(displayName)</n>
-                <SAPCode>\(sapCode)</SAPCode>
+                <SAPCode>\(productInfo.id)</SAPCode>
                 <CodexVersion>\(version)</CodexVersion>
                 <Platform>mac</Platform>
-                <EsdDirectory>\(sapCode)</EsdDirectory>
+                <EsdDirectory>\(productInfo.id)</EsdDirectory>
                 <Dependencies>
                     \(dependencies)
                 </Dependencies>
@@ -811,11 +815,11 @@ class NewDownloadUtils {
                             task.objectWillChange.send()
                         }
 
-                        await globalNetworkManager.saveTask(task)
+                        await globalNetworkManager?.saveTask(task)
 
                         await MainActor.run {
-                            globalNetworkManager.updateDockBadge()
-                            globalNetworkManager.objectWillChange.send()
+                            globalNetworkManager?.updateDockBadge()
+                            globalNetworkManager?.objectWillChange.send()
                         }
                         continuation.resume()
                     }
@@ -842,10 +846,10 @@ class NewDownloadUtils {
                             lastBytes = totalBytesWritten
 
                             task.objectWillChange.send()
-                            globalNetworkManager.objectWillChange.send()
+                            globalNetworkManager?.objectWillChange.send()
 
                             Task {
-                                await globalNetworkManager.saveTask(task)
+                                await globalNetworkManager?.saveTask(task)
                             }
                         }
                     }
@@ -860,20 +864,19 @@ class NewDownloadUtils {
             let downloadTask = session.downloadTask(with: downloadRequest)
 
             Task {
-                await globalCancelTracker?.registerTask(task.id, task: downloadTask, session: session)
-
-                if await (globalCancelTracker?.isCancelled(task.id) ?? false) {
+                await globalCancelTracker.registerTask(task.id, task: downloadTask, session: session)
+                
+                if await globalCancelTracker.isCancelled(task.id) {
                     continuation.resume(throwing: NetworkError.cancelled)
                     return
                 }
-
                 downloadTask.resume()
             }
         }
     }
 
     func pauseDownloadTask(taskId: UUID, reason: DownloadStatus.PauseInfo.PauseReason) async {
-        let task = await globalCancelTracker?.downloadTasks[taskId]
+        let task = await globalCancelTracker.downloadTasks[taskId]
         if let downloadTask = task {
             let data = await withCheckedContinuation { continuation in
                 downloadTask.cancel(byProducingResumeData: { data in
@@ -881,7 +884,7 @@ class NewDownloadUtils {
                 })
             }
             if let data = data {
-                await globalCancelTracker?.storeResumeData(taskId, data: data)
+                await globalCancelTracker.storeResumeData(taskId, data: data)
             }
         }
 
@@ -944,4 +947,223 @@ class NewDownloadUtils {
             return false
         }
     }
+
+    private func executePrivilegedCommand(_ command: String) async -> String {
+        return await withCheckedContinuation { continuation in
+            PrivilegedHelperManager.shared.executeCommand(command) { result in
+                if result.starts(with: "Error:") {
+                    print("命令执行失败: \(command)")
+                    print("错误信息: \(result)")
+                }
+                continuation.resume(returning: result)
+            }
+        }
+    }
+    
+    func downloadX1a0HeCCPackages(
+        progressHandler: @escaping (Double, String) -> Void,
+        cancellationHandler: @escaping () -> Bool,
+        shouldProcess: Bool = true
+    ) async throws {
+        let baseUrl = "https://cdn-ffc.oobesaas.adobe.com/core/v1/applications?name=CreativeCloud&platform=\(AppStatics.isAppleSilicon ? "macarm64" : "osx10")"
+
+        let tempDirectory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
+
+        let configuration = URLSessionConfiguration.default
+        configuration.timeoutIntervalForRequest = 30
+        configuration.timeoutIntervalForResource = 300
+        configuration.httpAdditionalHeaders = NetworkConstants.downloadHeaders
+        let session = URLSession(configuration: configuration)
+
+        do {
+            var request = URLRequest(url: URL(string: baseUrl)!)
+            NetworkConstants.downloadHeaders.forEach { request.setValue($0.value, forHTTPHeaderField: $0.key) }
+            let (data, response) = try await session.data(for: request)
+
+            guard let httpResponse = response as? HTTPURLResponse,
+                  (200...299).contains(httpResponse.statusCode) else {
+                throw NetworkError.invalidResponse
+            }
+
+            let xmlDoc = try XMLDocument(data: data)
+
+            let packageSets = try xmlDoc.nodes(forXPath: "//packageSet[name='ADC']")
+            guard let adcPackageSet = packageSets.first else {
+                throw NetworkError.invalidData("找不到ADC包集")
+            }
+
+            let targetPackages = ["HDBox", "IPCBox"]
+            var packagesToDownload: [(name: String, url: URL, size: Int64)] = []
+
+            for packageName in targetPackages {
+                let packageNodes = try adcPackageSet.nodes(forXPath: ".//package[name='\(packageName)']")
+                guard let package = packageNodes.first else {
+                    print("未找到包: \(packageName)")
+                    continue
+                }
+
+                guard let manifestUrl = try package.nodes(forXPath: ".//manifestUrl").first?.stringValue,
+                      let cdnBase = try xmlDoc.nodes(forXPath: "//cdn/secure").first?.stringValue else {
+                    print("无法获取manifest URL或CDN基础URL")
+                    continue
+                }
+
+                let manifestFullUrl = cdnBase + manifestUrl
+
+                var manifestRequest = URLRequest(url: URL(string: manifestFullUrl)!)
+                NetworkConstants.downloadHeaders.forEach { manifestRequest.setValue($0.value, forHTTPHeaderField: $0.key) }
+                let (manifestData, manifestResponse) = try await session.data(for: manifestRequest)
+
+                guard let manifestHttpResponse = manifestResponse as? HTTPURLResponse,
+                      (200...299).contains(manifestHttpResponse.statusCode) else {
+                    print("获取manifest失败: HTTP \(String(describing: (manifestResponse as? HTTPURLResponse)?.statusCode))")
+                    continue
+                }
+
+                let manifestDoc = try XMLDocument(data: manifestData)
+                let assetPathNodes = try manifestDoc.nodes(forXPath: "//asset_path")
+                let sizeNodes = try manifestDoc.nodes(forXPath: "//asset_size")
+                guard let assetPath = assetPathNodes.first?.stringValue,
+                      let sizeStr = sizeNodes.first?.stringValue,
+                      let size = Int64(sizeStr),
+                      let downloadUrl = URL(string: assetPath) else {
+                    continue
+                }
+                packagesToDownload.append((packageName, downloadUrl, size))
+            }
+
+            guard !packagesToDownload.isEmpty else {
+                throw NetworkError.invalidData("没有找到可下载的包")
+            }
+
+            let totalCount = packagesToDownload.count
+            for (index, package) in packagesToDownload.enumerated() {
+                if cancellationHandler() {
+                    try? FileManager.default.removeItem(at: tempDirectory)
+                    throw NetworkError.cancelled
+                }
+
+                await MainActor.run {
+                    progressHandler(Double(index) / Double(totalCount), "正在下载 \(package.name)...")
+                }
+
+                let destinationURL = tempDirectory.appendingPathComponent("\(package.name).zip")
+                var downloadRequest = URLRequest(url: package.url)
+                print(downloadRequest)
+                NetworkConstants.downloadHeaders.forEach { downloadRequest.setValue($0.value, forHTTPHeaderField: $0.key) }
+                let (downloadURL, downloadResponse) = try await session.download(for: downloadRequest)
+
+                guard let httpResponse = downloadResponse as? HTTPURLResponse,
+                      (200...299).contains(httpResponse.statusCode) else {
+                    print("下载失败: HTTP \(String(describing: (downloadResponse as? HTTPURLResponse)?.statusCode))")
+                    continue
+                }
+
+                try FileManager.default.moveItem(at: downloadURL, to: destinationURL)
+            }
+
+            await MainActor.run {
+                progressHandler(0.9, shouldProcess ? "正在安装组件..." : "正在完成下载...")
+            }
+
+            let targetDirectory = "/Library/Application\\ Support/Adobe/Adobe\\ Desktop\\ Common"
+            let rawTargetDirectory = "/Library/Application Support/Adobe/Adobe Desktop Common"
+
+            if !FileManager.default.fileExists(atPath: rawTargetDirectory) {
+                let createDirResult = await executePrivilegedCommand("/bin/mkdir -p \(targetDirectory)")
+                if createDirResult.starts(with: "Error:") {
+                    try? FileManager.default.removeItem(at: tempDirectory)
+                    throw NetworkError.installError("创建目录失败: \(createDirResult)")
+                }
+
+                let chmodResult = await executePrivilegedCommand("/bin/chmod 755 \(targetDirectory)")
+                if chmodResult.starts(with: "Error:") {
+                    try? FileManager.default.removeItem(at: tempDirectory)
+                    throw NetworkError.installError("设置权限失败: \(chmodResult)")
+                }
+            }
+
+            for package in packagesToDownload {
+                let packageDir = "\(targetDirectory)/\(package.name)"
+
+                let removeResult = await executePrivilegedCommand("/bin/rm -rf \(packageDir)")
+                if removeResult.starts(with: "Error:") {
+                    print("移除旧目录失败: \(removeResult)")
+                }
+
+                let mkdirResult = await executePrivilegedCommand("/bin/mkdir -p \(packageDir)")
+                if mkdirResult.starts(with: "Error:") {
+                    try? FileManager.default.removeItem(at: tempDirectory)
+                    throw NetworkError.installError("创建 \(package.name) 目录失败")
+                }
+
+                let unzipResult = await executePrivilegedCommand("cd \(packageDir) && /usr/bin/unzip -o '\(tempDirectory.path)/\(package.name).zip'")
+                if unzipResult.starts(with: "Error:") {
+                    try? FileManager.default.removeItem(at: tempDirectory)
+                    throw NetworkError.installError("解压 \(package.name) 失败: \(unzipResult)")
+                }
+
+                let chmodResult = await executePrivilegedCommand("/bin/chmod -R 755 \(packageDir)")
+                if chmodResult.starts(with: "Error:") {
+                    try? FileManager.default.removeItem(at: tempDirectory)
+                    throw NetworkError.installError("设置 \(package.name) 权限失败: \(chmodResult)")
+                }
+
+                let chownResult = await executePrivilegedCommand("/usr/sbin/chown -R root:wheel \(packageDir)")
+                if chownResult.starts(with: "Error:") {
+                    try? FileManager.default.removeItem(at: tempDirectory)
+                    throw NetworkError.installError("设置 \(package.name) 所有者失败: \(chownResult)")
+                }
+            }
+
+            try await Task.sleep(nanoseconds: 1_000_000_000)
+
+            if shouldProcess {
+                try await withCheckedThrowingContinuation { continuation in
+                    ModifySetup.backupAndModifySetupFile { success, message in
+                        if success {
+                            continuation.resume()
+                        } else {
+                            continuation.resume(throwing: NetworkError.installError(message))
+                        }
+                    }
+                }
+                ModifySetup.clearVersionCache()
+            }
+
+            try? FileManager.default.removeItem(at: tempDirectory)
+
+            await MainActor.run {
+                progressHandler(1.0, shouldProcess ? "安装完成" : "下载完成")
+            }
+        } catch {
+            print("发生错误: \(error.localizedDescription)")
+            throw error
+        }
+    }
+
+    func cancelDownloadTask(taskId: UUID, removeFiles: Bool = false) async {
+        await globalCancelTracker.cancel(taskId)
+
+        if let task = await globalNetworkManager.downloadTasks.first(where: { $0.id == taskId }) {
+            if removeFiles {
+                try? FileManager.default.removeItem(at: task.directory)
+            }
+
+            task.setStatus(.failed(DownloadStatus.FailureInfo(
+                message: String(localized: "下载已取消"),
+                error: NetworkError.downloadCancelled,
+                timestamp: Date(),
+                recoverable: false
+            )))
+
+            await globalNetworkManager.saveTask(task)
+            await MainActor.run {
+                globalNetworkManager.updateDockBadge()
+                globalNetworkManager.objectWillChange.send()
+            }
+        }
+    }
+
 }

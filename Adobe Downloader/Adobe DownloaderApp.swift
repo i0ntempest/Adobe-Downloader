@@ -105,7 +105,6 @@ struct Adobe_DownloaderApp: App {
 
         Settings {
             AboutView(updater: updaterController.updater)
-                .environmentObject(globalNetworkManager)
         }
     }
     

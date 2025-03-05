@@ -6,7 +6,6 @@ struct ContentView: View {
     @State private var showDownloadManager = false
     @State private var searchText = ""
     @State private var currentApiVersion = StorageData.shared.apiVersion
-    @State private var cachedProducts: [UniqueProduct] = []
 
     private var apiVersion: String {
         get { StorageData.shared.apiVersion }
@@ -17,13 +16,10 @@ struct ContentView: View {
     }
 
     private var filteredProducts: [UniqueProduct] {
-        if searchText.isEmpty {
-            return cachedProducts
-        }
+        if searchText.isEmpty { return globalUniqueProducts }
 
-        return cachedProducts.filter {
-            $0.displayName.localizedCaseInsensitiveContains(searchText) ||
-            $0.id.localizedCaseInsensitiveContains(searchText)
+        return globalUniqueProducts.filter {
+            $0.displayName.localizedCaseInsensitiveContains(searchText) || $0.id.localizedCaseInsensitiveContains(searchText)
         }
     }
 
@@ -31,22 +27,14 @@ struct ContentView: View {
         NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
     }
 
-    private func updateProductsCache() {
-        // 先获取有效的产品
-        let validProducts = globalCcmResult.products
-            .filter { $0.hasValidVersions(allowedPlatform: StorageData.shared.allowedPlatform) }
-        
-        // 使用字典合并相同ID的产品
-        var uniqueProductsDict = [String: UniqueProduct]()
-        for product in validProducts {
-            uniqueProductsDict[product.id] = UniqueProduct(id: product.id, displayName: product.displayName)
+    private func refreshData() {
+        isRefreshing = true
+        errorMessage = nil
+
+        Task {
+            await globalNetworkManager.fetchProducts()
+            await MainActor.run { isRefreshing = false }
         }
-        
-        // 转换为数组并按显示名称排序
-        let uniqueProducts = Array(uniqueProductsDict.values)
-            .sorted { $0.displayName < $1.displayName }
-            
-        cachedProducts = uniqueProducts
     }
 
     var body: some View {
@@ -60,9 +48,7 @@ struct ContentView: View {
                             await globalNetworkManager.fetchProducts()
                         }
                     }
-                )) {
-                    Text("Apple Silicon")
-                }
+                )) { Text("Apple Silicon") }
                 .toggleStyle(.switch)
                 .tint(.green)
                 .disabled(isRefreshing)
@@ -137,7 +123,7 @@ struct ContentView: View {
             HStack(spacing: 8) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundColor(.orange)
-                Text("Adobe Downloader 完全开源免费: https://github.com/X1a0He/Adobe-Downloader")
+                Text("Adobe Downloader 完全免费: https://github.com/X1a0He/Adobe-Downloader")
             }
             .frame(maxWidth: .infinity, alignment: .center)
             .padding(.horizontal)
@@ -204,8 +190,8 @@ struct ContentView: View {
                                 ],
                                 spacing: 20
                             ) {
-                                ForEach(filteredProducts, id: \.sapCode) { sap in
-                                    AppCardView(sap: sap)
+                                ForEach(filteredProducts, id: \.id) { uniqueProduct in
+                                    AppCardView(uniqueProduct: uniqueProduct)
                                 }
                             }
                             .padding()
@@ -224,63 +210,30 @@ struct ContentView: View {
                 }
             }
         }
-        .sheet(isPresented: $showDownloadManager) {
-            DownloadManagerView()
-                .environmentObject(globalNetworkManager)
-        }
-        .onAppear {
-            if globalCcmResult.products.isEmpty {
-                refreshData()
-            } else {
-                updateProductsCache()
-            }
-        }
-        .onChange(of: globalNetworkManager.saps) { _ in
-            updateProductsCache()
-        }
+        .sheet(isPresented: $showDownloadManager) { DownloadManagerView() }
+        .onAppear { if globalCcmResult.products.isEmpty { refreshData() } }
     }
 
-    private func refreshData() {
-        isRefreshing = true
-        errorMessage = nil
+    struct SearchField: View {
+        @Binding var text: String
 
-        Task {
-            await globalNetworkManager.fetchProducts()
-            await MainActor.run {
-                updateProductsCache()
-                isRefreshing = false
-            }
-        }
-    }
-}
-
-struct SearchField: View {
-    @Binding var text: String
-
-    var body: some View {
-        HStack {
-            Image(systemName: "magnifyingglass")
-                .foregroundColor(.secondary)
-            TextField("搜索应用", text: $text)
-                .textFieldStyle(PlainTextFieldStyle())
-            if !text.isEmpty {
-                Button(action: { text = "" }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
+        var body: some View {
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.secondary)
+                TextField("搜索应用", text: $text)
+                    .textFieldStyle(PlainTextFieldStyle())
+                if !text.isEmpty {
+                    Button(action: { text = "" }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(PlainButtonStyle())
                 }
-                .buttonStyle(PlainButtonStyle())
             }
+            .padding(8)
+            .background(Color(NSColor.controlBackgroundColor))
+            .cornerRadius(8)
         }
-        .padding(8)
-        .background(Color(NSColor.controlBackgroundColor))
-        .cornerRadius(8)
     }
-}
-
-#Preview {
-    let networkManager = NetworkManager()
-
-    return ContentView()
-        .environmentObject(networkManager)
-        .frame(width: 792, height: 600)
 }

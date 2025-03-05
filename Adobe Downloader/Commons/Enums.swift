@@ -55,6 +55,7 @@ enum NetworkError: Error, LocalizedError {
     case unsupportedPlatform(String)
     case incompatibleVersion(String, String)
     case installError(String)
+    case productNotFound
 
     private var errorGroup: Int {
         switch self {
@@ -64,7 +65,7 @@ enum NetworkError: Error, LocalizedError {
         case .httpError, .serverError, .clientError: return 4000
         case .downloadError, .downloadCancelled, .insufficientStorage, .cancelled: return 5000
         case .fileSystemError, .fileExists, .fileNotFound, .filePermissionDenied: return 6000
-        case .applicationInfoError, .unsupportedPlatform, .incompatibleVersion, .installError: return 7000
+        case .applicationInfoError, .unsupportedPlatform, .incompatibleVersion, .installError, .productNotFound: return 7000
         }
     }
 
@@ -94,6 +95,7 @@ enum NetworkError: Error, LocalizedError {
         case .unsupportedPlatform: return 2
         case .incompatibleVersion: return 3
         case .installError: return 4
+        case .productNotFound: return 5
         }
     }
 
@@ -160,6 +162,8 @@ enum NetworkError: Error, LocalizedError {
                 return NSLocalizedString("下载已取消", value: "下载已取消", comment: "Download cancelled")
             case .installError(let message):
                 return String(format: NSLocalizedString("安装错误: %@", value: "安装错误: %@", comment: "Install error"), message)
+            case .productNotFound:
+                return NSLocalizedString("产品未找到", value: "产品未找到", comment: "Product not found")
         }
     }
     

@@ -277,17 +277,19 @@ struct GeneralSettingsView: View {
     }
 
     var body: some View {
-        Form {
-            DownloadSettingsView(viewModel: viewModel)
-            HelperSettingsView(viewModel: viewModel,
-                            showHelperAlert: $showHelperAlert,
-                            helperAlertMessage: $helperAlertMessage,
-                            helperAlertSuccess: $helperAlertSuccess)
-            CCSettingsView(viewModel: viewModel)
-            UpdateSettingsView(viewModel: viewModel)
-            CleanConfigView()
+        ScrollView {
+            VStack(spacing: 16) {
+                DownloadSettingsView(viewModel: viewModel)
+                HelperSettingsView(viewModel: viewModel,
+                                showHelperAlert: $showHelperAlert,
+                                helperAlertMessage: $helperAlertMessage,
+                                helperAlertSuccess: $helperAlertSuccess)
+                CCSettingsView(viewModel: viewModel)
+                UpdateSettingsView(viewModel: viewModel)
+                CleanConfigView()
+            }
+            .padding()
         }
-        .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .alert(helperAlertSuccess ? "操作成功" : "操作失败", isPresented: $showHelperAlert) {
             Button("确定") { }
@@ -298,28 +300,7 @@ struct GeneralSettingsView: View {
             Button("取消", role: .cancel) { }
             Button("下载") {
                 Task {
-                    viewModel.isDownloadingSetup = true
-                    viewModel.isCancelled = false
-                    do {
-                        try await networkManager.downloadUtils.downloadX1a0HeCCPackages(
-                            progressHandler: { progress, status in
-                                viewModel.setupDownloadProgress = progress
-                                viewModel.setupDownloadStatus = status
-                            },
-                            cancellationHandler: { viewModel.isCancelled }
-                        )
-                        viewModel.setupVersion = ModifySetup.checkComponentVersion()
-                        viewModel.isSuccess = true
-                        viewModel.alertMessage = String(localized: "Setup 组件安装成功")
-                    } catch NetworkError.cancelled {
-                        viewModel.isSuccess = false
-                        viewModel.alertMessage = String(localized: "下载已取消")
-                    } catch {
-                        viewModel.isSuccess = false
-                        viewModel.alertMessage = error.localizedDescription
-                    }
-                    viewModel.showAlert = true
-                    viewModel.isDownloadingSetup = false
+                    await downloadSetup(shouldProcess: false)
                 }
             }
         } message: {
@@ -329,29 +310,7 @@ struct GeneralSettingsView: View {
             Button("取消", role: .cancel) { }
             Button("确定") {
                 Task {
-                    viewModel.isDownloadingSetup = true
-                    viewModel.isCancelled = false
-                    do {
-                        try await networkManager.downloadUtils.downloadX1a0HeCCPackages(
-                            progressHandler: { progress, status in
-                                viewModel.setupDownloadProgress = progress
-                                viewModel.setupDownloadStatus = status
-                            },
-                            cancellationHandler: { viewModel.isCancelled },
-                            shouldProcess: true
-                        )
-                        viewModel.setupVersion = ModifySetup.checkComponentVersion()
-                        viewModel.isSuccess = true
-                        viewModel.alertMessage = String(localized: "X1a0He CC 下载并处理成功")
-                    } catch NetworkError.cancelled {
-                        viewModel.isSuccess = false
-                        viewModel.alertMessage = String(localized: "下载已取消")
-                    } catch {
-                        viewModel.isSuccess = false
-                        viewModel.alertMessage = error.localizedDescription
-                    }
-                    viewModel.showAlert = true
-                    viewModel.isDownloadingSetup = false
+                    await downloadSetup(shouldProcess: true)
                 }
             }
         } message: {
@@ -361,29 +320,7 @@ struct GeneralSettingsView: View {
             Button("取消", role: .cancel) { }
             Button("确定") {
                 Task {
-                    viewModel.isDownloadingSetup = true
-                    viewModel.isCancelled = false
-                    do {
-                        try await networkManager.downloadUtils.downloadX1a0HeCCPackages(
-                            progressHandler: { progress, status in
-                                viewModel.setupDownloadProgress = progress
-                                viewModel.setupDownloadStatus = status
-                            },
-                            cancellationHandler: { viewModel.isCancelled },
-                            shouldProcess: false
-                        )
-                        viewModel.setupVersion = ModifySetup.checkComponentVersion()
-                        viewModel.isSuccess = true
-                        viewModel.alertMessage = String(localized: "X1a0He CC 下载成功")
-                    } catch NetworkError.cancelled {
-                        viewModel.isSuccess = false
-                        viewModel.alertMessage = String(localized: "下载已取消")
-                    } catch {
-                        viewModel.isSuccess = false
-                        viewModel.alertMessage = error.localizedDescription
-                    }
-                    viewModel.showAlert = true
-                    viewModel.isDownloadingSetup = false
+                    await downloadSetup(shouldProcess: false)
                 }
             }
         } message: {
@@ -400,6 +337,34 @@ struct GeneralSettingsView: View {
         .onReceive(NotificationCenter.default.publisher(for: .storageDidChange)) { _ in
             viewModel.objectWillChange.send()
         }
+    }
+    
+    private func downloadSetup(shouldProcess: Bool) async {
+        viewModel.isDownloadingSetup = true
+        viewModel.isCancelled = false
+        do {
+            try await globalNewDownloadUtils.downloadX1a0HeCCPackages(
+                progressHandler: { progress, status in
+                    viewModel.setupDownloadProgress = progress
+                    viewModel.setupDownloadStatus = status
+                },
+                cancellationHandler: { viewModel.isCancelled },
+                shouldProcess: shouldProcess
+            )
+            viewModel.setupVersion = ModifySetup.checkComponentVersion()
+            viewModel.isSuccess = true
+            viewModel.alertMessage = shouldProcess ? 
+                String(localized: "X1a0He CC 下载并处理成功") : 
+                String(localized: "X1a0He CC 下载成功")
+        } catch NetworkError.cancelled {
+            viewModel.isSuccess = false
+            viewModel.alertMessage = String(localized: "下载已取消")
+        } catch {
+            viewModel.isSuccess = false
+            viewModel.alertMessage = error.localizedDescription
+        }
+        viewModel.showAlert = true
+        viewModel.isDownloadingSetup = false
     }
 }
 

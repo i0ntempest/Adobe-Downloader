@@ -21,7 +21,6 @@ private enum VersionPickerConstants {
 }
 
 struct VersionPickerView: View {
-    @EnvironmentObject private var networkManager: NetworkManager
     @Environment(\.dismiss) private var dismiss
     @StorageValue(\.defaultLanguage) private var defaultLanguage
     @StorageValue(\.downloadAppleSilicon) private var downloadAppleSilicon
@@ -37,7 +36,7 @@ struct VersionPickerView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            HeaderView(product: product, downloadAppleSilicon: downloadAppleSilicon)
+            VersionPickerHeaderView(product: product, downloadAppleSilicon: downloadAppleSilicon)
             VersionListView(
                 product: product,
                 expandedVersions: $expandedVersions,
@@ -49,7 +48,7 @@ struct VersionPickerView: View {
     }
 }
 
-private struct HeaderView: View {
+private struct VersionPickerHeaderView: View {
     let product: Product
     let downloadAppleSilicon: Bool
     @Environment(\.dismiss) private var dismiss
@@ -160,7 +159,7 @@ private struct VersionRow: View {
     
     private var existingPath: URL? {
         globalNetworkManager.isVersionDownloaded(
-            product: product,
+            productId: product.id,
             version: version,
             language: defaultLanguage
         )

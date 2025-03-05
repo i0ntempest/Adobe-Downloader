@@ -49,16 +49,10 @@ class NetworkManager: ObservableObject {
     func fetchProducts() async {
         loadingState = .loading
         do {
-            let (saps, sapCodes) = try await globalNetworkService.fetchProductsData()
-
-            let (newProducts, uniqueProducts) = try await globalNetworkService.fetchProductsData()
-            print("新产品数量: \(newProducts.count), 唯一产品数量: \(uniqueProducts.count), CDN: \(globalCdn)")
-            for uniqueProduct in uniqueProducts {
-                print("新唯一产品: \(uniqueProduct)")
-            }
-
-
+            let (products, uniqueProducts) = try await globalNetworkService.fetchProductsData()
             await MainActor.run {
+                globalProducts = products
+                globalUniqueProducts = uniqueProducts.sorted { $0.displayName < $1.displayName }
                 self.loadingState = .success
             }
         } catch {
@@ -153,8 +147,10 @@ class NetworkManager: ObservableObject {
         
         while retryCount < maxRetries {
             do {
-                let (saps, sapCodes) = try await globalNetworkService.fetchProductsData()
+                let (products, uniqueProducts) = try await globalNetworkService.fetchProductsData()
                 await MainActor.run {
+                    globalProducts = products
+                    globalUniqueProducts = uniqueProducts
                     self.loadingState = .success
                     self.isFetchingProducts = false
                 }
@@ -290,18 +286,18 @@ class NetworkManager: ObservableObject {
         return try await globalNetworkService.getApplicationInfo(buildGuid: buildGuid)
     }
 
-    func isVersionDownloaded(product: Product, version: String, language: String) -> URL? {
+    func isVersionDownloaded(productId: String, version: String, language: String) -> URL? {
         if let task = downloadTasks.first(where: {
-            $0.sapCode == sap.sapCode &&
-            $0.version == version &&
+            $0.productId == productId &&
+            $0.productVersion == version &&
             $0.language == language &&
             !$0.status.isCompleted
         }) { return task.directory }
 
-        let platform = sap.versions[version]?.apPlatform ?? "unknown"
-        let fileName = sap.sapCode == "APRO" 
-            ? "Adobe Downloader \(sap.sapCode)_\(version)_\(platform).dmg"
-            : "Adobe Downloader \(sap.sapCode)_\(version)-\(language)-\(platform)"
+        let platform = globalProducts.first(where: { $0.id == productId })?.platforms.first?.id ?? "unknown"
+        let fileName = productId == "APRO"
+            ? "Adobe Downloader \(productId)_\(version)_\(platform).dmg"
+            : "Adobe Downloader \(productId)_\(version)-\(language)-\(platform)"
 
         if useDefaultDirectory && !defaultDirectory.isEmpty {
             let defaultPath = URL(fileURLWithPath: defaultDirectory)
@@ -344,7 +340,7 @@ class NetworkManager: ObservableObject {
             let savedTasks = await TaskPersistenceManager.shared.loadTasks()
             await MainActor.run {
                 for task in savedTasks {
-                    for product in task.productsToDownload {
+                    for product in task.dependenciesToDownload {
                         product.updateCompletedPackages()
                     }
                 }
@@ -383,7 +379,7 @@ class NetworkManager: ObservableObject {
         for task in downloadTasks {
             if case .paused(let info) = task.status,
                info.reason == .networkIssue {
-                await downloadUtils.resumeDownloadTask(taskId: task.id)
+                await globalNewDownloadUtils.resumeDownloadTask(taskId: task.id)
             }
         }
     }
@@ -391,7 +387,7 @@ class NetworkManager: ObservableObject {
     private func pauseActiveTasks() async {
         for task in downloadTasks {
             if case .downloading = task.status {
-                await downloadUtils.pauseDownloadTask(taskId: task.id, reason: .networkIssue)
+                await globalNewDownloadUtils.pauseDownloadTask(taskId: task.id, reason: .networkIssue)
             }
         }
     }

@@ -18,15 +18,15 @@ class TaskPersistenceManager {
         self.cancelTracker = tracker
     }
     
-    private func getTaskFileName(sapCode: String, version: String, language: String, platform: String) -> String {
-        return sapCode == "APRO" 
-            ? "Adobe Downloader \(sapCode)_\(version)_\(platform)-task.json"
-            : "Adobe Downloader \(sapCode)_\(version)-\(language)-\(platform)-task.json"
+    private func getTaskFileName(productId: String, version: String, language: String, platform: String) -> String {
+        return productId == "APRO"
+        ? "Adobe Downloader \(productId)_\(version)_\(platform)-task.json"
+            : "Adobe Downloader \(productId)_\(version)-\(language)-\(platform)-task.json"
     }
     
     func saveTask(_ task: NewDownloadTask) async {
         let fileName = getTaskFileName(
-            sapCode: task.productId,
+            productId: task.productId,
             version: task.productVersion,
             language: task.language,
             platform: task.platform
@@ -209,7 +209,7 @@ class TaskPersistenceManager {
     
     func removeTask(_ task: NewDownloadTask) {
         let fileName = getTaskFileName(
-            sapCode: task.productId,
+            productId: task.productId,
             version: task.productVersion,
             language: task.language,
             platform: task.platform
@@ -220,16 +220,16 @@ class TaskPersistenceManager {
         try? fileManager.removeItem(at: fileURL)
     }
     
-    func createExistingProgramTask(sapCode: String, version: String, language: String, displayName: String, platform: String, directory: URL) async {
+    func createExistingProgramTask(productId: String, version: String, language: String, displayName: String, platform: String, directory: URL) async {
         let fileName = getTaskFileName(
-            sapCode: sapCode,
+            productId: productId,
             version: version,
             language: language,
             platform: platform
         )
         
         let product = DependenciesToDownload(
-            sapCode: sapCode,
+            sapCode: productId,
             version: version,
             buildGuid: "",
             applicationJson: ""
@@ -249,7 +249,7 @@ class TaskPersistenceManager {
         product.packages = [package]
         
         let task = NewDownloadTask(
-            productId: sapCode,
+            productId: productId,
             productVersion: version,
             language: language,
             displayName: displayName,
