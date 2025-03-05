@@ -108,9 +108,13 @@ struct NewParseResult {
 }
 
 /* ========== */
-struct UniqueProduct {
+struct UniqueProduct: Equatable {
     var id: String
     var displayName: String
+    
+    static func == (lhs: UniqueProduct, rhs: UniqueProduct) -> Bool {
+        return lhs.id == rhs.id && lhs.displayName == rhs.displayName
+    }
 }
 
 /* ========== */

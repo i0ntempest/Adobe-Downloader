@@ -11,16 +11,20 @@ private enum AppCardConstants {
     static let cardWidth: CGFloat = 250
     static let cardHeight: CGFloat = 200
     static let iconSize: CGFloat = 64
-    static let cornerRadius: CGFloat = 10
-    static let buttonHeight: CGFloat = 32
+    static let cornerRadius: CGFloat = 12
+    static let buttonHeight: CGFloat = 36
     static let titleFontSize: CGFloat = 16
     static let buttonFontSize: CGFloat = 14
     
-    static let shadowOpacity: Double = 0.05
-    static let shadowRadius: CGFloat = 2
-    static let strokeOpacity: Double = 0.1
-    static let strokeWidth: CGFloat = 2
+    static let shadowOpacity: Double = 0.1
+    static let shadowRadius: CGFloat = 4
+    static let strokeOpacity: Double = 0.15
+    static let strokeWidth: CGFloat = 1
     static let backgroundOpacity: Double = 0.05
+    static let hoverScale: CGFloat = 1.02
+    
+    static let iconPlaceholderOpacity: Double = 0.6
+    static let iconLoadingDuration: Double = 0.3
 }
 
 final class IconCache {
@@ -338,6 +342,8 @@ private struct CardContainer<Content: View>: View {
 
 private struct IconView: View {
     @ObservedObject var viewModel: AppCardViewModel
+    @State private var isLoading = true
+    @State private var opacity = 0.0
     
     var body: some View {
         Group {
@@ -346,11 +352,18 @@ private struct IconView: View {
                     .resizable()
                     .interpolation(.high)
                     .scaledToFit()
+                    .opacity(opacity)
+                    .onAppear {
+                        withAnimation(.easeIn(duration: AppCardConstants.iconLoadingDuration)) {
+                            opacity = 1.0
+                        }
+                    }
             } else {
                 Image(systemName: "app.fill")
                     .resizable()
                     .scaledToFit()
                     .foregroundColor(.secondary)
+                    .opacity(AppCardConstants.iconPlaceholderOpacity)
             }
         }
         .frame(width: AppCardConstants.iconSize, height: AppCardConstants.iconSize)
@@ -362,12 +375,13 @@ private struct ProductInfoView: View {
     @ObservedObject var viewModel: AppCardViewModel
     
     var body: some View {
-        VStack {
+        VStack(spacing: 8) {
             Text(viewModel.uniqueProduct.displayName)
                 .font(.system(size: AppCardConstants.titleFontSize))
-                .fontWeight(.bold)
+                .fontWeight(.semibold)
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
             
             let products = findProducts(id: viewModel.uniqueProduct.id)
             let versions = products.compactMap { product -> String? in
@@ -383,71 +397,78 @@ private struct ProductInfoView: View {
             let modulesCount = products.first?.platforms.first?.modules.count ?? 0
             
             HStack(spacing: 12) {
-                HStack(spacing: 2) {
-                    Image(systemName: "tag")
-                    Text("\(uniqueVersions.count)")
-                }
+                MetricView(icon: "tag", value: "\(uniqueVersions.count)")
 
                 if dependenciesCount > 0 {
-                    Text("•")
-                        .foregroundColor(.gray)
-                    
-                    HStack(spacing: 2) {
-                        Image(systemName: "shippingbox")
-                        Text("\(dependenciesCount)")
-                    }
+                    Divider()
+                        .frame(height: 12)
+                    MetricView(icon: "shippingbox", value: "\(dependenciesCount)")
                 }
 
                 if !minOSVersion.isEmpty {
-                    Text("•")
-                        .foregroundColor(.gray)
-                    
-                    HStack(spacing: 2) {
-                        Image(systemName: "macwindow")
-                        Text(minOSVersion.replacingOccurrences(of: "-", with: ""))
-                    }
+                    Divider()
+                        .frame(height: 12)
+                    MetricView(icon: "macwindow", value: minOSVersion.replacingOccurrences(of: "-", with: ""))
                 }
                 
                 if modulesCount > 0 {
-                    Text("•")
-                        .foregroundColor(.gray)
-                    
-                    HStack(spacing: 2) {
-                        Image(systemName: "square.stack.3d.up")
-                        Text("\(modulesCount)")
-                    }
+                    Divider()
+                        .frame(height: 12)
+                    MetricView(icon: "square.stack.3d.up", value: "\(modulesCount)")
                 }
             }
             .font(.caption)
             .foregroundColor(.secondary)
-            .frame(height: 20)
+        }
+    }
+}
+
+private struct MetricView: View {
+    let icon: String
+    let value: String
+    
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon)
+                .imageScale(.small)
+            Text(value)
+                .fontWeight(.medium)
         }
     }
 }
 
 private struct DownloadButtonView: View {
     @ObservedObject var viewModel: AppCardViewModel
+    @State private var isHovered = false
     
     var body: some View {
         Button(action: { viewModel.showVersionPicker = true }) {
             Label(viewModel.downloadButtonTitle,
                   systemImage: viewModel.downloadButtonIcon)
-                .font(.system(size: AppCardConstants.buttonFontSize))
+                .font(.system(size: AppCardConstants.buttonFontSize, weight: .medium))
                 .frame(minWidth: 0, maxWidth: .infinity)
                 .frame(height: AppCardConstants.buttonHeight)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.borderedProminent)
         .tint(viewModel.isDownloading ? .gray : .blue)
         .disabled(!viewModel.canDownload)
+        .scaleEffect(isHovered && viewModel.canDownload ? 1.02 : 1.0)
+        .animation(.easeInOut(duration: 0.2), value: isHovered)
+        .onHover { hovering in
+            isHovered = hovering
+        }
     }
 }
 
 private struct CardModifier: ViewModifier {
+    @State private var isHovered = false
+    
     func body(content: Content) -> some View {
         content
             .background(
                 RoundedRectangle(cornerRadius: AppCardConstants.cornerRadius)
-                    .fill(Color.black.opacity(AppCardConstants.backgroundOpacity))
+                    .fill(Color(NSColor.windowBackgroundColor))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: AppCardConstants.cornerRadius)
@@ -455,11 +476,16 @@ private struct CardModifier: ViewModifier {
                            lineWidth: AppCardConstants.strokeWidth)
             )
             .shadow(
-                color: Color.primary.opacity(AppCardConstants.shadowOpacity),
-                radius: AppCardConstants.shadowRadius,
+                color: Color.primary.opacity(isHovered ? AppCardConstants.shadowOpacity * 2 : AppCardConstants.shadowOpacity),
+                radius: isHovered ? AppCardConstants.shadowRadius * 1.5 : AppCardConstants.shadowRadius,
                 x: 0,
-                y: 1
+                y: isHovered ? 4 : 2
             )
+            .scaleEffect(isHovered ? AppCardConstants.hoverScale : 1.0)
+            .animation(.easeInOut(duration: 0.2), value: isHovered)
+            .onHover { hovering in
+                isHovered = hovering
+            }
     }
 }
 

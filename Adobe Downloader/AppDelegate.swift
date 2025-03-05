@@ -6,6 +6,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.mainMenu = nil
+        
+        if let window = NSApp.windows.first {
+            window.minSize = NSSize(width: 792, height: 600)
+        }
+        
         eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             if event.modifierFlags.contains(.command) && event.characters?.lowercased() == "q" {
                 if let mainWindow = NSApp.mainWindow,
