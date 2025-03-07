@@ -5,6 +5,41 @@
 //
 import SwiftUI
 
+struct BeautifulLanguageSearchField: View {
+    @Binding var text: String
+    
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 13))
+                .foregroundColor(.secondary.opacity(0.7))
+            
+            TextField("搜索语言", text: $text)
+                .textFieldStyle(PlainTextFieldStyle())
+                .font(.system(size: 13))
+            
+            if !text.isEmpty {
+                Button(action: { text = "" }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary.opacity(0.7))
+                }
+                .buttonStyle(.plain)
+                .transition(.opacity)
+            }
+        }
+        .padding(8)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color(NSColor.controlBackgroundColor).opacity(0.5))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.secondary.opacity(0.1), lineWidth: 1)
+                )
+        )
+    }
+}
+
 struct LanguagePickerView: View {
     let languages: [(code: String, name: String)]
     let onLanguageSelected: (String) -> Void
@@ -28,36 +63,35 @@ struct LanguagePickerView: View {
         VStack(spacing: 0) {
             HStack {
                 Text("选择安装语言")
-                    .font(.headline)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.primary.opacity(0.9))
                 Spacer()
                 Button("取消") {
                     dismiss()
                 }
+                .font(.system(size: 14))
+                .foregroundColor(.blue)
                 .buttonStyle(.plain)
             }
-            .padding()
-            .background(Color(NSColor.controlBackgroundColor))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(
+                Color(NSColor.windowBackgroundColor)
+                    .overlay(
+                        Rectangle()
+                            .frame(height: 0.5)
+                            .foregroundColor(Color.secondary.opacity(0.2)),
+                        alignment: .bottom
+                    )
+            )
 
-            HStack {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(.secondary)
-                TextField("搜索语言", text: $searchText)
-                    .textFieldStyle(.plain)
-                if !searchText.isEmpty {
-                    Button(action: { searchText = "" }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.secondary)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(8)
-            .background(Color(NSColor.controlBackgroundColor))
-            .cornerRadius(6)
-            .padding(.horizontal)
-            .padding(.vertical, 8)
+            BeautifulLanguageSearchField(text: $searchText)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
 
-            Divider()
+            Rectangle()
+                .fill(Color.secondary.opacity(0.1))
+                .frame(height: 1)
 
             ScrollView(showsIndicators: false) {
                 LazyVStack(spacing: 0) {
@@ -66,33 +100,48 @@ struct LanguagePickerView: View {
                             language: language,
                             isSelected: language.code == selectedLanguage,
                             onSelect: {
-                                selectedLanguage = language.code
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    selectedLanguage = language.code
+                                }
                                 onLanguageSelected(language.code)
                                 dismiss()
                             }
                         )
                         
                         if index < filteredLanguages.count - 1 {
-                            Divider()
-                                .padding(.leading, 44)
+                            Rectangle()
+                                .fill(Color.secondary.opacity(0.06))
+                                .frame(height: 0.5)
+                                .padding(.leading, 46)
                         }
                     }
                 }
+                .padding(.vertical, 4)
             }
-            
+
             if filteredLanguages.isEmpty {
-                VStack {
-                    Image(systemName: "magnifyingglass")
-                        .font(.system(size: 36))
-                        .foregroundColor(.secondary)
-                    Text("未找到语言")
-                        .font(.headline)
-                        .padding(.top)
-                    Text("尝试其他搜索关键词")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                VStack(spacing: 16) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.secondary.opacity(0.1))
+                            .frame(width: 80, height: 80)
+                        
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 36))
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    VStack(spacing: 8) {
+                        Text("未找到语言")
+                            .font(.system(size: 16, weight: .medium))
+                        
+                        Text("尝试其他搜索关键词")
+                            .font(.system(size: 14))
+                            .foregroundColor(.secondary)
+                    }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .offset(y: -20)
             }
         }
         .frame(width: 320, height: 400)
@@ -106,30 +155,40 @@ struct LanguageRow: View {
     
     var body: some View {
         Button(action: onSelect) {
-            HStack(spacing: 12) {
-                Image(systemName: getLanguageIcon(language.code))
-                    .foregroundColor(.blue)
-                    .frame(width: 24)
-                
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(Color.blue.opacity(0.15))
+                        .frame(width: 32, height: 32)
+                    
+                    Image(systemName: getLanguageIcon(language.code))
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.blue)
+                }
+
                 Text(language.name)
+                    .font(.system(size: 14, weight: isSelected ? .medium : .regular))
+                    .foregroundColor(isSelected ? .primary : .primary.opacity(0.8))
                     .frame(maxWidth: .infinity, alignment: .leading)
-                
+
                 Text(language.code)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary.opacity(0.8))
                 
                 if isSelected {
                     Image(systemName: "checkmark")
+                        .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.blue)
                         .frame(width: 20)
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 14)
             .padding(.vertical, 10)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .background(isSelected ? Color.blue.opacity(0.1) : Color.clear)
+        .background(isSelected ? Color.blue.opacity(0.08) : Color.clear)
+        .animation(.easeInOut(duration: 0.2), value: isSelected)
     }
     
     private func getLanguageIcon(_ code: String) -> String {

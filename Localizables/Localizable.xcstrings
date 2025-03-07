@@ -4,6 +4,12 @@
     "" : {
 
     },
+    "--" : {
+
+    },
+    "--:--" : {
+
+    },
     "(%@)" : {
 
     },
@@ -33,9 +39,6 @@
       }
     },
     "(退出代码: %lld)" : {
-
-    },
-    "[%@]" : {
 
     },
     "/" : {
@@ -301,7 +304,7 @@
     "Apple Silicon" : {
 
     },
-    "base: %@" : {
+    "base:" : {
 
     },
     "buildGuid:" : {
@@ -381,6 +384,7 @@
       }
     },
     "Helper 状态: " : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -401,6 +405,7 @@
       }
     },
     "Helper 连接状态: " : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -506,15 +511,6 @@
     "v%@" : {
 
     },
-    "v4" : {
-
-    },
-    "v5" : {
-
-    },
-    "v6" : {
-
-    },
     "X1a0He CC" : {
 
     },
@@ -541,6 +537,7 @@
       }
     },
     "X1a0He CC 处理状态: " : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -551,6 +548,7 @@
       }
     },
     "X1a0He CC 备份状态: " : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -561,6 +559,7 @@
       }
     },
     "X1a0He CC 版本信息: " : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1180,6 +1179,9 @@
         }
       }
     },
+    "处理状态: " : {
+
+    },
     "备份 Setup 组件失败" : {
       "localizations" : {
         "en" : {
@@ -1209,6 +1211,9 @@
           }
         }
       }
+    },
+    "备份状态: " : {
+
     },
     "复制命令" : {
       "localizations" : {
@@ -1410,6 +1415,9 @@
     "安装文件不完整或损坏 (退出代码: %lld)" : {
 
     },
+    "安装状态: " : {
+
+    },
     "安装程序已存在" : {
       "localizations" : {
         "en" : {
@@ -1511,6 +1519,12 @@
           }
         }
       }
+    },
+    "已启用" : {
+
+    },
+    "已启用确认" : {
+
     },
     "已处理" : {
       "extractionState" : "stale",
@@ -1670,6 +1684,7 @@
       }
     },
     "当前版本：" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1678,6 +1693,9 @@
           }
         }
       }
+    },
+    "当前版本: " : {
+
     },
     "所有操作已成功完成" : {
       "localizations" : {
@@ -2187,7 +2205,11 @@
         }
       }
     },
+    "检查更新" : {
+
+    },
     "检查更新..." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2548,6 +2570,9 @@
           }
         }
       }
+    },
+    "版本信息: " : {
+
     },
     "确定" : {
       "localizations" : {
@@ -2934,6 +2959,9 @@
         }
       }
     },
+    "连接状态: " : {
+
+    },
     "连接超时" : {
       "localizations" : {
         "en" : {
@@ -3105,6 +3133,9 @@
           }
         }
       }
+    },
+    "需先启用自动检查" : {
+
     },
     "需要下载 Setup 组件" : {
       "localizations" : {

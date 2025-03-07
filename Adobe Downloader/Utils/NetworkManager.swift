@@ -62,6 +62,7 @@ class NetworkManager: ObservableObject {
         }
     }
     func startDownload(productId: String, selectedVersion: String, language: String, destinationURL: URL) async throws {
+        print(destinationURL)
         // 从 globalCcmResult 中获取 productId 对应的 ProductInfo
         guard let productInfo = globalCcmResult.products.first(where: { $0.id == productId }) else {
             throw NetworkError.productNotFound
@@ -84,7 +85,7 @@ class NetworkManager: ObservableObject {
             totalDownloadedSize: 0,
             totalSize: 0,
             totalSpeed: 0,
-            platform: "")
+            platform: globalProducts.first(where: { $0.id == productId })?.platforms.first?.id ?? "unknown")
 
         downloadTasks.append(task)
         updateDockBadge()

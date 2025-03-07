@@ -9,6 +9,7 @@ import SwiftUI
 struct DownloadManagerView: View {
     @Environment(\.dismiss) private var dismiss
     
+    @ObservedObject private var networkManager = globalNetworkManager
     @State private var sortOrder: SortOrder = .addTime
 
     enum SortOrder {
@@ -26,7 +27,9 @@ struct DownloadManagerView: View {
     }
     
     private func removeTask(_ task: NewDownloadTask) {
-        globalNetworkManager.removeTask(taskId: task.id)
+        Task { @MainActor in
+            globalNetworkManager.removeTask(taskId: task.id)
+        }
     }
 
     private func sortTasks(_ tasks: [NewDownloadTask]) -> [NewDownloadTask] {
@@ -51,7 +54,7 @@ struct DownloadManagerView: View {
                 dismiss: dismiss
             )
             DownloadTaskList(
-                tasks: sortTasks(globalNetworkManager.downloadTasks),
+                tasks: sortTasks(networkManager.downloadTasks),
                 removeTask: removeTask
             )
         }
@@ -64,18 +67,36 @@ private struct DownloadManagerToolbar: View {
     let dismiss: DismissAction
     
     var body: some View {
-        HStack {
-            Text("下载管理")
-                .font(.headline)
-            Spacer()
-            SortMenuView(sortOrder: $sortOrder)
-                .frame(minWidth: 120)
-                .fixedSize()
-
-            ToolbarButtons(dismiss: dismiss)
+        VStack(spacing: 0) {
+            HStack {
+                Text("下载管理")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(.primary)
+                
+                Spacer()
+                
+                SortMenuView(sortOrder: $sortOrder)
+                    .frame(minWidth: 120)
+                    .fixedSize()
+                
+                ToolbarButtons(dismiss: dismiss)
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 14)
+            
+            Divider()
         }
-        .padding(.horizontal)
-        .padding(.vertical, 8)
+        .background(
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    Color(NSColor.windowBackgroundColor).opacity(0.95),
+                    Color(NSColor.windowBackgroundColor)
+                ]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
+        .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
     }
 }
 
@@ -83,8 +104,8 @@ private struct ToolbarButtons: View {
     let dismiss: DismissAction
     
     var body: some View {
-        Group {
-            Button("全部暂停") {
+        HStack(spacing: 12) {
+            Button(action: {
                 Task {
                     for task in globalNetworkManager.downloadTasks {
                         if case .downloading = task.status {
@@ -95,9 +116,14 @@ private struct ToolbarButtons: View {
                         }
                     }
                 }
+            }) {
+                Label("全部暂停", systemImage: "pause.circle.fill")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.white)
             }
+            .buttonStyle(BeautifulButtonStyle(baseColor: .orange))
             
-            Button("全部继续") {
+            Button(action: {
                 Task {
                     for task in globalNetworkManager.downloadTasks {
                         if case .paused = task.status {
@@ -105,9 +131,14 @@ private struct ToolbarButtons: View {
                         }
                     }
                 }
+            }) {
+                Label("全部继续", systemImage: "play.circle.fill")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.white)
             }
+            .buttonStyle(BeautifulButtonStyle(baseColor: .blue))
             
-            Button("清理已完成") {
+            Button(action: {
                 globalNetworkManager.downloadTasks.removeAll { task in
                     if case .completed = task.status {
                         return true
@@ -115,13 +146,19 @@ private struct ToolbarButtons: View {
                     return false
                 }
                 globalNetworkManager.updateDockBadge()
+            }) {
+                Label("清理已完成", systemImage: "trash.circle.fill")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.white)
             }
+            .buttonStyle(BeautifulButtonStyle(baseColor: .green))
             
-            Button("关闭") {
-                dismiss()
+            Button(action: { dismiss() }) {
+                Label("关闭", systemImage: "xmark.circle.fill")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.white)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(.red)
+            .buttonStyle(BeautifulButtonStyle(baseColor: .red))
         }
     }
 }
@@ -187,19 +224,57 @@ struct SortMenuView: View {
                 }) {
                     HStack {
                         Text(order.description)
+                            .font(.system(size: 14, weight: .medium))
+                        Spacer()
                         if sortOrder == order {
                             Image(systemName: "checkmark")
+                                .foregroundColor(.blue)
+                                .font(.system(size: 12, weight: .bold))
                         }
                     }
+                    .frame(minWidth: 120)
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 12)
+                    .background(
+                        LinearGradient(
+                            gradient: Gradient(colors: [
+                                sortOrder == order ? Color.blue.opacity(0.05) : Color.clear,
+                                sortOrder == order ? Color.blue.opacity(0.1) : Color.clear
+                            ]),
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(PlainButtonStyle())
             }
         } label: {
-            HStack {
+            HStack(spacing: 6) {
                 Image(systemName: "arrow.up.arrow.down")
+                    .font(.system(size: 12))
                 Text(sortOrder.description)
-                    .font(.caption)
+                    .font(.system(size: 13, weight: .medium))
             }
+            .foregroundColor(.white)
+            .padding(.vertical, 6)
+            .padding(.horizontal, 10)
+            .background(
+                LinearGradient(
+                    gradient: Gradient(colors: [
+                        Color.blue.opacity(0.7),
+                        Color.blue.opacity(0.8)
+                    ]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
         }
+        .menuStyle(BorderlessButtonMenuStyle())
+        .menuIndicator(.hidden)
+        .fixedSize()
     }
 }
 

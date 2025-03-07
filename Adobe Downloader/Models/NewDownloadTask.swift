@@ -18,7 +18,7 @@ class NewDownloadTask: Identifiable, ObservableObject  {
     let createAt: Date
     var displayInstallButton: Bool
 
-    let platform: String
+    var platform: String
 
     @Published var totalStatus: DownloadStatus?
     @Published var totalProgress: Double

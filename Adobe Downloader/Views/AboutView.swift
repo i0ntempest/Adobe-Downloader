@@ -295,12 +295,16 @@ private struct GeneralSettingsContent: View {
     var body: some View {
         Form {
             DownloadSettingsView(viewModel: viewModel)
+                .padding(.bottom, 8)
             HelperSettingsView(viewModel: viewModel,
                             showHelperAlert: $showHelperAlert,
                             helperAlertMessage: $helperAlertMessage,
                             helperAlertSuccess: $helperAlertSuccess)
+                .padding(.bottom, 8)
             CCSettingsView(viewModel: viewModel)
+                .padding(.bottom, 8)
             UpdateSettingsView(viewModel: viewModel)
+                .padding(.bottom, 8)
             CleanConfigView()
         }
         .padding()
@@ -404,21 +408,68 @@ private struct GeneralSettingsAlerts: ViewModifier {
     }
 }
 
+struct BeautifulGroupBox<Label: View, Content: View>: View {
+    let label: Label
+    let content: Content
+    
+    init(label: @escaping () -> Label, @ViewBuilder content: () -> Content) {
+        self.label = label()
+        self.content = content()
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            label
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.primary.opacity(0.85))
+            
+            VStack(alignment: .leading, spacing: 0) {
+                content
+            }
+            .padding(8)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(NSColor.controlBackgroundColor).opacity(0.7))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color.secondary.opacity(0.15), lineWidth: 1)
+                    )
+            )
+        }
+    }
+}
+
 struct DownloadSettingsView: View {
     @ObservedObject var viewModel: GeneralSettingsViewModel
 
     var body: some View {
-        GroupBox(label: Text("下载设置").padding(.bottom, 8)) {
-            VStack(alignment: .leading, spacing: 12) {
+        BeautifulGroupBox(label: { 
+            Text("下载设置")
+        }) {
+            VStack(alignment: .leading, spacing: 8) {
                 LanguageSettingRow(viewModel: viewModel)
+                    .fixedSize(horizontal: false, vertical: true)
+                
                 Divider()
+                
                 DirectorySettingRow(viewModel: viewModel)
+                    .fixedSize(horizontal: false, vertical: true)
+                
                 Divider()
+                
                 RedownloadConfirmRow(viewModel: viewModel)
-                Divider()
+                    .fixedSize(horizontal: false, vertical: true)
+                
+                HStack {
+                    Spacer()
+                    Rectangle()
+                        .fill(Color.secondary.opacity(0.15))
+                        .frame(height: 1)
+                    Spacer()
+                }
+                
                 ArchitectureSettingRow(viewModel: viewModel)
             }
-            .padding(8)
         }
     }
 }
@@ -430,13 +481,15 @@ struct HelperSettingsView: View {
     @Binding var helperAlertSuccess: Bool
 
     var body: some View {
-        GroupBox(label: Text("Helper 设置").padding(.bottom, 8)) {
-            VStack(alignment: .leading, spacing: 12) {
+        BeautifulGroupBox(label: { 
+            Text("Helper 设置")
+        }) {
+            VStack(alignment: .leading, spacing: 8) {
                 HelperStatusRow(viewModel: viewModel, showHelperAlert: $showHelperAlert,
                               helperAlertMessage: $helperAlertMessage,
                               helperAlertSuccess: $helperAlertSuccess)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(8)
         }
     }
 }
@@ -445,11 +498,13 @@ struct CCSettingsView: View {
     @ObservedObject var viewModel: GeneralSettingsViewModel
 
     var body: some View {
-        GroupBox(label: Text("X1a0He CC设置").padding(.bottom, 8)) {
-            VStack(alignment: .leading, spacing: 12) {
+        BeautifulGroupBox(label: { 
+            Text("X1a0He CC设置")
+        }) {
+            VStack(alignment: .leading, spacing: 16) {
                 SetupComponentRow(viewModel: viewModel)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(8)
         }
     }
 }
@@ -464,24 +519,44 @@ struct UpdateSettingsView: View {
     }
 
     var body: some View {
-        GroupBox(label: Text("更新设置").padding(.bottom, 8)) {
-            VStack(alignment: .leading, spacing: 12) {
+        BeautifulGroupBox(label: { 
+            Text("更新设置")
+        }) {
+            VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text("当前版本：")
-                        .foregroundColor(.secondary)
-                    Text(appVersion)
-                    Text("(\(buildVersion))")
-                        .foregroundColor(.secondary)
+                    Text("当前版本: ")
+                        .font(.system(size: 14, weight: .medium))
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: "number.circle.fill")
+                            .foregroundColor(.blue)
+                            .font(.system(size: 12))
+                            .frame(width: 16, height: 16)
+                        Text(appVersion)
+                            .foregroundColor(.secondary)
+                            .font(.system(size: 13))
+                        Text("(\(buildVersion))")
+                            .foregroundColor(.secondary)
+                            .font(.system(size: 13))
+                    }
+                    .padding(.vertical, 3)
+                    .padding(.horizontal, 8)
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(5)
                 }
-                .font(.system(size: 12))
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.vertical, 2)
 
                 Divider()
 
                 AutoUpdateRow(viewModel: viewModel)
+                    .fixedSize(horizontal: false, vertical: true)
+                
                 Divider()
+                
                 AutoDownloadRow(viewModel: viewModel)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(8)
         }
     }
 }
@@ -507,32 +582,44 @@ struct CleanConfigView: View {
     }
 
     var body: some View {
-        HStack(spacing: 12) {
-            GroupBox(label: Text("重置程序").padding(.bottom, 8)) {
-                VStack(alignment: .leading, spacing: 12) {
+        HStack(spacing: 16) {
+            BeautifulGroupBox(label: { 
+                Text("重置程序")
+            }) {
+                VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Button("重置程序") {
                             showConfirmation = true
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(.red)
+                        .buttonStyle(BeautifulButtonStyle(baseColor: .red.opacity(0.8)))
+                        .foregroundColor(.white)
                     }
+                    .fixedSize(horizontal: false, vertical: true)
                 }
-                .padding(8)
             }
             
-            GroupBox(label: Text("系统信息").padding(.bottom, 8)) {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
+            BeautifulGroupBox(label: { 
+                Text("系统信息")
+            }) {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) {
                         Image(systemName: "desktopcomputer")
                             .foregroundColor(.blue)
-                        Text("macOS \(ProcessInfo.processInfo.operatingSystemVersionString)")
-                        Text("[\(chipInfo.isEmpty ? "加载中..." : chipInfo)]")
-                            .foregroundColor(.secondary)
+                            .imageScale(.medium)
+                            .frame(width: 22, height: 22)
+                            .background(Circle().fill(Color.blue.opacity(0.1)).frame(width: 28, height: 28))
+                        
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("macOS \(ProcessInfo.processInfo.operatingSystemVersionString)")
+                                .fontWeight(.medium)
+                            
+                            Text("\(chipInfo.isEmpty ? "加载中..." : chipInfo)")
+                                .foregroundColor(.secondary)
+                                .font(.system(size: 12))
+                        }
                         Spacer()
                     }
                 }
-                .padding(8)
             }
         }
         .alert("确认重置程序", isPresented: $showConfirmation) {
@@ -635,19 +722,51 @@ struct LanguageSettingRow: View {
     @ObservedObject var viewModel: GeneralSettingsViewModel
 
     var body: some View {
-        HStack {
+        HStack(spacing: 10) {
             Toggle("使用默认语言", isOn: Binding(
                 get: { viewModel.useDefaultLanguage },
                 set: { viewModel.useDefaultLanguage = $0 }
             ))
+            .toggleStyle(SwitchToggleStyle(tint: Color.green))
                 .padding(.leading, 5)
+                .controlSize(.small)
+                .labelsHidden()
+                
+            Text("使用默认语言")
+                .font(.system(size: 14))
+                
             Spacer()
-            Text(getLanguageName(code: viewModel.defaultLanguage))
-                .foregroundColor(.secondary)
-            Button("选择") {
-                viewModel.showLanguagePicker = true
+            
+            if viewModel.useDefaultLanguage {
+                HStack(spacing: 4) {
+                    Image(systemName: "globe")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 12))
+                    Text(getLanguageName(code: viewModel.defaultLanguage))
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 13))
+                }
+                .padding(.vertical, 3)
+                .padding(.horizontal, 8)
+                .background(Color.secondary.opacity(0.1))
+                .cornerRadius(5)
+                
+                Button(action: {
+                    viewModel.showLanguagePicker = true
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "pencil")
+                            .font(.system(size: 10))
+                        Text("选择")
+                            .font(.system(size: 13))
+                    }
+                    .frame(minWidth: 60)
+                }
+                .buttonStyle(BeautifulButtonStyle(baseColor: Color.blue.opacity(0.8)))
+                .foregroundColor(.white)
+                .padding(.trailing, 5)
+                .disabled(!viewModel.useDefaultLanguage)
             }
-            .padding(.trailing, 5)
         }
         .sheet(isPresented: $viewModel.showLanguagePicker) {
             LanguagePickerView(languages: AppStatics.supportedLanguages) { language in
@@ -666,18 +785,51 @@ struct DirectorySettingRow: View {
     @ObservedObject var viewModel: GeneralSettingsViewModel
 
     var body: some View {
-        HStack {
+        HStack(spacing: 10) {
             Toggle("使用默认目录", isOn: $viewModel.useDefaultDirectory)
+                .toggleStyle(SwitchToggleStyle(tint: Color.green))
                 .padding(.leading, 5)
+                .controlSize(.small)
+                .labelsHidden()
+                
+            Text("使用默认目录")
+                .font(.system(size: 14))
+                
             Spacer()
-            Text(formatPath(viewModel.defaultDirectory))
-                .foregroundColor(.secondary)
-                .lineLimit(1)
-                .truncationMode(.middle)
-            Button("选择") {
-                selectDirectory()
+            
+            if viewModel.useDefaultDirectory {
+                HStack(spacing: 4) {
+                    Image(systemName: "folder")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 12))
+                        .frame(width: 16)
+                    Text(formatPath(viewModel.defaultDirectory))
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 13))
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+                .padding(.vertical, 3)
+                .padding(.horizontal, 8)
+                .background(Color.secondary.opacity(0.1))
+                .cornerRadius(5)
+                
+                Button(action: {
+                    selectDirectory()
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "folder.badge.plus")
+                            .font(.system(size: 10))
+                        Text("选择")
+                            .font(.system(size: 13))
+                    }
+                    .frame(minWidth: 60)
+                }
+                .buttonStyle(BeautifulButtonStyle(baseColor: Color.blue.opacity(0.8)))
+                .foregroundColor(.white)
+                .padding(.trailing, 5)
+                .disabled(!viewModel.useDefaultDirectory)
             }
-            .padding(.trailing, 5)
         }
     }
 
@@ -704,31 +856,80 @@ struct RedownloadConfirmRow: View {
     @ObservedObject var viewModel: GeneralSettingsViewModel
 
     var body: some View {
-        HStack {
+        HStack(spacing: 10) {
             Toggle("重新下载时需要确认", isOn: $viewModel.confirmRedownload)
+                .toggleStyle(SwitchToggleStyle(tint: Color.green))
                 .padding(.leading, 5)
+                .controlSize(.small)
+                .labelsHidden()
+                
+            Text("重新下载时需要确认")
+                .font(.system(size: 14))
+            
             Spacer()
+            
+            if viewModel.confirmRedownload {
+                HStack(spacing: 5) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .foregroundColor(.orange)
+                        .font(.system(size: 12))
+                    Text("已启用确认")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 13))
+                }
+                .padding(.vertical, 3)
+                .padding(.horizontal, 8)
+                .background(Color.orange.opacity(0.1))
+                .cornerRadius(5)
+                .padding(.trailing, 5)
+            }
         }
     }
 }
 
 struct ArchitectureSettingRow: View {
     @ObservedObject var viewModel: GeneralSettingsViewModel
+    @ObservedObject private var networkManager = globalNetworkManager
 
     var body: some View {
-        HStack {
+        HStack(spacing: 10) {
             Toggle("下载 Apple Silicon 架构", isOn: $viewModel.downloadAppleSilicon)
+                .toggleStyle(SwitchToggleStyle(tint: Color.green))
                 .padding(.leading, 5)
-                .disabled(globalNetworkManager.loadingState == .loading)
+                .controlSize(.small)
+                .disabled(networkManager.loadingState == .loading)
+                .labelsHidden()
+                
+            Text("下载 Apple Silicon 架构")
+                .font(.system(size: 14))
+            
             Spacer()
-            Text("当前架构: \(AppStatics.cpuArchitecture)")
-                .foregroundColor(.secondary)
-                .lineLimit(1)
-                .truncationMode(.middle)
+            
+            HStack(spacing: 5) {
+                Image(systemName: "cpu")
+                    .foregroundColor(.secondary)
+                    .font(.system(size: 12))
+                Text("当前架构: \(AppStatics.cpuArchitecture)")
+                    .foregroundColor(.secondary)
+                    .font(.system(size: 13))
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+            .padding(.vertical, 3)
+            .padding(.horizontal, 8)
+            .background(Color.secondary.opacity(0.1))
+            .cornerRadius(5)
+            .padding(.trailing, 5)
+            
+            if networkManager.loadingState == .loading {
+                ProgressView()
+                    .scaleEffect(0.7)
+                    .padding(.trailing, 5)
+            }
         }
         .onChange(of: viewModel.downloadAppleSilicon) { newValue in
             Task {
-                await globalNetworkManager.fetchProducts()
+                await networkManager.fetchProducts()
             }
         }
     }
@@ -743,24 +944,43 @@ struct HelperStatusRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("Helper 状态: ")
+            HStack(spacing: 10) {
+                Text("安装状态: ")
+                    .font(.system(size: 14, weight: .medium))
+                    
                 if PrivilegedHelperManager.getHelperStatus {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                    Text("已安装 (build \(UserDefaults.standard.string(forKey: "InstalledHelperBuild") ?? "0"))")
+                    HStack(spacing: 5) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                            .font(.system(size: 14))
+                        Text("已安装 (build \(UserDefaults.standard.string(forKey: "InstalledHelperBuild") ?? "0"))")
+                            .font(.system(size: 14))
+                    }
+                    .padding(.vertical, 4)
+                    .padding(.horizontal, 8)
+                    .background(Color.green.opacity(0.1))
+                    .cornerRadius(6)
                 } else {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.red)
-                    Text("未安装")
-                        .foregroundColor(.red)
+                    HStack(spacing: 5) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.red)
+                            .font(.system(size: 14))
+                        Text("未安装")
+                            .foregroundColor(.red)
+                            .font(.system(size: 14))
+                    }
+                    .padding(.vertical, 4)
+                    .padding(.horizontal, 8)
+                    .background(Color.red.opacity(0.1))
+                    .cornerRadius(6)
                 }
+                
                 Spacer()
 
                 if isReinstallingHelper {
                     ProgressView()
-                        .scaleEffect(0.7)
-                        .frame(width: 16, height: 16)
+                        .scaleEffect(0.8)
+                        .padding(.trailing, 5)
                 }
 
                 Button(action: {
@@ -773,8 +993,16 @@ struct HelperStatusRow: View {
                         isReinstallingHelper = false
                     }
                 }) {
-                    Text("重新安装")
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 12))
+                        Text("重新安装")
+                            .font(.system(size: 13))
+                    }
+                    .frame(minWidth: 90)
                 }
+                .buttonStyle(BeautifulButtonStyle(baseColor: Color.blue.opacity(0.8)))
+                .foregroundColor(.white)
                 .disabled(isReinstallingHelper)
                 .help("完全卸载并重新安装 Helper")
             }
@@ -787,12 +1015,21 @@ struct HelperStatusRow: View {
 
             Divider()
 
-            HStack {
-                Text("Helper 连接状态: ")
-                PulsingCircle(color: helperStatusColor)
-                    .padding(.horizontal, 4)
-                Text(helperStatusText)
-                    .foregroundColor(helperStatusColor)
+            HStack(spacing: 10) {
+                Text("连接状态: ")
+                    .font(.system(size: 14, weight: .medium))
+                
+                HStack(spacing: 5) {
+                    PulsingCircle(color: helperStatusColor)
+                        .frame(width: 12, height: 12)
+                    Text(helperStatusText)
+                        .font(.system(size: 14))
+                        .foregroundColor(helperStatusColor)
+                }
+                .padding(.vertical, 4)
+                .padding(.horizontal, 8)
+                .background(helperStatusBackgroundColor)
+                .cornerRadius(6)
 
                 Spacer()
 
@@ -806,11 +1043,17 @@ struct HelperStatusRow: View {
                         }
                     }
                 }) {
-                    Text("重新连接")
+                    HStack(spacing: 4) {
+                        Image(systemName: "network")
+                            .font(.system(size: 12))
+                        Text("重新连接")
+                            .font(.system(size: 13))
+                    }
+                    .frame(minWidth: 90)
                 }
-                .disabled(!PrivilegedHelperManager.getHelperStatus ||
-                         viewModel.helperConnectionStatus == .connected ||
-                         isReinstallingHelper)
+                .buttonStyle(BeautifulButtonStyle(baseColor: shouldDisableReconnectButton ? Color.gray.opacity(0.6) : Color.blue.opacity(0.8)))
+                .foregroundColor(shouldDisableReconnectButton ? Color.white.opacity(0.8) : .white)
+                .disabled(shouldDisableReconnectButton)
                 .help("尝试重新连接到已安装的 Helper")
             }
         }
@@ -822,6 +1065,21 @@ struct HelperStatusRow: View {
         case .connecting: return .orange
         case .disconnected: return .red
         case .checking: return .orange
+        }
+    }
+    
+    private var shouldDisableReconnectButton: Bool {
+        return !PrivilegedHelperManager.getHelperStatus || 
+               viewModel.helperConnectionStatus == .connected || 
+               isReinstallingHelper
+    }
+
+    private var helperStatusBackgroundColor: Color {
+        switch viewModel.helperConnectionStatus {
+        case .connected: return Color.green.opacity(0.1)
+        case .connecting: return Color.orange.opacity(0.1)
+        case .disconnected: return Color.red.opacity(0.1)
+        case .checking: return Color.orange.opacity(0.1)
         }
     }
 
@@ -856,41 +1114,119 @@ struct SetupComponentRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("X1a0He CC 备份状态: ")
+                Text("备份状态: ")
+                    .font(.system(size: 14, weight: .medium))
+                    
                 #if DEBUG
-                Image(systemName: "ladybug.fill")
-                    .foregroundColor(.yellow)
-                Text("Debug 模式")
+                HStack(spacing: 4) {
+                    Image(systemName: "ladybug.fill")
+                        .foregroundColor(.yellow)
+                        .font(.system(size: 12))
+                        .frame(width: 16, height: 16)
+                    Text("Debug 模式")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 13))
+                }
+                .padding(.vertical, 3)
+                .padding(.horizontal, 8)
+                .background(Color.yellow.opacity(0.1))
+                .cornerRadius(5)
                 #else
                 if ModifySetup.isSetupBackup() {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                    Text("已备份")
+                    HStack(spacing: 4) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                            .font(.system(size: 12))
+                            .frame(width: 16, height: 16)
+                        Text("已备份")
+                            .foregroundColor(.secondary)
+                            .font(.system(size: 13))
+                    }
+                    .padding(.vertical, 3)
+                    .padding(.horizontal, 8)
+                    .background(Color.green.opacity(0.1))
+                    .cornerRadius(5)
                 } else {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.red)
-                    Text("(可能导致处理 Setup 组件失败)")
+                    HStack(spacing: 4) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.red)
+                            .font(.system(size: 12))
+                            .frame(width: 16, height: 16)
+                        Text("未备份")
+                            .foregroundColor(.secondary)
+                            .font(.system(size: 13))
+                    }
+                    .padding(.vertical, 3)
+                    .padding(.horizontal, 8)
+                    .background(Color.red.opacity(0.1))
+                    .cornerRadius(5)
+                    
+                    Text("(可能导致处理失败)")
+                        .foregroundColor(.red.opacity(0.8))
+                        .font(.system(size: 12))
+                        .padding(.leading, 2)
                 }
                 #endif
+                
+                Spacer()
             }
             Divider()
+            
             HStack {
-                Text("X1a0He CC 处理状态: ")
+                Text("处理状态: ")
+                    .font(.system(size: 14, weight: .medium))
+                    
                 #if DEBUG
-                Image(systemName: "ladybug.fill")
-                    .foregroundColor(.yellow)
-                Text("Debug 模式")
+                HStack(spacing: 4) {
+                    Image(systemName: "ladybug.fill")
+                        .foregroundColor(.yellow)
+                        .font(.system(size: 12))
+                        .frame(width: 16, height: 16)
+                    Text("Debug 模式")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 13))
+                }
+                .padding(.vertical, 3)
+                .padding(.horizontal, 8)
+                .background(Color.yellow.opacity(0.1))
+                .cornerRadius(5)
                 #else
                 if ModifySetup.isSetupModified() {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                    Text("已处理")
+                    HStack(spacing: 4) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                            .font(.system(size: 12))
+                            .frame(width: 16, height: 16)
+                        Text("已处理")
+                            .foregroundColor(.secondary)
+                            .font(.system(size: 13))
+                    }
+                    .padding(.vertical, 3)
+                    .padding(.horizontal, 8)
+                    .background(Color.green.opacity(0.1))
+                    .cornerRadius(5)
                 } else {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.red)
-                    Text("(将导致无法使用安装功能)")
+                    HStack(spacing: 4) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.red)
+                            .font(.system(size: 12))
+                            .frame(width: 16, height: 16)
+                        Text("未处理")
+                            .foregroundColor(.secondary)
+                            .font(.system(size: 13))
+                    }
+                    .padding(.vertical, 3)
+                    .padding(.horizontal, 8)
+                    .background(Color.red.opacity(0.1))
+                    .cornerRadius(5)
+                    
+                    Text("(无法使用安装功能)")
+                        .foregroundColor(.red.opacity(0.8))
+                        .font(.system(size: 12))
+                        .padding(.leading, 2)
                 }
                 #endif
+                
                 Spacer()
 
                 Button(action: {
@@ -902,13 +1238,29 @@ struct SetupComponentRow: View {
                 }) {
                     Text("重新处理")
                 }
+                .buttonStyle(BeautifulButtonStyle(baseColor: Color.blue.opacity(0.8)))
+                .foregroundColor(.white)
             }
             Divider()
+            
             HStack {
-                Text("X1a0He CC 版本信息: ")
-                Image(systemName: "info.circle.fill")
-                    .foregroundColor(.blue)
-                Text("\(viewModel.setupVersion)")
+                Text("版本信息: ")
+                    .font(.system(size: 14, weight: .medium))
+                    
+                HStack(spacing: 5) {
+                    Image(systemName: "info.circle.fill")
+                        .foregroundColor(.blue)
+                        .font(.system(size: 12))
+                        .frame(width: 16, height: 16)
+                    Text("\(viewModel.setupVersion)")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 14))
+                }
+                .padding(.vertical, 4)
+                .padding(.horizontal, 8)
+                .background(Color.blue.opacity(0.1))
+                .cornerRadius(5)
+
                 Spacer()
 
                 if viewModel.isDownloadingSetup {
@@ -920,6 +1272,8 @@ struct SetupComponentRow: View {
                     Button("取消") {
                         viewModel.cancelDownload()
                     }
+                    .buttonStyle(BeautifulButtonStyle(baseColor: Color.red.opacity(0.8)))
+                    .foregroundColor(.white)
                 } else {
                     Menu {
                         Button(action: {
@@ -956,12 +1310,38 @@ struct AutoUpdateRow: View {
 
     var body: some View {
         HStack {
-            Toggle("自动检查更新版本", isOn: Binding(
+            Toggle("", isOn: Binding(
                 get: { viewModel.automaticallyChecksForUpdates },
                 set: { viewModel.updateAutomaticallyChecksForUpdates($0) }
             ))
+            .toggleStyle(SwitchToggleStyle(tint: Color.green))
+            .controlSize(.small)
+            .labelsHidden()
+            
+            Text("自动检查更新版本")
+                .font(.system(size: 14))
+            
             Spacer()
+            
+            if viewModel.automaticallyChecksForUpdates {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                        .font(.system(size: 12))
+                        .frame(width: 16, height: 16)
+                    Text("已启用")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 13))
+                }
+                .padding(.vertical, 3)
+                .padding(.horizontal, 8)
+                .background(Color.green.opacity(0.1))
+                .cornerRadius(5)
+            }
+            
             CheckForUpdatesView(updater: viewModel.updater)
+                .buttonStyle(BeautifulButtonStyle(baseColor: Color.blue.opacity(0.8)))
+                .foregroundColor(.white)
         }
     }
 }
@@ -970,11 +1350,52 @@ struct AutoDownloadRow: View {
     @ObservedObject var viewModel: GeneralSettingsViewModel
 
     var body: some View {
-        Toggle("自动下载最新版本", isOn: Binding(
-            get: { viewModel.automaticallyDownloadsUpdates },
-            set: { viewModel.updateAutomaticallyDownloadsUpdates($0) }
-        ))
-        .disabled(viewModel.isAutomaticallyDownloadsUpdatesDisabled)
+        HStack {
+            Toggle("", isOn: Binding(
+                get: { viewModel.automaticallyDownloadsUpdates },
+                set: { viewModel.updateAutomaticallyDownloadsUpdates($0) }
+            ))
+            .toggleStyle(SwitchToggleStyle(tint: Color.green))
+            .controlSize(.small)
+            .labelsHidden()
+            .disabled(viewModel.isAutomaticallyDownloadsUpdatesDisabled)
+            
+            Text("自动下载最新版本")
+                .font(.system(size: 14))
+                .foregroundColor(viewModel.isAutomaticallyDownloadsUpdatesDisabled ? .gray : .primary)
+            
+            Spacer()
+            
+            if viewModel.automaticallyDownloadsUpdates && !viewModel.isAutomaticallyDownloadsUpdatesDisabled {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                        .font(.system(size: 12))
+                        .frame(width: 16, height: 16)
+                    Text("已启用")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 13))
+                }
+                .padding(.vertical, 3)
+                .padding(.horizontal, 8)
+                .background(Color.green.opacity(0.1))
+                .cornerRadius(5)
+            } else if viewModel.isAutomaticallyDownloadsUpdatesDisabled {
+                HStack(spacing: 4) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.gray)
+                        .font(.system(size: 12))
+                        .frame(width: 16, height: 16)
+                    Text("需先启用自动检查")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 13))
+                }
+                .padding(.vertical, 3)
+                .padding(.horizontal, 8)
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(5)
+            }
+        }
     }
 }
 
@@ -1344,7 +1765,7 @@ struct CleanupView: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading) {
                     ForEach(CleanupOption.allCases) { option in
-                        VStack() {
+                        VStack(spacing: 0) {
                             #if DEBUG
                             Button(action: {
                                 withAnimation {
@@ -1355,7 +1776,7 @@ struct CleanupView: View {
                                     }
                                 }
                             }) {
-                                HStack {
+                                HStack(spacing: 12) {
                                     Toggle(isOn: Binding(
                                         get: { selectedOptions.contains(option) },
                                         set: { isSelected in
@@ -1368,53 +1789,61 @@ struct CleanupView: View {
                                     )) {
                                         EmptyView()
                                     }
+                                    .toggleStyle(SwitchToggleStyle(tint: .green))
                                     .disabled(isProcessing)
                                     .labelsHidden()
+                                    .scaleEffect(0.85)
 
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(option.localizedName)
-                                            .font(.system(size: 14, weight: .medium))
+                                            .font(.system(size: 15, weight: .semibold))
                                         Text(option.description)
                                             .font(.system(size: 12))
                                             .foregroundColor(.secondary)
+                                            .lineLimit(2)
                                     }
 
                                     Spacer()
 
                                     Image(systemName: expandedOptions.contains(option) ? "chevron.down" : "chevron.right")
                                         .foregroundColor(.secondary)
-                                        .rotationEffect(.degrees(expandedOptions.contains(option) ? 0 : -90))
+                                        .font(.system(size: 14, weight: .medium))
+                                        .frame(width: 20, height: 20)
+                                        .animation(.easeInOut, value: expandedOptions.contains(option))
                                 }
-                                .padding(.vertical, 8)
-                                .padding(.horizontal, 6)
+                                .padding(.vertical, 10)
+                                .padding(.horizontal, 10)
                                 .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)
                             .disabled(isProcessing)
 
                             if expandedOptions.contains(option) {
-                                VStack(alignment: .leading, spacing: 4) {
+                                VStack(alignment: .leading, spacing: 8) {
                                     Text("将执行的命令：")
-                                        .font(.system(size: 11, weight: .medium))
+                                        .font(.system(size: 12, weight: .medium))
                                         .foregroundColor(.secondary)
-                                        .padding(.top, 4)
-                                        .padding(.horizontal, 6)
+                                        .padding(.top, 2)
+                                        .padding(.horizontal, 12)
 
-                                    ForEach(option.commands, id: \.self) { command in
-                                        Text(command)
-                                            .font(.system(size: 11, design: .monospaced))
-                                            .foregroundColor(.secondary)
-                                            .padding(8)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                            .background(Color(NSColor.textBackgroundColor))
-                                            .cornerRadius(4)
-                                            .padding(.horizontal, 6)
+                                    VStack(spacing: 6) {
+                                        ForEach(option.commands, id: \.self) { command in
+                                            Text(command)
+                                                .font(.system(size: 11, design: .monospaced))
+                                                .foregroundColor(Color(.white))
+                                                .padding(10)
+                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                                .background(Color.black.opacity(0.85))
+                                                .cornerRadius(6)
+                                        }
                                     }
+                                    .padding(.horizontal, 12)
                                 }
-                                .padding(.bottom, 8)
+                                .padding(.bottom, 12)
+                                .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
                             }
                             #else
-                            HStack {
+                            HStack(spacing: 12) {
                                 Toggle(isOn: Binding(
                                     get: { selectedOptions.contains(option) },
                                     set: { isSelected in
@@ -1427,25 +1856,33 @@ struct CleanupView: View {
                                 )) {
                                     EmptyView()
                                 }
+                                .toggleStyle(SwitchToggleStyle(tint: .green))
                                 .disabled(isProcessing)
                                 .labelsHidden()
+                                .scaleEffect(0.85)
 
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(option.localizedName)
-                                        .font(.system(size: 14, weight: .medium))
+                                        .font(.system(size: 15, weight: .semibold))
                                     Text(option.description)
                                         .font(.system(size: 12))
                                         .foregroundColor(.secondary)
+                                        .lineLimit(2)
                                 }
 
                                 Spacer()
                             }
-                            .padding(.vertical, 8)
-                            .padding(.horizontal, 6)
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 10)
                             #endif
                         }
                         .background(Color(NSColor.controlBackgroundColor))
-                        .cornerRadius(8)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                        )
+                        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
                     }
                 }
             }
@@ -1544,34 +1981,43 @@ struct CleanupView: View {
                 .cornerRadius(6)
             }
 
-            HStack {
-                Button(action: {
-                    selectedOptions = Set(CleanupOption.allCases)
-                }) {
-                    Text("全选")
-                }
-                .disabled(isProcessing)
-
-                Button(action: {
-                    selectedOptions.removeAll()
-                }) {
-                    Text("取消全选")
-                }
-                .disabled(isProcessing)
-
-                #if DEBUG
-                Button(action: {
-                    if expandedOptions.count == CleanupOption.allCases.count {
-                        expandedOptions.removeAll()
-                    } else {
-                        expandedOptions = Set(CleanupOption.allCases)
+            HStack(spacing: 10) {
+                Group {
+                    Button(action: {
+                        selectedOptions = Set(CleanupOption.allCases)
+                    }) {
+                        Text("全选")
+                            .frame(minWidth: 50)
                     }
-                }) {
-                    Text(expandedOptions.count == CleanupOption.allCases.count ? "折叠全部" : "展开全部")
+                    .buttonStyle(BeautifulButtonStyle(baseColor: Color.blue.opacity(0.7)))
+                    .foregroundColor(.white)
+
+                    Button(action: {
+                        selectedOptions.removeAll()
+                    }) {
+                        Text("取消全选")
+                            .frame(minWidth: 65)
+                    }
+                    .buttonStyle(BeautifulButtonStyle(baseColor: Color.gray.opacity(0.7)))
+                    .foregroundColor(.white)
+
+                    #if DEBUG
+                    Button(action: {
+                        if expandedOptions.count == CleanupOption.allCases.count {
+                            expandedOptions.removeAll()
+                        } else {
+                            expandedOptions = Set(CleanupOption.allCases)
+                        }
+                    }) {
+                        Text(expandedOptions.count == CleanupOption.allCases.count ? "折叠全部" : "展开全部")
+                            .frame(minWidth: 65)
+                    }
+                    .buttonStyle(BeautifulButtonStyle(baseColor: Color.purple.opacity(0.7)))
+                    .foregroundColor(.white)
+                    #endif
                 }
                 .disabled(isProcessing)
-                #endif
-
+                
                 Spacer()
 
                 Button(action: {
@@ -1579,11 +2025,19 @@ struct CleanupView: View {
                         showConfirmation = true
                     }
                 }) {
-                    Text("开始清理")
+                    HStack(spacing: 6) {
+                        Image(systemName: "trash")
+                        Text("开始清理")
+                    }
+                    .frame(minWidth: 100)
                 }
+                .buttonStyle(BeautifulButtonStyle(baseColor: Color.red.opacity(0.8)))
+                .foregroundColor(.white)
+                .opacity(selectedOptions.isEmpty || isProcessing ? 0.5 : 1)
+                .saturation(selectedOptions.isEmpty || isProcessing ? 0.3 : 1)
                 .disabled(selectedOptions.isEmpty || isProcessing)
             }
-            .padding(.top, 8)
+            .padding(.top, 6)
         }
         .padding()
         .alert("确认清理", isPresented: $showConfirmation) {

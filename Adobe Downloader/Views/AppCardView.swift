@@ -127,9 +127,9 @@ final class AppCardViewModel: ObservableObject {
     }
     
     func getDestinationURL(version: String, language: String) async throws -> URL {
-        let platform = globalProducts.first(where: { $0.id == uniqueProduct.id })?.platforms.first?.id
+        let platform = globalProducts.first(where: { $0.id == uniqueProduct.id })?.platforms.first?.id ?? "unknown"
         let installerName = uniqueProduct.id == "APRO"
-        ? "Adobe Downloader \(uniqueProduct.id)_\(version)_\(platform).dmg"
+            ? "Adobe Downloader \(uniqueProduct.id)_\(version)_\(platform).dmg"
             : "Adobe Downloader \(uniqueProduct.id)_\(version)-\(language)-\(platform)"
 
         if useDefaultDirectory && !defaultDirectory.isEmpty {

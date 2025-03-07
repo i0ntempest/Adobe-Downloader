@@ -5,6 +5,28 @@
 //
 import SwiftUI
 
+public struct BeautifulButtonStyle: ButtonStyle {
+    var baseColor: Color
+    @State private var isHovering = false
+    
+    public func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .padding(.vertical, 6)
+            .padding(.horizontal, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(configuration.isPressed ? baseColor.opacity(0.7) : baseColor)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 6)
+                    .strokeBorder(baseColor.opacity(0.2), lineWidth: 1)
+                    .opacity(configuration.isPressed ? 0 : 1)
+            )
+            .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
+            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
+    }
+}
+
 struct DownloadProgressView: View {
     @ObservedObject var task: NewDownloadTask
     let onCancel: () -> Void
@@ -24,12 +46,12 @@ struct DownloadProgressView: View {
 
     private var statusLabel: some View {
         Text(task.status.description)
-            .font(.caption)
+            .font(.system(size: 11, weight: .medium))
             .foregroundColor(.white)
-            .padding(.vertical, 2)
-            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
+            .padding(.horizontal, 7)
             .background(statusBackgroundColor)
-            .cornerRadius(4)
+            .cornerRadius(5)
     }
     
     private var statusColor: Color {
@@ -71,57 +93,57 @@ struct DownloadProgressView: View {
     }
     
     private var actionButtons: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 12) {
             switch task.status {
             case .downloading, .preparing, .waiting:
                 Button(action: onPause) {
                     Label("暂停", systemImage: "pause.fill")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.white)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.orange)
-                .controlSize(.regular)
+                .buttonStyle(BeautifulButtonStyle(baseColor: .orange))
                 
                 Button(action: onCancel) {
                     Label("取消", systemImage: "xmark")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.white)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.red)
-                .controlSize(.regular)
+                .buttonStyle(BeautifulButtonStyle(baseColor: .red))
                 
             case .paused:
                 Button(action: onResume) {
                     Label("继续", systemImage: "play.fill")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.white)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.blue)
-                .controlSize(.regular)
+                .buttonStyle(BeautifulButtonStyle(baseColor: .blue))
                 
                 Button(action: onCancel) {
                     Label("取消", systemImage: "xmark")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.white)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.red)
-                .controlSize(.regular)
+                .buttonStyle(BeautifulButtonStyle(baseColor: .red))
                 
             case .failed(let info):
                 if info.recoverable {
                     Button(action: onRetry) {
                         Label("重试", systemImage: "arrow.clockwise")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.white)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.blue)
-                    .controlSize(.regular)
+                    .buttonStyle(BeautifulButtonStyle(baseColor: .blue))
                 }
                 
                 Button(action: onRemove) {
                     Label("移除", systemImage: "xmark")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.white)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.red)
-                .controlSize(.regular)
+                .buttonStyle(BeautifulButtonStyle(baseColor: .red))
                 
             case .completed:
-                HStack(spacing: 8) {
+                HStack(spacing: 12) {
                     if task.displayInstallButton {
                         Button(action: { 
                             #if DEBUG
@@ -153,10 +175,10 @@ struct DownloadProgressView: View {
                             #endif
                         }) {
                             Label("安装", systemImage: "square.and.arrow.down.on.square")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(.white)
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(.green)
-                        .controlSize(.regular)
+                        .buttonStyle(BeautifulButtonStyle(baseColor: .green))
                         .alert("Setup 组件未处理", isPresented: $showSetupProcessAlert) {
                             Button("确定") { }
                         } message: {
@@ -172,22 +194,21 @@ struct DownloadProgressView: View {
                     
                     Button(action: onRemove) {
                         Label("删除", systemImage: "trash")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.white)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.red)
-                    .controlSize(.regular)
+                    .buttonStyle(BeautifulButtonStyle(baseColor: .red))
                 }
                 
             case .retrying:
                 Button(action: onCancel) {
                     Label("取消", systemImage: "xmark")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.white)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.red)
-                .controlSize(.regular)
+                .buttonStyle(BeautifulButtonStyle(baseColor: .red))
             }
         }
-        .controlSize(.small)
         .sheet(isPresented: $showInstallPrompt) {
             if task.displayInstallButton {
                 VStack(spacing: 20) {
@@ -391,58 +412,89 @@ private struct TaskHeaderView: View {
     let openInFinder: (String) -> Void
     
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 16) {
             Group {
                 if let iconImage = iconImage {
                     Image(nsImage: iconImage)
                         .resizable()
                         .interpolation(.high)
                         .aspectRatio(contentMode: .fit)
+                        .padding(4)
                 } else {
                     Image(systemName: "app.fill")
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .foregroundColor(.secondary)
+                        .padding(4)
                 }
             }
-            .frame(width: 32, height: 32)
+            .frame(width: 42, height: 42)
+            .background(Color(NSColor.controlBackgroundColor).opacity(0.6))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+            )
             .onAppear(perform: loadIcon)
             
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 8) {
-                    HStack(spacing: 4) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 10) {
+                    HStack(spacing: 6) {
                         Text(task.displayName)
-                            .font(.headline)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.primary)
+                        
                         Text(task.productVersion)
+                            .font(.system(size: 13))
                             .foregroundColor(.secondary)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(Color.secondary.opacity(0.1))
+                            .cornerRadius(4)
                     }
-                    
+
                     statusLabel
                     
                     Spacer()
                 }
-                
-                Text(formatPath(task.directory.path))
-                    .font(.caption)
-                    .foregroundColor(.blue)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                    .onTapGesture {
-                        openInFinder(task.directory.path)
-                    }
-                    .help(task.directory.path)
+
+                HStack(spacing: 4) {
+                    Image(systemName: "folder")
+                        .font(.system(size: 10))
+                        .foregroundColor(.blue.opacity(0.8))
+                    
+                    Text(formatPath(task.directory.path))
+                        .font(.system(size: 11))
+                        .foregroundColor(.primary.opacity(0.7))
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+                .padding(.vertical, 3)
+                .padding(.horizontal, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.blue.opacity(0.05))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4)
+                        .stroke(Color.blue.opacity(0.1), lineWidth: 0.5)
+                )
+                .onTapGesture {
+                    openInFinder(task.directory.path)
+                }
+                .help(task.directory.path)
             }
         }
     }
     
     private var statusLabel: some View {
         Text(task.status.description)
-            .font(.caption)
+            .font(.system(size: 11, weight: .medium))
             .foregroundColor(.white)
-            .padding(.vertical, 2)
-            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
+            .padding(.horizontal, 7)
             .background(statusBackgroundColor)
-            .cornerRadius(4)
+            .cornerRadius(5)
     }
     
     private var statusBackgroundColor: Color {
@@ -471,36 +523,96 @@ private struct TaskProgressView: View {
     let formatSpeed: (Double) -> String
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack {
                 HStack(spacing: 4) {
                     Text(task.formattedDownloadedSize)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.primary.opacity(0.8))
                     Text("/")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary.opacity(0.6))
                     Text(task.formattedTotalSize)
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
                 }
+                .padding(.vertical, 2)
+                .padding(.horizontal, 6)
+                .background(Color.secondary.opacity(0.08))
+                .cornerRadius(4)
+                
+                Spacer()
+
+                Text("\(Int(task.totalProgress * 100))%")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.blue)
+                    .padding(.vertical, 2)
+                    .padding(.horizontal, 8)
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(4)
+            }
+
+            HStack {
+                HStack(spacing: 4) {
+                    Image(systemName: "clock")
+                        .font(.system(size: 10))
+                    if task.totalSpeed > 0 {
+                        Text(formatRemainingTime(
+                            task.totalSize,
+                            task.totalDownloadedSize,
+                            task.totalSpeed
+                        ))
+                        .font(.system(size: 11))
+                        .transition(.opacity)
+                    } else {
+                        Text("--:--")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary.opacity(0.5))
+                    }
+                }
+                .foregroundColor(.secondary)
                 
                 Spacer()
                 
-                if task.totalSpeed > 0 {
-                    Text(formatRemainingTime(
-                        task.totalSize,
-                        task.totalDownloadedSize,
-                        task.totalSpeed
-                    ))
-                    .foregroundColor(.secondary)
+                HStack(spacing: 4) {
+                    Image(systemName: "arrow.down")
+                        .font(.system(size: 10))
+                    if task.totalSpeed > 0 {
+                        Text(formatSpeed(task.totalSpeed))
+                            .font(.system(size: 11))
+                            .transition(.opacity)
+                    } else {
+                        Text("--")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary.opacity(0.5))
+                    }
                 }
-                
-                Text("\(Int(task.totalProgress * 100))%")
-                
-                if task.totalSpeed > 0 {
-                    Text(formatSpeed(task.totalSpeed))
-                        .foregroundColor(.secondary)
+                .foregroundColor(.secondary)
+            }
+            .padding(.horizontal, 2)
+            .animation(.easeInOut(duration: 0.2), value: task.totalSpeed > 0)
+
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    Rectangle()
+                        .fill(Color.secondary.opacity(0.1))
+                        .frame(height: 6)
+                        .cornerRadius(3)
+
+                    Rectangle()
+                        .fill(
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color.blue.opacity(0.7), Color.blue]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(width: max(0, CGFloat(task.totalProgress) * geometry.size.width), height: 6)
+                        .cornerRadius(3)
+                        .animation(.linear(duration: 0.3), value: task.totalProgress)
                 }
             }
-            .font(.caption)
-            
-            ProgressView(value: task.totalProgress)
-                .progressViewStyle(.linear)
+            .frame(height: 6)
         }
     }
 }
@@ -521,14 +633,25 @@ private struct PackageListView: View {
                         isPackageListExpanded.toggle()
                     }
                 }) {
-                    HStack {
+                    HStack(spacing: 4) {
                         Image(systemName: isPackageListExpanded ? "chevron.down" : "chevron.right")
+                            .font(.system(size: 10))
                             .foregroundColor(.secondary)
                         Text("产品和包列表")
-                            .font(.caption)
+                            .font(.system(size: 12, weight: .medium))
                             .foregroundColor(.secondary)
                     }
                     .contentShape(Rectangle())
+                    .padding(.vertical, 4)
+                    .padding(.horizontal, 8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 5)
+                            .fill(Color.secondary.opacity(0.08))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 5)
+                            .stroke(Color.secondary.opacity(0.15), lineWidth: 0.5)
+                    )
                 }
                 .buttonStyle(.plain)
                 
@@ -543,10 +666,10 @@ private struct PackageListView: View {
                     NSWorkspace.shared.selectFile(fileURL.path, inFileViewerRootedAtPath: tasksDirectory.path)
                 }) {
                     Label("查看持久化文件", systemImage: "doc.text.magnifyingglass")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.white)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.blue)
-                .controlSize(.regular)
+                .buttonStyle(BeautifulButtonStyle(baseColor: .blue))
                 #endif
 
                 if case .completed = task.status, task.productId != "APRO" {
@@ -562,17 +685,28 @@ private struct PackageListView: View {
             
             if isPackageListExpanded {
                 ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 10) {
                         ForEach(task.dependenciesToDownload, id: \.sapCode) { product in
                             ProductRow(
                                 product: product,
                                 isCurrentProduct: task.currentPackage?.id == product.packages.first?.id,
                                 expandedProducts: $expandedProducts
                             )
+                            .shadow(color: Color.black.opacity(0.03), radius: 2, x: 0, y: 1)
                         }
                     }
+                    .padding(.horizontal, 2)
+                    .padding(.vertical, 5)
                 }
-                .frame(maxHeight: 200)
+                .frame(maxHeight: 300)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color(NSColor.windowBackgroundColor).opacity(0.5))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.secondary.opacity(0.1), lineWidth: 0.5)
+                )
             }
         }
     }
@@ -588,10 +722,10 @@ private struct CommandLineInstallButton: View {
             showCommandLineInstall.toggle()
         }) {
             Label("命令行安装", systemImage: "terminal")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(.white)
         }
-        .buttonStyle(.borderedProminent)
-        .tint(.purple)
-        .controlSize(.regular)
+        .buttonStyle(BeautifulButtonStyle(baseColor: .purple))
         .popover(isPresented: $showCommandLineInstall, arrowEdge: .bottom) {
             VStack(alignment: .leading, spacing: 8) {
                 Button("复制命令") {
@@ -607,6 +741,21 @@ private struct CommandLineInstallButton: View {
                         showCopiedAlert = false
                     }
                 }
+                .padding(.vertical, 5)
+                .padding(.horizontal, 10)
+                .background(
+                    LinearGradient(
+                        gradient: Gradient(colors: [
+                            Color.purple.opacity(0.8),
+                            Color.purple
+                        ]),
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .foregroundColor(.white)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .shadow(color: Color.purple.opacity(0.3), radius: 3, x: 0, y: 2)
 
                 if showCopiedAlert {
                     Text("已复制")
@@ -647,26 +796,39 @@ struct ProductRow: View {
                     }
                 }
             }) {
-                HStack {
-                    Image(systemName: "cube.box")
-                        .foregroundColor(.blue)
+                HStack(spacing: 8) {
+                    Image(systemName: "cube.box.fill")
+                        .font(.system(size: 13))
+                        .foregroundColor(.blue.opacity(0.8))
+                        
                     Text("\(product.sapCode) \(product.version)\(product.sapCode != "APRO" ? " - (\(product.buildGuid))" : "")")
-                        .font(.caption)
-                        .fontWeight(.medium)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.primary.opacity(0.8))
                     
                     Spacer()
                     
                     Text("\(product.completedPackages)/\(product.totalPackages)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .font(.system(size: 12))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.secondary.opacity(0.08))
+                        .cornerRadius(4)
+                        .foregroundColor(.primary.opacity(0.7))
                     
                     Image(systemName: expandedProducts.contains(product.sapCode) ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 11))
                         .foregroundColor(.secondary)
                 }
-                .padding(.vertical, 8)
-                .padding(.horizontal)
-                .background(Color(NSColor.controlBackgroundColor))
-                .cornerRadius(8)
+                .padding(.vertical, 10)
+                .padding(.horizontal, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color(NSColor.controlBackgroundColor))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.secondary.opacity(0.1), lineWidth: 0.5)
+                )
             }
             .buttonStyle(.plain)
             
@@ -692,27 +854,49 @@ struct PackageRow: View {
         Group {
             switch package.status {
             case .waiting:
-                HStack {
+                HStack(spacing: 4) {
                     Image(systemName: "hourglass.circle.fill")
+                        .font(.system(size: 10))
                     Text(package.status.description)
+                        .font(.system(size: 11, weight: .medium))
                 }
-                .foregroundColor(.secondary)
+                .padding(.vertical, 3)
+                .padding(.horizontal, 6)
+                .background(Color.secondary.opacity(0.1))
+                .foregroundColor(.secondary.opacity(0.8))
+                .cornerRadius(4)
             case .downloading:
-                HStack {
+                HStack(spacing: 3) {
                     Text("\(Int(package.progress * 100))%")
+                        .font(.system(size: 11, weight: .semibold))
                 }
-                .foregroundColor(.blue)
+                .padding(.vertical, 3)
+                .padding(.horizontal, 6)
+                .background(Color.blue.opacity(0.1))
+                .foregroundColor(.blue.opacity(0.9))
+                .cornerRadius(4)
             case .completed:
-                HStack {
+                HStack(spacing: 4) {
                     Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 10))
                     Text(package.status.description)
+                        .font(.system(size: 11, weight: .medium))
                 }
-                .foregroundColor(.green)
+                .padding(.vertical, 3)
+                .padding(.horizontal, 6)
+                .background(Color.green.opacity(0.1))
+                .foregroundColor(.green.opacity(0.9))
+                .cornerRadius(4)
             default:
-                HStack {
+                HStack(spacing: 4) {
                     Text(package.status.description)
+                        .font(.system(size: 11, weight: .medium))
                 }
-                .foregroundColor(.secondary)
+                .padding(.vertical, 3)
+                .padding(.horizontal, 6)
+                .background(Color.secondary.opacity(0.1))
+                .foregroundColor(.secondary.opacity(0.8))
+                .cornerRadius(4)
             }
         }
     }
@@ -726,46 +910,75 @@ struct PackageRow: View {
     }
     
     var body: some View {
-        VStack(spacing: 6) {
-            HStack {
+        VStack(spacing: 8) {
+            HStack(spacing: 8) {
                 Text("\(package.fullPackageName) (\(package.packageVersion))")
-                    .font(.caption)
-                    .foregroundColor(.primary)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.primary.opacity(0.8))
                 
-                HStack(spacing: 4) {
+                HStack(spacing: 6) {
                     Text(package.type)
-                        .font(.caption2)
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 1)
-                        .background(Color.blue.opacity(0.1))
-                        .cornerRadius(2)
+                        .font(.system(size: 10, weight: .medium))
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 2)
+                        .background(
+                            RoundedRectangle(cornerRadius: 3)
+                                .fill(Color.blue.opacity(0.1))
+                        )
+                        .foregroundColor(.blue.opacity(0.8))
 
                     Text(package.formattedSize)
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary.opacity(0.8))
                 }
                 
                 Spacer()
                 
                 statusView()
-                    .font(.caption)
+                    .font(.system(size: 11))
             }
+            .padding(.vertical, 3)
 
             if package.status == .downloading {
-                VStack() {
+                VStack(spacing: 6) {
                     ProgressView(value: package.progress)
                         .progressViewStyle(.linear)
-                    
-                    HStack {
-                        Text("\(package.formattedDownloadedSize) / \(package.formattedSize)")
+                        .tint(Color.blue.opacity(0.8))
+                        .animation(.easeInOut(duration: 0.3), value: package.progress)
+
+                    HStack(spacing: 8) {
+                        HStack(spacing: 4) {
+                            Text("\(package.formattedDownloadedSize) / \(package.formattedSize)")
+                                .font(.system(size: 11))
+                                .foregroundColor(.primary.opacity(0.7))
+                        }
+                        .padding(.vertical, 2)
+                        .padding(.horizontal, 6)
+                        .background(Color.secondary.opacity(0.08))
+                        .cornerRadius(4)
+                        
                         Spacer()
+                        
                         if package.speed > 0 {
-                            Text(formatSpeed(package.speed))
+                            HStack(spacing: 3) {
+                                Image(systemName: "arrow.down")
+                                    .font(.system(size: 9))
+                                    .foregroundColor(.blue.opacity(0.7))
+                                    
+                                Text(formatSpeed(package.speed))
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.blue.opacity(0.8))
+                            }
+                            .padding(.vertical, 2)
+                            .padding(.horizontal, 6)
+                            .background(Color.blue.opacity(0.1))
+                            .cornerRadius(4)
                         }
                     }
-                    .font(.caption)
-                    .foregroundColor(.secondary)
                 }
+                .padding(.horizontal, 2)
+                .padding(.top, 4)
+                .padding(.bottom, 2)
             }
         }
         .padding(.vertical, 10)

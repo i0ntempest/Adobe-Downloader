@@ -81,6 +81,7 @@ private struct VersionPickerHeaderView: View {
                 Button("取消") {
                     dismiss()
                 }
+                .buttonStyle(BeautifulButtonStyle(baseColor: Color.gray.opacity(0.2)))
             }
             .padding(.bottom, VersionPickerConstants.headerPadding)
             
@@ -277,29 +278,36 @@ private struct VersionInfo: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
                 Text(version)
-                    .font(.headline)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.primary.opacity(0.9))
                 
                 if let pv = productVersion, pv != version {
                     Text("•")
                         .foregroundColor(.secondary)
                     Text("v\(pv)")
-                        .font(.caption)
-                        .foregroundColor(.blue)
+                        .font(.system(size: 12))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color.blue.opacity(0.1))
+                        )
+                        .foregroundColor(.blue.opacity(0.8))
                 }
             }
 
             HStack(spacing: 4) {
                 Text(platform)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary.opacity(0.8))
                 
                 if let guid = buildGuid {
                     Text("•")
-                        .font(.caption)
+                        .font(.system(size: 10))
                         .foregroundColor(.secondary)
                     Text(guid)
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary.opacity(0.7))
                         .textSelection(.enabled)
                 }
             }
@@ -313,12 +321,18 @@ private struct ExistingPathButton: View {
     var body: some View {
         if isVisible {
             Text("可能已存在目录")
-                .font(.caption)
-                .foregroundColor(.white)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundColor(.blue.opacity(0.9))
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
-                .background(Color.blue)
-                .cornerRadius(4)
+                .background(
+                    RoundedRectangle(cornerRadius: 5)
+                        .fill(Color.blue.opacity(0.1))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 5)
+                        .stroke(Color.blue.opacity(0.2), lineWidth: 0.5)
+                )
         }
     }
 }
@@ -354,16 +368,24 @@ private struct VersionDetails: View {
             if hasDependencies || hasModules {
                 VStack(alignment: .leading, spacing: 8) {
                     if hasDependencies {
-                        HStack(spacing: 4) {
-                            Image(systemName: "shippingbox")
-                                .foregroundColor(.blue)
+                        HStack(spacing: 5) {
+                            Image(systemName: "shippingbox.fill")
+                                .font(.system(size: 11))
+                                .foregroundColor(.blue.opacity(0.8))
                             Text("依赖组件")
-                                .font(.caption)
+                                .font(.system(size: 12, weight: .medium))
                                 .foregroundColor(.secondary)
                             Text("(\(info.languageSet.first?.dependencies.count ?? 0))")
-                                .font(.caption)
-                                .foregroundColor(.blue)
+                                .font(.system(size: 11))
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 1)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 3)
+                                        .fill(Color.blue.opacity(0.1))
+                                )
+                                .foregroundColor(.blue.opacity(0.8))
                         }
+                        .padding(.vertical, 4)
                         DependenciesList(dependencies: info.languageSet.first?.dependencies ?? [])
                             .padding(.leading, 8)
                     }
@@ -374,16 +396,24 @@ private struct VersionDetails: View {
                                 .padding(.vertical, 4)
                         }
                         
-                        HStack(spacing: 4) {
-                            Image(systemName: "square.stack.3d.up")
-                                .foregroundColor(.blue)
+                        HStack(spacing: 5) {
+                            Image(systemName: "square.stack.3d.up.fill")
+                                .font(.system(size: 11))
+                                .foregroundColor(.blue.opacity(0.8))
                             Text("可选模块")
-                                .font(.caption)
+                                .font(.system(size: 12, weight: .medium))
                                 .foregroundColor(.secondary)
                             Text("(\(info.modules.count))")
-                                .font(.caption)
-                                .foregroundColor(.blue)
+                                .font(.system(size: 11))
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 1)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 3)
+                                        .fill(Color.blue.opacity(0.1))
+                                )
+                                .foregroundColor(.blue.opacity(0.8))
                         }
+                        .padding(.vertical, 4)
                         ModulesList(modules: info.modules)
                             .padding(.leading, 8)
                     }
@@ -404,43 +434,60 @@ private struct DependenciesList: View {
 
     var body: some View {
         ForEach(dependencies, id: \.sapCode) { dependency in
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: 5) {
+                HStack(spacing: 8) {
                     getPlatformIcon(for: dependency.selectedPlatform)
-                        .foregroundColor(.blue)
+                        .foregroundColor(.blue.opacity(0.8))
+                        .font(.system(size: 12))
                         .frame(width: 16)
                     
                     Text(dependency.sapCode)
-                        .font(.caption)
-                        .fontWeight(.medium)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.primary.opacity(0.8))
                     
-                    Text("v\(dependency.productVersion)")
-                        .font(.caption)
-                        .foregroundColor(.blue)
+                    Text("\(dependency.productVersion)")
+                        .font(.system(size: 11))
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 1)
+                        .background(
+                            RoundedRectangle(cornerRadius: 3)
+                                .fill(Color.blue.opacity(0.1))
+                        )
+                        .foregroundColor(.blue.opacity(0.8))
                 }
+                .padding(.vertical, 2)
 
-                HStack(spacing: 8) {
+                HStack(spacing: 10) {
                     if dependency.baseVersion != dependency.productVersion {
-                        Text("base: \(dependency.baseVersion)")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
+                        HStack(spacing: 3) {
+                            Text("base:")
+                                .font(.system(size: 10))
+                                .foregroundColor(.secondary.opacity(0.7))
+                            Text(dependency.baseVersion)
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(.secondary.opacity(0.9))
+                        }
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 1)
+                        .background(Color.secondary.opacity(0.07))
+                        .cornerRadius(2)
                     }
                     
                     if !dependency.buildGuid.isEmpty {
-                        HStack(spacing: 4) {
+                        HStack(spacing: 3) {
                             Text("buildGuid:")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
+                                .font(.system(size: 10))
+                                .foregroundColor(.secondary.opacity(0.7))
                             Text(dependency.buildGuid)
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(.secondary.opacity(0.9))
                                 .textSelection(.enabled)
                         }
                     }
                 }
-                .padding(.leading, 22)
+                .padding(.top, 2)
+                .padding(.leading, 24)
                 
-                // 第三行：调试信息（仅在 DEBUG 模式下显示）
                 #if DEBUG
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 4) {
@@ -499,23 +546,24 @@ private struct ModulesList: View {
     
     var body: some View {
         ForEach(modules, id: \.id) { module in
-            HStack(spacing: 6) {
+            HStack(spacing: 8) {
                 Circle()
-                    .fill(Color.blue.opacity(0.2))
+                    .fill(Color.blue.opacity(0.3))
                     .frame(width: 6, height: 6)
                 
                 Text(module.displayName)
-                    .font(.caption)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.primary.opacity(0.8))
                 
                 if !module.deploymentType.isEmpty {
                     Text("(\(module.deploymentType))")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary.opacity(0.8))
                 }
                 
                 Spacer()
             }
-            .padding(.vertical, 2)
+            .padding(.vertical, 3)
         }
     }
 }
@@ -528,7 +576,8 @@ private struct DownloadButton: View {
         Button("下载") {
             onSelect(version)
         }
-        .buttonStyle(.borderedProminent)
+        .foregroundColor(.white)
+        .buttonStyle(BeautifulButtonStyle(baseColor: Color.blue))
         .padding(.top, 8)
     }
 }

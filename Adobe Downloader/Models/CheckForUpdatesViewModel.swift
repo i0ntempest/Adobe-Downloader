@@ -28,7 +28,17 @@ struct CheckForUpdatesView: View {
     }
 
     var body: some View {
-        Button("检查更新...", action: updater.checkForUpdates)
-            .disabled(!checkForUpdatesViewModel.canCheckForUpdates)
+        Button(action: updater.checkForUpdates) {
+            HStack(spacing: 4) {
+                Image(systemName: "arrow.clockwise")
+                    .font(.system(size: 12))
+                Text("检查更新")
+                    .font(.system(size: 13))
+            }
+        }
+        .buttonStyle(BeautifulButtonStyle(baseColor: Color.blue.opacity(0.8)))
+        .foregroundColor(.white)
+        .disabled(!checkForUpdatesViewModel.canCheckForUpdates)
+        .opacity(!checkForUpdatesViewModel.canCheckForUpdates ? 0.6 : 1.0)
     }
 }
