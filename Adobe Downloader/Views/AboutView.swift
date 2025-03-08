@@ -1890,77 +1890,174 @@ struct CleanupView: View {
             Divider()
                 .padding(.vertical, 8)
 
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 12) {
                 if isProcessing {
-                    HStack {
-                        ProgressView(value: Double(currentCommandIndex), total: Double(totalCommands)) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
                             Text("清理进度：\(currentCommandIndex)/\(totalCommands)")
-                                .font(.system(size: 12))
+                                .font(.system(size: 12, weight: .medium))
+                            
+                            Spacer()
+                            
+                            let percentage = totalCommands > 0 ? Int((Double(currentCommandIndex) / Double(totalCommands)) * 100) : 0
+                            Text("\(percentage)%")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(.blue)
                         }
-                        .progressViewStyle(LinearProgressViewStyle())
-
+                        .padding(.horizontal, 2)
+                        
+                        GeometryReader { geometry in
+                            ZStack(alignment: .leading) {
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(Color.secondary.opacity(0.2))
+                                    .frame(height: 12)
+                                
+                                let progressWidth = totalCommands > 0 ? 
+                                    CGFloat(Double(currentCommandIndex) / Double(totalCommands)) * geometry.size.width : 0
+                                
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [Color.blue.opacity(0.8), Color.blue]),
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .frame(width: progressWidth, height: 12)
+                            }
+                        }
+                        .frame(height: 12)
+                        .animation(.linear(duration: 0.3), value: currentCommandIndex)
+                        
                         Button(action: {
                             isCancelled = true
                         }) {
-                            Text("取消")
+                            Text("取消清理")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.white)
                         }
+                        .buttonStyle(BeautifulButtonStyle(baseColor: Color.red.opacity(0.8)))
                         .disabled(isCancelled)
+                        .opacity(isCancelled ? 0.5 : 1)
                     }
+                    .padding(10)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color(NSColor.controlBackgroundColor))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color.blue.opacity(0.2), lineWidth: 1)
+                    )
 
                     if let lastLog = cleanupLogs.last {
-                        #if DEBUG
-                        Text("当前执行：\(lastLog.command)")
-                            .font(.system(size: 12))
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                        #else
-                        Text("当前执行：\(CleanupLog.getCleanupDescription(for: lastLog.command))")
-                            .font(.system(size: 12))
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                        #endif
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "arrow.triangle.turn.up.right.circle.fill")
+                                    .foregroundColor(.blue.opacity(0.8))
+                                    .font(.system(size: 14))
+                                
+                                Text("当前执行：")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            #if DEBUG
+                            Text(lastLog.command)
+                                .font(.system(size: 11))
+                                .foregroundColor(.secondary)
+                                .lineLimit(2)
+                                .truncationMode(.middle)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            #else
+                            Text(CleanupLog.getCleanupDescription(for: lastLog.command))
+                                .font(.system(size: 11))
+                                .foregroundColor(.secondary)
+                                .lineLimit(2)
+                                .truncationMode(.middle)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            #endif
+                        }
+                        .frame(height: 70)
+                        .padding(.vertical, 6)
+                        .padding(.horizontal, 8)
+                        .frame(maxWidth: .infinity)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color(NSColor.textBackgroundColor))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+                        )
                     }
                 }
 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 0) {
                     Button(action: {
                         withAnimation {
                             isLogExpanded.toggle()
                         }
                     }) {
                         HStack {
+                            Image(systemName: "terminal.fill")
+                                .font(.system(size: 12))
+                                .foregroundColor(.blue.opacity(0.8))
+                            
                             Text("最近日志：")
                                 .font(.system(size: 12, weight: .medium))
 
                             if isProcessing {
-                                Text("正在执行...")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.secondary)
+                                HStack(spacing: 4) {
+                                    Circle()
+                                        .fill(Color.green)
+                                        .frame(width: 6, height: 6)
+                                    
+                                    Text("正在执行...")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.secondary)
+                                }
+                                .padding(.horizontal, 4)
+                                .padding(.vertical, 2)
+                                .background(Color.secondary.opacity(0.1))
+                                .cornerRadius(4)
                             }
 
                             Spacer()
 
+                            Text(isLogExpanded ? "收起" : "展开")
+                                .font(.system(size: 11))
+                                .foregroundColor(.blue)
+                                .padding(.trailing, 4)
+                                
                             Image(systemName: isLogExpanded ? "chevron.down" : "chevron.right")
-                                .foregroundColor(.secondary)
+                                .font(.system(size: 10))
+                                .foregroundColor(.blue)
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 10)
+                        .background(Color(NSColor.controlBackgroundColor))
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
 
                     ScrollView {
-                        VStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: 8) {
                             if cleanupLogs.isEmpty {
                                 HStack {
                                     Spacer()
-                                    Text("暂无清理记录")
-                                        .font(.system(size: 11))
-                                        .foregroundColor(.secondary)
+                                    VStack(spacing: 6) {
+                                        Image(systemName: "doc.text.magnifyingglass")
+                                            .font(.system(size: 20))
+                                            .foregroundColor(.secondary.opacity(0.6))
+                                        
+                                        Text("暂无清理记录")
+                                            .font(.system(size: 11))
+                                            .foregroundColor(.secondary)
+                                    }
+                                    .padding(.vertical, 16)
                                     Spacer()
                                 }
-                                .padding(.vertical, 8)
                             } else {
                                 if isLogExpanded {
                                     ForEach(cleanupLogs.reversed()) { log in
@@ -1971,14 +2068,23 @@ struct CleanupView: View {
                                 }
                             }
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, 6)
+                        .padding(.horizontal, 2)
                     }
-                    .frame(height: cleanupLogs.isEmpty ? 40 : (isLogExpanded ? 200 : 40))
-                    .animation(.easeInOut, value: isLogExpanded)
+                    .frame(height: cleanupLogs.isEmpty ? 80 : (isLogExpanded ? 220 : 54))
+                    .animation(.easeInOut(duration: 0.3), value: isLogExpanded)
+                    .background(Color(NSColor.textBackgroundColor).opacity(0.6))
+                    .cornerRadius(6)
+                    .padding(.bottom, 1)
                 }
-                .padding(8)
-                .background(Color(NSColor.textBackgroundColor))
-                .cornerRadius(6)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color(NSColor.textBackgroundColor))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+                )
             }
 
             HStack(spacing: 10) {
@@ -2289,32 +2395,3 @@ struct LogEntryView: View {
         return formatter.string(from: date)
     }
 }
-
-#Preview("About Tab") {
-    AboutAppView()
-}
-
-#Preview("General Settings") {
-    let networkManager = NetworkManager()
-    VStack {
-        GeneralSettingsView(updater: PreviewUpdater())
-            .environmentObject(networkManager)
-    }
-    .fixedSize()
-}
-
-#Preview("Q&A View") {
-    QAView()
-        .frame(width: 600)
-}
-
-#Preview("Cleanup View") {
-    CleanupView()
-        .frame(width: 600)
-}
-
-#Preview("Complete About View") {
-    AboutView(updater: PreviewUpdater())
-        .environmentObject(NetworkManager())
-}
-

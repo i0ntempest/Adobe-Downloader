@@ -784,6 +784,7 @@ struct ProductRow: View {
     @ObservedObject var product: DependenciesToDownload
     let isCurrentProduct: Bool
     @Binding var expandedProducts: Set<String>
+    @State private var showCopiedAlert = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -804,7 +805,34 @@ struct ProductRow: View {
                     Text("\(product.sapCode) \(product.version)\(product.sapCode != "APRO" ? " - (\(product.buildGuid))" : "")")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(.primary.opacity(0.8))
-                    
+                        
+                    if product.sapCode != "APRO" {
+                        Button(action: {
+                            let pasteboard = NSPasteboard.general
+                            pasteboard.clearContents()
+                            pasteboard.setString(product.buildGuid, forType: .string)
+                            showCopiedAlert = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                                showCopiedAlert = false
+                            }
+                        }) {
+                            Image(systemName: "doc.on.doc")
+                                .font(.system(size: 10))
+                                .foregroundColor(.white)
+                        }
+                        .buttonStyle(BeautifulButtonStyle(baseColor: .blue))
+                        .help("复制 buildGuid")
+                        .popover(isPresented: $showCopiedAlert, arrowEdge: .trailing) {
+                            Text("已复制")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .cornerRadius(6)
+                                .padding(6)
+                        }
+                    }
+
                     Spacer()
                     
                     Text("\(product.completedPackages)/\(product.totalPackages)")
@@ -845,6 +873,7 @@ struct ProductRow: View {
             }
         }
     }
+
 }
 
 struct PackageRow: View {

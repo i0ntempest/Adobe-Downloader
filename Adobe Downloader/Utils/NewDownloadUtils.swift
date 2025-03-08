@@ -161,13 +161,21 @@ class NewDownloadUtils {
             var nonCorePackageCount = 0
 
             /*
-             这里是对包的过滤，一般规则在
-             1. 如果没有Condition，那么就视为需要下载的包
-             2. 如果存在Condition，那么按照以下规则下载
-                [OSVersion]>=10.15 : 系统版本大于等于10.15就下载，所以需要一个函数来获取系统版本号
-                [OSArchitecture]==arm64 : 系统架构为arm64的就下载，官方并没有下载另外一个架构的包
-                [OSArchitecture]==x64 : 同上
-                [installLanguage]==zh_CN : 目标安装语言为 zh_CN 的就下载
+             这里是对包的过滤，我的规则是，一般产品分为主产品和依赖产品
+                主产品逻辑
+                 1. 如果是 non-core，默认不下载
+                 2. 如果是 core，就继续判断
+                    a. 如果没有Condition，就下载
+                    b. 如果有Condition
+                        i.  先判断架构是否一致，只下载对应的架构
+                        ii. 判断是否为目标语言
+
+                依赖产品逻辑
+                 1. 因为依赖产品没有core和non-core之分的
+                 2. 如果没有Condition，就下载
+                 3. 如果有Condition，目前分析到的基本上是语言之分
+                    i. 判断是否为目标语言
+
 
              PS: 下面是留给看源码的人的
              哪怕是官方的ACC下载任何一款App，都是这个逻辑，不信自己去翻，你可能会说，为什么官方能下通用的，你问这个问题之前，可以自己去拿正版的看看他是怎么下载的，他下载的包数量跟我的是不是一致的，他也只是下载了对应架构的包
@@ -204,55 +212,78 @@ class NewDownloadUtils {
                     downloadSize = Int64(sizeInt)
                 } else { continue }
 
-                let installLanguage = "[installLanguage]==\(task.language)"
-                if let condition = package["Condition"] as? String {
-                    if condition.isEmpty {
-                        shouldDownload = true
-                    } else {
-                        if condition.contains("[OSVersion]") {
-                            let osVersion = ProcessInfo.processInfo.operatingSystemVersion
-                            let currentVersion = Double("\(osVersion.majorVersion).\(osVersion.minorVersion)") ?? 0.0
+                if dependencyToDownload.sapCode != productInfo.id {
 
-                            let versionPattern = #"\[OSVersion\](>=|<=|<|>|==)([\d.]+)"#
-                            let regex = try? NSRegularExpression(pattern: versionPattern)
-                            let range = NSRange(condition.startIndex..<condition.endIndex, in: condition)
+                }
 
-                            if let matches = regex?.matches(in: condition, range: range) {
-                                var meetsAllConditions = true
-
-                                for match in matches {
-                                    guard let operatorRange = Range(match.range(at: 1), in: condition),
-                                          let versionRange = Range(match.range(at: 2), in: condition),
-                                          let requiredVersion = Double(condition[versionRange]) else {
-                                        continue
-                                    }
-
-                                    let operatorSymbol = String(condition[operatorRange])
-                                    let meets = compareVersions(current: currentVersion, required: requiredVersion, operator: operatorSymbol)
-
-                                    if !meets {
-                                        meetsAllConditions = false
-                                        break
-                                    }
+                if dependencyToDownload.sapCode == productInfo.id {
+                    if isCore {
+                        let installLanguage = "[installLanguage]==\(task.language)"
+                        if let condition = package["Condition"] as? String {
+                            if condition.isEmpty {
+                                shouldDownload = true
+                            } else {
+                                if condition.contains("[OSArchitecture]==\(AppStatics.architectureSymbol)") {
+                                    shouldDownload = true
                                 }
-
-                                if meetsAllConditions {
+        //                        if condition.contains("[OSArchitecture]==x64") {
+        //                            shouldDownload = true
+        //                        }
+                                if condition.contains(installLanguage) || task.language == "ALL" {
                                     shouldDownload = true
                                 }
                             }
-                        }
-                        if condition.contains("[OSArchitecture]==\(AppStatics.architectureSymbol)") {
+                        } else {
                             shouldDownload = true
                         }
-                        if condition.contains("[OSArchitecture]==x64") {
-                            shouldDownload = true
-                        }
-                        if condition.contains(installLanguage) || task.language == "ALL" {
-                            shouldDownload = true
-                        }
+                    } else {
+                        shouldDownload = false
                     }
                 } else {
-                    shouldDownload = true
+                    let installLanguage = "[installLanguage]==\(task.language)"
+                    if let condition = package["Condition"] as? String {
+                        if condition.isEmpty {
+                            shouldDownload = true
+                        } else {
+                            if condition.contains("[OSVersion]") {
+                                let osVersion = ProcessInfo.processInfo.operatingSystemVersion
+                                let currentVersion = Double("\(osVersion.majorVersion).\(osVersion.minorVersion)") ?? 0.0
+
+                                let versionPattern = #"\[OSVersion\](>=|<=|<|>|==)([\d.]+)"#
+                                let regex = try? NSRegularExpression(pattern: versionPattern)
+                                let range = NSRange(condition.startIndex..<condition.endIndex, in: condition)
+
+                                if let matches = regex?.matches(in: condition, range: range) {
+                                    var meetsAllConditions = true
+
+                                    for match in matches {
+                                        guard let operatorRange = Range(match.range(at: 1), in: condition),
+                                              let versionRange = Range(match.range(at: 2), in: condition),
+                                              let requiredVersion = Double(condition[versionRange]) else {
+                                            continue
+                                        }
+
+                                        let operatorSymbol = String(condition[operatorRange])
+                                        let meets = compareVersions(current: currentVersion, required: requiredVersion, operator: operatorSymbol)
+
+                                        if !meets {
+                                            meetsAllConditions = false
+                                            break
+                                        }
+                                    }
+
+                                    if meetsAllConditions {
+                                        shouldDownload = true
+                                    }
+                                }
+                            }
+                            if condition.contains(installLanguage) || task.language == "ALL" {
+                                shouldDownload = true
+                            }
+                        }
+                    } else {
+                        shouldDownload = true
+                    }
                 }
 
                 if isCore {

@@ -73,6 +73,7 @@ struct InstallProgressView: View {
 
             if !isFailed {
                 ProgressSection(progress: progress, progressText: progressText)
+                    .padding(.vertical, 4)
             }
 
             if isFailed {
@@ -91,8 +92,11 @@ struct InstallProgressView: View {
         }
         .padding()
         .frame(minWidth: 500)
-        .background(Color(NSColor.windowBackgroundColor))
-        .cornerRadius(8)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color(NSColor.windowBackgroundColor))
+                .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+        )
     }
 }
 
@@ -101,15 +105,40 @@ private struct ProgressSection: View {
     let progressText: String
     
     var body: some View {
-        VStack(spacing: 4) {
-            ProgressView(value: progress)
-                .progressViewStyle(.linear)
-                .frame(maxWidth: .infinity)
+        VStack(spacing: 8) {
+            HStack {
+                Spacer()
+                
+                Text(progressText)
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.blue)
+                    .padding(.vertical, 2)
+                    .padding(.horizontal, 8)
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(4)
+            }
             
-            Text(progressText)
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .frame(maxWidth: .infinity, alignment: .center)
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    Rectangle()
+                        .fill(Color.secondary.opacity(0.1))
+                        .frame(height: 6)
+                        .cornerRadius(3)
+                    
+                    Rectangle()
+                        .fill(
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color.blue.opacity(0.7), Color.blue]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(width: max(0, CGFloat(progress) * geometry.size.width), height: 6)
+                        .cornerRadius(3)
+                        .animation(.linear(duration: 0.3), value: progress)
+                }
+            }
+            .frame(height: 6)
         }
         .padding(.horizontal, 20)
     }
@@ -120,27 +149,44 @@ private struct ErrorSection: View {
     let isFailed: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("错误详情:")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .fontWeight(.medium)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 6) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundColor(.orange)
+                    .font(.system(size: 14))
+                Text("错误详情")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.primary.opacity(0.8))
+            }
+            .padding(.vertical, 2)
+            
             Text(status)
-                .font(.caption)
+                .font(.system(size: 12))
                 .foregroundColor(.secondary)
                 .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(8)
-                .background(Color.secondary.opacity(0.1))
-                .cornerRadius(6)
+                .padding(10)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.red.opacity(0.05))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .strokeBorder(Color.red.opacity(0.2), lineWidth: 1)
+                )
+            
             if isFailed {
-                HStack {
-                    Text("自行安装命令:")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .fontWeight(.medium)
+                HStack(spacing: 6) {
+                    Image(systemName: "terminal.fill")
+                        .foregroundColor(.blue.opacity(0.7))
+                        .font(.system(size: 14))
+                    Text("自行安装命令")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.primary.opacity(0.8))
+                    Spacer()
                     CommandPopover()
                 }
+                .padding(.vertical, 2)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -185,29 +231,33 @@ private struct ButtonSection: View {
             if isFailed {
                 if let onRetry = onRetry {
                     Button(action: onRetry) {
-                        Label("重试", systemImage: "arrow.clockwise.circle.fill")
+                        Label("重试", systemImage: "arrow.clockwise")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.white)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.blue)
+                    .buttonStyle(BeautifulButtonStyle(baseColor: .blue))
                 }
                 
                 Button(action: onCancel) {
-                    Label("关闭", systemImage: "xmark.circle.fill")
+                    Label("关闭", systemImage: "xmark")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.white)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.red)
+                .buttonStyle(BeautifulButtonStyle(baseColor: .red))
             } else if isCompleted {
                 Button(action: onCancel) {
-                    Label("关闭", systemImage: "xmark.circle.fill")
+                    Label("关闭", systemImage: "xmark")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.white)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.green)
+                .buttonStyle(BeautifulButtonStyle(baseColor: .green))
             } else {
                 Button(action: onCancel) {
-                    Label("取消", systemImage: "xmark.circle.fill")
+                    Label("取消", systemImage: "xmark")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.white)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.red)
+                .buttonStyle(BeautifulButtonStyle(baseColor: .red))
             }
         }
         .padding(.horizontal, 20)
@@ -221,41 +271,75 @@ private struct CommandPopover: View {
     
     var body: some View {
         Button(action: { showPopover.toggle() }) {
-            Image(systemName: "terminal.fill")
-                .foregroundColor(.secondary)
+            Text("查看")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.white)
+                .padding(.vertical, 4)
+                .padding(.horizontal, 8)
+                .background(Color.blue.opacity(0.8))
+                .cornerRadius(4)
         }
         .buttonStyle(.plain)
         .popover(isPresented: $showPopover, arrowEdge: .bottom) {
-            VStack(alignment: .leading, spacing: 8) {
-                Button("复制命令") {
-                    let command = networkManager.installCommand
-                    let pasteboard = NSPasteboard.general
-                    pasteboard.clearContents()
-                    pasteboard.setString(command, forType: .string)
-                    showCopiedAlert = true
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text("安装命令")
+                        .font(.headline)
+                        .foregroundColor(.primary)
                     
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                        showCopiedAlert = false
+                    Spacer()
+                    
+                    Button(action: {
+                        let command = networkManager.installCommand
+                        let pasteboard = NSPasteboard.general
+                        pasteboard.clearContents()
+                        pasteboard.setString(command, forType: .string)
+                        showCopiedAlert = true
+                        
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            showCopiedAlert = false
+                        }
+                    }) {
+                        Label("复制", systemImage: "doc.on.doc")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.white)
                     }
+                    .buttonStyle(BeautifulButtonStyle(baseColor: .blue))
                 }
 
                 if showCopiedAlert {
-                    Text("已复制")
-                        .font(.caption)
-                        .foregroundColor(.green)
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                        Text("命令已复制到剪贴板")
+                            .font(.system(size: 12))
+                            .foregroundColor(.green)
+                    }
+                    .padding(6)
+                    .background(Color.green.opacity(0.1))
+                    .cornerRadius(4)
+                    .transition(.opacity)
+                    .animation(.easeInOut, value: showCopiedAlert)
                 }
 
                 let command = networkManager.installCommand
                 Text(command)
-                    .font(.system(.caption, design: .monospaced))
-                    .foregroundColor(.secondary)
+                    .font(.system(size: 12, design: .monospaced))
+                    .foregroundColor(.primary.opacity(0.8))
                     .textSelection(.enabled)
-                    .padding(8)
-                    .background(Color.secondary.opacity(0.1))
-                    .cornerRadius(6)
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color(NSColor.textBackgroundColor))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 1)
+                    )
             }
-            .padding()
-            .frame(width: 400)
+            .padding(16)
+            .frame(width: 450)
         }
     }
 }
