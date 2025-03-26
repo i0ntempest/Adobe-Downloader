@@ -224,6 +224,6 @@ struct ToolbarView: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
-        .background(Color(NSColor.windowBackgroundColor))
+        .background(Color(.clear))
     }
 } 

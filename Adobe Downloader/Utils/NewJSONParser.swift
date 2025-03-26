@@ -231,6 +231,8 @@ class NewJSONParser {
                     continue
                 }
 
+                if productDisplayName == "Creative Cloud" { continue }
+
                 let icons = (product["productIcons"] as? [String: Any])?["icon"] as? [[String: Any]] ?? []
                 let productIcons = icons.compactMap { icon -> Product.ProductIcon? in
                     guard let size = icon["size"] as? String,

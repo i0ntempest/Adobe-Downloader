@@ -12,6 +12,21 @@ struct InstallProgressView: View {
     let status: String
     let onCancel: () -> Void
     let onRetry: (() -> Void)?
+    let errorDetails: String?
+    
+    init(productName: String, 
+         progress: Double, 
+         status: String,
+         onCancel: @escaping () -> Void, 
+         onRetry: (() -> Void)? = nil, 
+         errorDetails: String? = nil) {
+        self.productName = productName
+        self.progress = progress
+        self.status = status
+        self.onCancel = onCancel
+        self.onRetry = onRetry
+        self.errorDetails = errorDetails
+    }
     
     private var isCompleted: Bool {
         progress >= 1.0 || status == String(localized: "安装完成")
@@ -79,7 +94,8 @@ struct InstallProgressView: View {
             if isFailed {
                 ErrorSection(
                     status: status,
-                    isFailed: true
+                    isFailed: true,
+                    errorDetails: errorDetails
                 )
             }
 
@@ -91,11 +107,10 @@ struct InstallProgressView: View {
             )
         }
         .padding()
-        .frame(minWidth: 500)
+        .frame(minWidth: 600)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color(NSColor.windowBackgroundColor))
-                .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+                .fill(Color(NSColor.clear))
         )
     }
 }
@@ -147,6 +162,15 @@ private struct ProgressSection: View {
 private struct ErrorSection: View {
     let status: String
     let isFailed: Bool
+    let errorDetails: String?
+    
+    init(status: String, 
+         isFailed: Bool, 
+         errorDetails: String? = nil) {
+        self.status = status
+        self.isFailed = isFailed
+        self.errorDetails = errorDetails
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -174,6 +198,37 @@ private struct ErrorSection: View {
                     RoundedRectangle(cornerRadius: 8)
                         .strokeBorder(Color.red.opacity(0.2), lineWidth: 1)
                 )
+            
+            if let errorDetails = errorDetails, !errorDetails.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "doc.text.magnifyingglass")
+                            .foregroundColor(.orange.opacity(0.7))
+                            .font(.system(size: 14))
+                        Text("日志详情")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.primary.opacity(0.8))
+                    }
+                    
+                    ScrollView {
+                        Text(errorDetails)
+                            .font(.system(size: 11, design: .monospaced))
+                            .foregroundColor(.secondary)
+                            .textSelection(.enabled)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.orange.opacity(0.05))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .strokeBorder(Color.orange.opacity(0.2), lineWidth: 1)
+                            )
+                    }
+                    .frame(maxHeight: 120)
+                }
+            }
             
             if isFailed {
                 HStack(spacing: 6) {
@@ -351,7 +406,8 @@ private struct CommandPopover: View {
         progress: 0.45,
         status: "正在安装核心组件...",
         onCancel: {},
-        onRetry: nil
+        onRetry: nil,
+        errorDetails: nil
     )
     .environmentObject(networkManager)
 }
@@ -363,7 +419,8 @@ private struct CommandPopover: View {
         progress: 0.0,
         status: "安装失败: 权限被拒绝",
         onCancel: {},
-        onRetry: {}
+        onRetry: {},
+        errorDetails: "详细错误日志"
     )
     .environmentObject(networkManager)
     .onAppear {
@@ -378,7 +435,8 @@ private struct CommandPopover: View {
         progress: 1.0,
         status: "安装完成",
         onCancel: {},
-        onRetry: nil
+        onRetry: nil,
+        errorDetails: nil
     )
     .environmentObject(networkManager)
 }
@@ -390,7 +448,8 @@ private struct CommandPopover: View {
         progress: 0.75,
         status: "正在安装...",
         onCancel: {},
-        onRetry: nil
+        onRetry: nil,
+        errorDetails: nil
     )
     .environmentObject(networkManager)
     .preferredColorScheme(.dark)

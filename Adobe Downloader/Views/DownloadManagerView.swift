@@ -58,6 +58,7 @@ struct DownloadManagerView: View {
                 removeTask: removeTask
             )
         }
+        .background(Color(.clear))
         .frame(width:800, height: 600)
     }
 }
@@ -86,16 +87,7 @@ private struct DownloadManagerToolbar: View {
             
             Divider()
         }
-        .background(
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color(NSColor.windowBackgroundColor).opacity(0.95),
-                    Color(NSColor.windowBackgroundColor)
-                ]),
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        )
+        .background(Color(NSColor.clear))
         .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
     }
 }
@@ -143,6 +135,9 @@ private struct ToolbarButtons: View {
                     if case .completed = task.status {
                         return true
                     }
+                    if case .failed = task.status {
+                        return true
+                    }
                     return false
                 }
                 globalNetworkManager.updateDockBadge()
@@ -160,6 +155,7 @@ private struct ToolbarButtons: View {
             }
             .buttonStyle(BeautifulButtonStyle(baseColor: .red))
         }
+        .background(Color(NSColor.clear))
     }
 }
 
@@ -184,7 +180,7 @@ private struct DownloadTaskList: View {
             .padding(.horizontal)
             .padding(.vertical, 8)
         }
-        .background(Color(NSColor.windowBackgroundColor))
+        .background(Color(NSColor.clear))
     }
 }
 

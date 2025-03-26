@@ -18,6 +18,7 @@ actor InstallManager {
         case installationFailed(String)
         case cancelled
         case permissionDenied
+        case installationFailedWithDetails(String, String)
         
         var errorDescription: String? {
             switch self {
@@ -25,6 +26,7 @@ actor InstallManager {
                 case .installationFailed(let message): return message
                 case .cancelled: return String(localized: "安装已取消")
                 case .permissionDenied: return String(localized: "权限被拒绝")
+                case .installationFailedWithDetails(let message, _): return message
             }
         }
     }
@@ -71,6 +73,45 @@ actor InstallManager {
         }
     }
     
+    private func getAdobeInstallLogDetails() async -> String? {
+        let logPath = "/Library/Logs/Adobe/Installers/Install.log"
+        guard FileManager.default.fileExists(atPath: logPath) else {
+            return nil
+        }
+        
+        do {
+            let logContent = try String(contentsOfFile: logPath, encoding: .utf8)
+            let lines = logContent.components(separatedBy: .newlines)
+
+            let fatalLines = lines.filter { 
+                line in line.contains("FATAL:") 
+            }
+
+            var uniqueLines: [String] = []
+            var seen = Set<String>()
+            
+            for line in fatalLines {
+                if !seen.contains(line) {
+                    seen.insert(line)
+                    uniqueLines.append(line)
+                }
+            }
+
+            if uniqueLines.isEmpty, lines.count > 10 {
+                uniqueLines = Array(lines.suffix(10))
+            }
+
+            if !uniqueLines.isEmpty {
+                return uniqueLines.joined(separator: "\n")
+            }
+            
+            return nil
+        } catch {
+            print("读取安装日志失败: \(error.localizedDescription)")
+            return nil
+        }
+    }
+    
     private func executeInstallation(
         at appPath: URL,
         progressHandler: @escaping (Double, String) -> Void
@@ -88,6 +129,27 @@ actor InstallManager {
         if let permissions = attributes?[.posixPermissions] as? NSNumber {
             if permissions.int16Value & 0o444 == 0 {
                 throw InstallError.installationFailed("driver.xml 文件没有读取权限")
+            }
+        }
+        
+        await MainActor.run {
+            progressHandler(0.0, String(localized: "正在清理安装环境..."))
+        }
+
+        let logFiles = [
+            "/Library/Logs/Adobe/Installers/Install.log",
+        ]
+        
+        for logFile in logFiles {
+            let removeCommand = "rm -f '\(logFile)'"
+            let result = await withCheckedContinuation { continuation in
+                PrivilegedHelperManager.shared.executeCommand(removeCommand) { result in
+                    continuation.resume(returning: result)
+                }
+            }
+            
+            if result.contains("Error") {
+                print("清理安装日志失败: \(logFile) - \(result)")
             }
         }
 
@@ -113,20 +175,12 @@ actor InstallManager {
                                     return
                                 } else {
                                     let errorMessage: String
-                                    switch exitCode {
-                                    case 107:
-                                        errorMessage = String(localized: "架构或版本不一致 (退出代码: \(exitCode))")
-                                    case 103:
-                                        errorMessage = String(localized: "权限问题 (退出代码: \(exitCode))")
-                                    case 182:
-                                        errorMessage = String(localized: "安装文件不完整或损坏 (退出代码: \(exitCode))")
-                                    case -1:
-                                        errorMessage = String(localized: "Setup 组件未被处理 (退出代码: \(exitCode))")
-                                    default:
-                                        errorMessage = String(localized: "(退出代码: \(exitCode))")
+                                    errorMessage = String(localized: "错误代码(\(exitCode))，请查看日志详情并向开发者汇报")
+                                    if let logDetails = await self.getAdobeInstallLogDetails() {
+                                        continuation.resume(throwing: InstallError.installationFailedWithDetails(errorMessage, logDetails))
+                                    } else {
+                                        continuation.resume(throwing: InstallError.installationFailed(errorMessage))
                                     }
-                                    progressHandler(0.0, errorMessage)
-                                    continuation.resume(throwing: InstallError.installationFailed(errorMessage))
                                     return
                                 }
                             }

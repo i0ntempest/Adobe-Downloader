@@ -294,7 +294,8 @@ struct AppCardView: View {
     @StateObject private var viewModel: AppCardViewModel
     @StorageValue(\.useDefaultLanguage) private var useDefaultLanguage
     @StorageValue(\.defaultLanguage) private var defaultLanguage
-    
+    @State private var isHovered = false
+
     init(uniqueProduct: UniqueProduct) {
         _viewModel = StateObject(wrappedValue: AppCardViewModel(uniqueProduct: uniqueProduct))
     }
@@ -308,6 +309,26 @@ struct AppCardView: View {
                 DownloadButtonView(viewModel: viewModel)
             }
         }
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(isHovered ? Color(.controlBackgroundColor) : Color(.windowBackgroundColor).opacity(0.5))
+                .animation(.easeInOut(duration: 0.2), value: isHovered)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(isHovered ? Color.blue.opacity(0.5) : Color.gray.opacity(0.1), lineWidth: isHovered ? 2 : 1)
+                .animation(.easeInOut(duration: 0.2), value: isHovered)
+        )
+        .shadow(color: isHovered ? Color.black.opacity(0.1) : Color.black.opacity(0.05),
+                radius: isHovered ? 4 : 2,
+                x: 0,
+                y: isHovered ? 2 : 1)
+        .animation(.easeInOut(duration: 0.2), value: isHovered)
+        .onHover { hovering in
+            self.isHovered = hovering
+        }
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isHovered)
+        .contentShape(Rectangle())
         .modifier(CardModifier())
         .modifier(SheetModifier(viewModel: viewModel))
         .modifier(AlertModifier(viewModel: viewModel, confirmRedownload: true))
@@ -417,9 +438,11 @@ private struct ProductInfoView: View {
                     MetricView(icon: "square.stack.3d.up", value: "\(modulesCount)")
                 }
             }
+            .background(Color(.clear))
             .font(.caption)
             .foregroundColor(.secondary)
         }
+        .background(Color(.clear))
     }
 }
 
@@ -466,10 +489,7 @@ private struct CardModifier: ViewModifier {
     
     func body(content: Content) -> some View {
         content
-            .background(
-                RoundedRectangle(cornerRadius: AppCardConstants.cornerRadius)
-                    .fill(Color(NSColor.windowBackgroundColor))
-            )
+            .background(Color(NSColor.clear))
             .overlay(
                 RoundedRectangle(cornerRadius: AppCardConstants.cornerRadius)
                     .stroke(Color.gray.opacity(AppCardConstants.strokeOpacity), 

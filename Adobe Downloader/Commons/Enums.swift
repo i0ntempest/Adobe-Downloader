@@ -418,6 +418,20 @@ enum DownloadStatus: Equatable, Codable {
         }
         return false
     }
+
+    var isCompleted: Bool {
+        if case .completed = self {
+            return true
+        }
+        return false
+    }
+    
+    var isFailed: Bool {
+        if case .failed = self {
+            return true
+        }
+        return false
+    }
 }
 
 extension DownloadStatus.PrepareInfo: Equatable {}

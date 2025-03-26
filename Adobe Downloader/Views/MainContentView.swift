@@ -7,9 +7,6 @@ struct MainContentView: View {
     
     var body: some View {
         ZStack {
-            Color(NSColor.windowBackgroundColor)
-                .ignoresSafeArea()
-            
             switch loadingState {
             case .idle, .loading:
                 ProgressView("正在加载...")
@@ -50,6 +47,7 @@ struct MainContentView: View {
                 }
             }
         }
+        .background(Color(.clear))
     }
 }
 
@@ -97,5 +95,6 @@ struct ProductGridView: View {
             }
             .padding(.bottom, 16)
         }
+        .background(Color(.clear))
     }
 } 

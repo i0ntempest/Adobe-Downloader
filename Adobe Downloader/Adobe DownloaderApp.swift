@@ -57,43 +57,48 @@ struct Adobe_DownloaderApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environmentObject(globalNetworkManager)
-                .frame(minWidth: 792, minHeight: 600)
-                .tint(.blue)
-                .task {
-                    await setupApplication()
-                }
-                .sheet(isPresented: $showCreativeCloudAlert) {
-                    ShouldExistsSetUpView()
-                        .environmentObject(globalNetworkManager)
-                }
-                .alert("Setup未备份提示", isPresented: $showBackupAlert) {
-                    Button("确定") {
-                        handleBackup()
-                    }
-                    Button("取消", role: .cancel) {}
-                } message: {
-                    Text("检测到Setup文件尚未备份，如果你需要安装程序，则Setup必须被处理，点击确定后你需要输入密码，Adobe Downloader将自动处理并备份为Setup.original")
-                }
-                .alert(backupSuccess ? "备份成功" : "备份失败", isPresented: $showBackupResultAlert) {
-                    Button("确定") { }
-                } message: {
-                    Text(backupResultMessage)
-                }
-                .sheet(isPresented: $showTipsSheet) {
-                    TipsSheetView(
-                        showTipsSheet: $showTipsSheet,
-                        showLanguagePicker: $showLanguagePicker
-                    )
+            ZStack {
+                BlurView()
+                    .ignoresSafeArea()
+
+                ContentView()
                     .environmentObject(globalNetworkManager)
-                    .sheet(isPresented: $showLanguagePicker) {
-                        LanguagePickerView(languages: AppStatics.supportedLanguages) { language in
-                            storage.defaultLanguage = language
-                            showLanguagePicker = false
+                    .frame(minWidth: 792, minHeight: 600)
+                    .tint(.blue)
+                    .task {
+                        await setupApplication()
+                    }
+                    .sheet(isPresented: $showCreativeCloudAlert) {
+                        ShouldExistsSetUpView()
+                            .environmentObject(globalNetworkManager)
+                    }
+                    .alert("Setup未备份提示", isPresented: $showBackupAlert) {
+                        Button("确定") {
+                            handleBackup()
+                        }
+                        Button("取消", role: .cancel) {}
+                    } message: {
+                        Text("检测到Setup文件尚未备份，如果你需要安装程序，则Setup必须被处理，点击确定后你需要输入密码，Adobe Downloader将自动处理并备份为Setup.original")
+                    }
+                    .alert(backupSuccess ? "备份成功" : "备份失败", isPresented: $showBackupResultAlert) {
+                        Button("确定") { }
+                    } message: {
+                        Text(backupResultMessage)
+                    }
+                    .sheet(isPresented: $showTipsSheet) {
+                        TipsSheetView(
+                            showTipsSheet: $showTipsSheet,
+                            showLanguagePicker: $showLanguagePicker
+                        )
+                        .environmentObject(globalNetworkManager)
+                        .sheet(isPresented: $showLanguagePicker) {
+                            LanguagePickerView(languages: AppStatics.supportedLanguages) { language in
+                                storage.defaultLanguage = language
+                                showLanguagePicker = false
+                            }
                         }
                     }
-                }
+            }
         }
         .windowStyle(.hiddenTitleBar)
         .windowResizabilityContentSize()

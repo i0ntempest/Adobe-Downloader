@@ -130,10 +130,6 @@ class NewDownloadUtils {
         }
 
         for dependencyToDownload in dependenciesToDownload {
-            print("\(dependencyToDownload.sapCode), \(dependencyToDownload.version), \(dependencyToDownload.buildGuid)")
-        }
-
-        for dependencyToDownload in dependenciesToDownload {
             await MainActor.run {
                 task.setStatus(.preparing(DownloadStatus.PrepareInfo(
                     message: String(localized: "正在处理 \(dependencyToDownload.sapCode) 的包信息..."),
@@ -147,15 +143,72 @@ class NewDownloadUtils {
             if !FileManager.default.fileExists(atPath: productDir.path) {
                 try FileManager.default.createDirectory(at: productDir, withIntermediateDirectories: true)
             }
-            let jsonURL = productDir.appendingPathComponent("application.json")
-            try jsonString.write(to: jsonURL, atomically: true, encoding: String.Encoding.utf8)
 
-            guard let jsonData = jsonString.data(using: .utf8),
+            var processedJsonString = jsonString
+            if dependencyToDownload.sapCode == productInfo.id {
+                if let jsonData = jsonString.data(using: .utf8),
+                   var appInfo = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any] {
+
+                    if var modules = appInfo["Modules"] as? [String: Any] {
+                        modules["Module"] = [] as [[String: Any]]
+                        appInfo["Modules"] = modules
+                    }
+
+                    if var packages = appInfo["Packages"] as? [String: Any],
+                       let packageArray = packages["Package"] as? [[String: Any]] {
+                        
+                        var filteredPackages: [[String: Any]] = []
+                        
+                        for package in packageArray {
+                            var shouldKeep = false
+                            let packageType = package["Type"] as? String ?? "non-core"
+                            let isCore = packageType == "core"
+
+                            let condition = package["Condition"] as? String ?? ""
+                            
+                            if isCore {
+                                if condition.isEmpty {
+                                    shouldKeep = true
+                                } else {
+                                    if condition.contains("[OSArchitecture]==\(AppStatics.architectureSymbol)") {
+                                        shouldKeep = true
+                                    }
+                                    if condition.contains("[installLanguage]==\(task.language)") || task.language == "ALL" {
+                                        shouldKeep = true
+                                    }
+                                }
+                            } else {
+                                shouldKeep = (condition.contains("[installLanguage]==\(task.language)") || task.language == "ALL")
+                            }
+                            
+                            if shouldKeep {
+                                filteredPackages.append(package)
+                            }
+                        }
+
+                        packages["Package"] = filteredPackages
+                        appInfo["Packages"] = packages
+                    }
+
+                    if let processedData = try? JSONSerialization.data(withJSONObject: appInfo, options: .prettyPrinted),
+                       let processedString = String(data: processedData, encoding: .utf8) {
+                        processedJsonString = processedString
+                    }
+                }
+            }
+            
+            let jsonURL = productDir.appendingPathComponent("application.json")
+            try processedJsonString.write(to: jsonURL, atomically: true, encoding: String.Encoding.utf8)
+
+            guard let jsonData = processedJsonString.data(using: .utf8),
                   let appInfo = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
                   let packages = appInfo["Packages"] as? [String: Any],
                   let packageArray = packages["Package"] as? [[String: Any]] else {
                 throw NetworkError.invalidData("无法解析产品信息")
             }
+            // TODO: 暂时没想好module怎么处理
+//            let modules = appInfo["Modules"] as? [String: Any]
+//            let moduleArray = modules?["Module"] as? [[String: Any]] ?? []
 
             var corePackageCount = 0
             var nonCorePackageCount = 0
@@ -175,133 +228,92 @@ class NewDownloadUtils {
                  2. 如果没有Condition，就下载
                  3. 如果有Condition，目前分析到的基本上是语言之分
                     i. 判断是否为目标语言
-
-
-             PS: 下面是留给看源码的人的
-             哪怕是官方的ACC下载任何一款App，都是这个逻辑，不信自己去翻，你可能会说，为什么官方能下通用的，你问这个问题之前，可以自己去拿正版的看看他是怎么下载的，他下载的包数量跟我的是不是一致的，他也只是下载了对应架构的包
-
-             其实要下载通用的也很简单，不是判断架构吗，那下载通用的时候，两个架构同时成立不就好了，但我并没有在官方的下载逻辑中看到，也没尝试过，如果你尝试之后发现可以，请你告诉我
              */
 
             for package in packageArray {
-                var shouldDownload = false
-                let packageType = package["Type"] as? String ?? "non-core"
-                let isCore = packageType == "core"
-
                 guard let downloadURL = package["Path"] as? String, !downloadURL.isEmpty else { continue }
 
+                let packageVersion: String = package["PackageVersion"] as? String ?? ""
                 let fullPackageName: String
-                let packageVersion: String
+                
                 if let name = package["fullPackageName"] as? String, !name.isEmpty {
                     fullPackageName = name
-                    packageVersion = package["PackageVersion"] as? String ?? ""
                 } else if let name = package["PackageName"] as? String, !name.isEmpty {
                     fullPackageName = "\(name).zip"
-                    packageVersion = package["PackageVersion"] as? String ?? ""
                 } else {
                     continue
                 }
 
                 let downloadSize: Int64
-                if let sizeNumber = package["DownloadSize"] as? NSNumber {
-                    downloadSize = sizeNumber.int64Value
-                } else if let sizeString = package["DownloadSize"] as? String,
-                          let parsedSize = Int64(sizeString) {
-                    downloadSize = parsedSize
-                } else if let sizeInt = package["DownloadSize"] as? Int {
-                    downloadSize = Int64(sizeInt)
-                } else { continue }
-
-                if dependencyToDownload.sapCode != productInfo.id {
-
+                switch package["DownloadSize"] {
+                    case let sizeNumber as NSNumber:
+                        downloadSize = sizeNumber.int64Value
+                    case let sizeString as String:
+                        guard let parsedSize = Int64(sizeString) else { continue }
+                        downloadSize = parsedSize
+                    case let sizeInt as Int:
+                        downloadSize = Int64(sizeInt)
+                    default:
+                        continue
                 }
 
+                let packageType = package["Type"] as? String ?? "non-core"
+                let isCore = packageType == "core"
+                let installLanguage = "[installLanguage]==\(task.language)"
+                let condition = package["Condition"] as? String ?? ""
+
+                var shouldDownload = false
+                
                 if dependencyToDownload.sapCode == productInfo.id {
                     if isCore {
-                        let installLanguage = "[installLanguage]==\(task.language)"
-                        if let condition = package["Condition"] as? String {
-                            if condition.isEmpty {
-                                shouldDownload = true
-                            } else {
-                                if condition.contains("[OSArchitecture]==\(AppStatics.architectureSymbol)") {
-                                    shouldDownload = true
-                                }
-        //                        if condition.contains("[OSArchitecture]==x64") {
-        //                            shouldDownload = true
-        //                        }
-                                if condition.contains(installLanguage) || task.language == "ALL" {
-                                    shouldDownload = true
-                                }
-                            }
-                        } else {
-                            shouldDownload = true
-                        }
+                        shouldDownload = condition.isEmpty || 
+                                         condition.contains("[OSArchitecture]==\(AppStatics.architectureSymbol)") ||
+                                         condition.contains(installLanguage) || task.language == "ALL"
                     } else {
-                        shouldDownload = false
+                        shouldDownload = condition.contains(installLanguage) || task.language == "ALL"
                     }
                 } else {
-                    let installLanguage = "[installLanguage]==\(task.language)"
-                    if let condition = package["Condition"] as? String {
-                        if condition.isEmpty {
-                            shouldDownload = true
-                        } else {
-                            if condition.contains("[OSVersion]") {
-                                let osVersion = ProcessInfo.processInfo.operatingSystemVersion
-                                let currentVersion = Double("\(osVersion.majorVersion).\(osVersion.minorVersion)") ?? 0.0
-
-                                let versionPattern = #"\[OSVersion\](>=|<=|<|>|==)([\d.]+)"#
-                                let regex = try? NSRegularExpression(pattern: versionPattern)
-                                let range = NSRange(condition.startIndex..<condition.endIndex, in: condition)
-
-                                if let matches = regex?.matches(in: condition, range: range) {
-                                    var meetsAllConditions = true
-
-                                    for match in matches {
-                                        guard let operatorRange = Range(match.range(at: 1), in: condition),
-                                              let versionRange = Range(match.range(at: 2), in: condition),
-                                              let requiredVersion = Double(condition[versionRange]) else {
-                                            continue
-                                        }
-
-                                        let operatorSymbol = String(condition[operatorRange])
-                                        let meets = compareVersions(current: currentVersion, required: requiredVersion, operator: operatorSymbol)
-
-                                        if !meets {
-                                            meetsAllConditions = false
-                                            break
-                                        }
-                                    }
-
-                                    if meetsAllConditions {
-                                        shouldDownload = true
-                                    }
-                                }
-                            }
-                            if condition.contains(installLanguage) || task.language == "ALL" {
-                                shouldDownload = true
-                            }
-                        }
-                    } else {
-                        shouldDownload = true
-                    }
+                    shouldDownload = condition.isEmpty ||
+                                    (condition.contains("[OSVersion]") && checkOSVersionCondition(condition)) ||
+                                    condition.contains(installLanguage) || task.language == "ALL"
                 }
 
-                if isCore {
-                    corePackageCount += 1
-                } else {
-                    nonCorePackageCount += 1
-                }
-
+                isCore ? (corePackageCount += 1) : (nonCorePackageCount += 1)
+                
                 if shouldDownload {
-                    let newPackage = Package(
+                    dependencyToDownload.packages.append(Package(
                         type: packageType,
                         fullPackageName: fullPackageName,
                         downloadSize: downloadSize,
                         downloadURL: downloadURL,
                         packageVersion: packageVersion
-                    )
-                    dependencyToDownload.packages.append(newPackage)
+                    ))
                 }
+            }
+            
+            func checkOSVersionCondition(_ condition: String) -> Bool {
+                let osVersion = ProcessInfo.processInfo.operatingSystemVersion
+                let currentVersion = Double("\(osVersion.majorVersion).\(osVersion.minorVersion)") ?? 0.0
+                
+                let versionPattern = #"\[OSVersion\](>=|<=|<|>|==)([\d.]+)"#
+                guard let regex = try? NSRegularExpression(pattern: versionPattern) else { return false }
+                
+                let nsRange = NSRange(condition.startIndex..<condition.endIndex, in: condition)
+                let matches = regex.matches(in: condition, range: nsRange)
+                
+                for match in matches {
+                    guard match.numberOfRanges >= 3,
+                          let operatorRange = Range(match.range(at: 1), in: condition),
+                          let versionRange = Range(match.range(at: 2), in: condition),
+                          let requiredVersion = Double(condition[versionRange]) else { continue }
+                    
+                    let operatorSymbol = String(condition[operatorRange])
+                    if !compareVersions(current: currentVersion, required: requiredVersion, operator: operatorSymbol) {
+                        return false
+                    }
+                }
+                
+                return !matches.isEmpty
             }
         }
 
@@ -490,8 +502,7 @@ class NewDownloadUtils {
             )))
 
             if let currentPackage = task.currentPackage {
-                let destinationDir = task.directory
-                    .appendingPathComponent("\(task.productId ?? "")")
+                let destinationDir = task.directory.appendingPathComponent("\(task.productId)")
                 let fileURL = destinationDir.appendingPathComponent(currentPackage.fullPackageName)
                 try? FileManager.default.removeItem(at: fileURL)
             }
@@ -714,27 +725,35 @@ class NewDownloadUtils {
         }
         
         // 构建依赖列表
-        let dependencies = languageSet.first?.dependencies.map { dependency in
+        let dependencies = (languageSet.first?.dependencies.map { dependency in
             """
-                <Dependency>
-                    <SAPCode>\(productInfo.id)</SAPCode>
-                    <BaseVersion>\(languageSet.first?.baseVersion)</BaseVersion>
-                    <EsdDirectory>\(productInfo.id)</EsdDirectory>
-                </Dependency>
+            <Dependency>
+                <BuildGuid>\(dependency.buildGuid)</BuildGuid>
+                <BuildVersion>\(dependency.productVersion)</BuildVersion>
+                <CodexVersion>\(dependency.baseVersion)</CodexVersion>
+                <Platform>\(dependency.selectedPlatform)</Platform>
+                <SAPCode>\(dependency.sapCode)</SAPCode>
+                <EsdDirectory>\(dependency.sapCode)</EsdDirectory>
+            </Dependency>
             """
-        }.joined(separator: "\n")
+        }.joined(separator: "\n")) ?? ""
+
+        let buildGuid = productInfo.platforms.first?.languageSet.first?.buildGuid ?? ""
+        let buildVersion = languageSet.first?.productVersion ?? ""
         
         return """
         <DriverInfo>
             <ProductInfo>
-                <n>Adobe \(displayName)</n>
-                <SAPCode>\(productInfo.id)</SAPCode>
-                <CodexVersion>\(version)</CodexVersion>
-                <Platform>mac</Platform>
-                <EsdDirectory>\(productInfo.id)</EsdDirectory>
                 <Dependencies>
                     \(dependencies)
                 </Dependencies>
+                <Modules></Modules>
+                <BuildGuid>\(buildGuid)</BuildGuid>
+                <BuildVersion>\(buildVersion)</BuildVersion>
+                <CodexVersion>\(productInfo.version)</CodexVersion>
+                <Platform>\(platform)</Platform>
+                <EsdDirectory>\(productInfo.id)</EsdDirectory>
+                <SAPCode>\(productInfo.id)</SAPCode>
             </ProductInfo>
             <RequestInfo>
                 <InstallDir>/Applications</InstallDir>
@@ -746,9 +765,11 @@ class NewDownloadUtils {
 
     func downloadAPRO(task: NewDownloadTask, productInfo: Product) async throws {
         let firstPlatform = productInfo.platforms.first
-        let buildGuid = firstPlatform?.languageSet.first?.buildGuid ?? ""
+        let productManifestURL = firstPlatform?.languageSet.first?.manifestURL ?? ""
 
-        let manifestURL = globalCdn + buildGuid
+        let manifestURL = globalCdn + productManifestURL
+        print("manifestURL")
+        print(manifestURL)
         guard let url = URL(string: manifestURL) else {
             throw NetworkError.invalidURL(manifestURL)
         }
@@ -757,7 +778,6 @@ class NewDownloadUtils {
         request.httpMethod = "GET"
 
         var headers = NetworkConstants.adobeRequestHeaders
-        headers["x-adobe-build-guid"] = buildGuid
 
         headers.forEach { request.setValue($0.value, forHTTPHeaderField: $0.key) }
 
@@ -775,6 +795,8 @@ class NewDownloadUtils {
             throw NetworkError.invalidURL(downloadPath)
         }
 
+        print("downloadURL \(downloadURL)")
+
         let aproPackage = Package(
             type: "dmg",
             fullPackageName: "Adobe Downloader \(task.productId)_\(firstPlatform?.languageSet.first?.productVersion ?? "unknown")_\(firstPlatform?.id ?? "unknown").dmg",
@@ -783,8 +805,10 @@ class NewDownloadUtils {
             packageVersion: ""
         )
 
+        print(aproPackage)
+
         await MainActor.run {
-            let product = DependenciesToDownload(sapCode: task.productId, version: firstPlatform?.languageSet.first?.productVersion ?? "unknown", buildGuid: buildGuid)
+            let product = DependenciesToDownload(sapCode: task.productId, version: firstPlatform?.languageSet.first?.productVersion ?? "unknown", buildGuid: "")
             product.packages = [aproPackage]
             task.dependenciesToDownload = [product]
             task.totalSize = assetSize

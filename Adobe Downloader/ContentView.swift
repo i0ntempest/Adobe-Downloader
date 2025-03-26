@@ -57,10 +57,12 @@ struct ContentView: View {
                 filteredProducts: filteredProducts,
                 onRetry: { networkManager.retryFetchData() }
             )
+            .background(Color(.clear))
             .animation(.easeInOut, value: networkManager.loadingState)
             .animation(.easeInOut, value: filteredProducts)
         }
-        .sheet(isPresented: $showDownloadManager) { 
+        .background(Color(.clear))
+        .sheet(isPresented: $showDownloadManager) {
             DownloadManagerView() 
         }
         .onChange(of: currentApiVersion) { newValue in

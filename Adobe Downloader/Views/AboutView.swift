@@ -72,7 +72,7 @@ struct AboutView: View {
                 }
                 .tag("about_app")
         }
-        .background(Color(NSColor.windowBackgroundColor))
+        .background(Color(.clear))
         .frame(width: 600)
         .onAppear {
             selectedTab = "general_settings"

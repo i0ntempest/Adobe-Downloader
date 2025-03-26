@@ -258,7 +258,7 @@ struct DownloadProgressView: View {
                         },
                         onRetry: nil
                     )
-                } else if case .failed(let error) = globalNetworkManager.installationState {
+                } else if case .failed(let error, let errorDetails) = globalNetworkManager.installationState {
                     InstallProgressView(
                         productName: task.displayName,
                         progress: 0,
@@ -270,7 +270,8 @@ struct DownloadProgressView: View {
                             Task {
                                 await globalNetworkManager.retryInstallation(at: task.directory)
                             }
-                        }
+                        },
+                        errorDetails: errorDetails
                     )
                 } else {
                     InstallProgressView(
@@ -285,7 +286,7 @@ struct DownloadProgressView: View {
                     )
                 }
             }
-            .frame(minWidth: 400, minHeight: 200)
+            .frame(minWidth: 700, minHeight: 200)
             .background(Color(NSColor.windowBackgroundColor))
         }
     }

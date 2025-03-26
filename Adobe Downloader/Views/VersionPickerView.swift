@@ -320,7 +320,7 @@ private struct ExistingPathButton: View {
     
     var body: some View {
         if isVisible {
-            Text("可能已存在目录")
+            Text("已存在")
                 .font(.system(size: 11, weight: .medium))
                 .foregroundColor(.blue.opacity(0.9))
                 .padding(.horizontal, 8)

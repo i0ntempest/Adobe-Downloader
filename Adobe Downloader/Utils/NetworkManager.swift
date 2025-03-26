@@ -38,7 +38,7 @@ class NetworkManager: ObservableObject {
         case idle
         case installing(progress: Double, status: String)
         case completed
-        case failed(Error)
+        case failed(Error, String? = nil)
     }
 
     init() {
@@ -62,7 +62,6 @@ class NetworkManager: ObservableObject {
         }
     }
     func startDownload(productId: String, selectedVersion: String, language: String, destinationURL: URL) async throws {
-        print(destinationURL)
         // 从 globalCcmResult 中获取 productId 对应的 ProductInfo
         guard let productInfo = globalCcmResult.products.first(where: { $0.id == productId }) else {
             throw NetworkError.productNotFound
@@ -215,26 +214,20 @@ class NetworkManager: ObservableObject {
             await MainActor.run {
                 self.installCommand = command
                 
+                var errorDetails: String? = nil
+                var mainError = error
+                
                 if let installError = error as? InstallManager.InstallError {
                     switch installError {
-                    case .installationFailed(let message):
-                        if message.contains("需要重新输入密码") {
-                            Task {
-                                await installProduct(at: path)
-                            }
-                        } else {
-                            installationState = .failed(InstallManager.InstallError.installationFailed(message))
-                        }
-                    case .cancelled:
-                        installationState = .failed(InstallManager.InstallError.cancelled)
-                    case .setupNotFound:
-                        installationState = .failed(InstallManager.InstallError.setupNotFound)
-                    case .permissionDenied:
-                        installationState = .failed(InstallManager.InstallError.permissionDenied)
+                    case .installationFailedWithDetails(let message, let details):
+                        errorDetails = details
+                        mainError = InstallManager.InstallError.installationFailed(message)
+                    default:
+                        break
                     }
-                } else {
-                    installationState = .failed(InstallManager.InstallError.installationFailed(error.localizedDescription))
                 }
+                
+                installationState = .failed(mainError, errorDetails)
             }
         }
     }
@@ -268,17 +261,18 @@ class NetworkManager: ObservableObject {
                 installationState = .completed
             }
         } catch {
-            if case InstallManager.InstallError.installationFailed(let message) = error,
-               message.contains("需要重新输入密码") {
-                await installProduct(at: path)
-            } else {
-                await MainActor.run {
-                    if let installError = error as? InstallManager.InstallError {
-                        installationState = .failed(installError)
-                    } else {
-                        installationState = .failed(error)
+            await MainActor.run {
+                var errorDetails: String? = nil
+                var mainError = error
+                
+                if let installError = error as? InstallManager.InstallError {
+                    if case .installationFailedWithDetails(let message, let details) = installError {
+                        errorDetails = details
+                        mainError = InstallManager.InstallError.installationFailed(message)
                     }
                 }
+                
+                installationState = .failed(mainError, errorDetails)
             }
         }
     }
