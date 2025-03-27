@@ -38,6 +38,8 @@ class PrivilegedHelperManager: NSObject {
 
     private var useLegacyInstall = false
     private var connection: NSXPCConnection?
+    private var isInitializing = false
+    private var shouldAutoReconnect = true
 
     @Published private(set) var connectionState: ConnectionState = .disconnected {
         didSet {
@@ -67,8 +69,6 @@ class PrivilegedHelperManager: NSObject {
         }
     }
 
-    private var isInitializing = false
-
     private let connectionQueue = DispatchQueue(label: "com.x1a0he.helper.connection")
 
     override init() {
@@ -87,6 +87,15 @@ class PrivilegedHelperManager: NSObject {
             self?.connectionState = .disconnected
             self?.connection?.invalidate()
             self?.connection = nil
+        }
+    }
+
+    private func setupAutoReconnect() {
+        Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            if self.connectionState == .disconnected && self.shouldAutoReconnect {
+                _ = self.connectToHelper()
+            }
         }
     }
 
@@ -228,24 +237,28 @@ class PrivilegedHelperManager: NSObject {
     }
     
     func reinstallHelper(completion: @escaping (Bool, String) -> Void) {
+        shouldAutoReconnect = false
         uninstallHelperViaTerminal { [weak self] success, message in
             guard let self = self else { return }
-            DispatchQueue.main.asyncAfter(deadline: .now()) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 let result = self.installHelperDaemon()
                 
                 switch result {
                 case .success:
-                    DispatchQueue.main.asyncAfter(deadline: .now()) { [weak self] in
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
                         guard let self = self else { return }
-
+                        self.shouldAutoReconnect = true
                         self.tryConnect(retryCount: 3, delay: 1, completion: completion)
                     }
                     
                 case .authorizationFail:
+                    self.shouldAutoReconnect = true
                     completion(false, String(localized: "获取授权失败"))
                 case .getAdminFail:
+                    self.shouldAutoReconnect = true
                     completion(false, String(localized: "获取管理员权限失败"))
                 case .blessError(_):
+                    self.shouldAutoReconnect = true
                     completion(false, String(localized: "安装失败: \(result.alertContent)"))
                 }
             }
@@ -356,6 +369,7 @@ class PrivilegedHelperManager: NSObject {
                 }
                 semaphore.signal()
             }
+            _ = semaphore.wait(timeout: .now() + 1.0)
         }
         
         if !isConnected {
@@ -435,14 +449,15 @@ class PrivilegedHelperManager: NSObject {
             self.connectionState = .disconnected
             self.connection?.invalidate()
             self.connection = nil
+            self.shouldAutoReconnect = true
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            DispatchQueue.main.asyncAfter(deadline: .now()) {
                 do {
                     let helper = try self.getHelperProxy()
 
                     helper.executeCommand(type: .install, path1: "id -u", path2: "", permissions: 0) { result in
                         DispatchQueue.main.async {
-                            if result == "root" {
+                            if result.contains("0") || result == "0" {
                                 self.connectionState = .connected
                                 completion(true, String(localized: "Helper 重新连接成功"))
                             } else {
@@ -519,18 +534,21 @@ class PrivilegedHelperManager: NSObject {
     func forceReinstallHelper() {
         guard !isInitializing else { return }
         isInitializing = true
+        shouldAutoReconnect = false
 
         uninstallHelperViaTerminal { [weak self] success, _ in
             guard let self = self else { return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 self.notifyInstall()
                 self.isInitializing = false
+                self.shouldAutoReconnect = true
             }
         }
     }
 
     func disconnectHelper() {
         connectionQueue.sync {
+            shouldAutoReconnect = false
             if let existingConnection = connection {
                 existingConnection.invalidate()
             }
@@ -581,13 +599,18 @@ class PrivilegedHelperManager: NSObject {
                     let errorString = String(data: errorData, encoding: .utf8) ?? "未知错误"
                     completion(false, String(localized: "卸载失败: \(errorString)"))
                 }
+
+                self.shouldAutoReconnect = true
+                
             } catch {
+                self.shouldAutoReconnect = true
                 completion(false, String(localized: "执行卸载脚本失败: \(error.localizedDescription)"))
             }
 
             try? FileManager.default.removeItem(at: scriptURL)
             
         } catch {
+            self.shouldAutoReconnect = true
             completion(false, String(localized: "准备卸载脚本失败: \(error.localizedDescription)"))
         }
     }
@@ -596,9 +619,11 @@ class PrivilegedHelperManager: NSObject {
 extension PrivilegedHelperManager {
     private func notifyInstall() {
         guard !isInitializing else { return }
+        shouldAutoReconnect = false
 
         let result = installHelperDaemon()
         if case .success = result {
+            shouldAutoReconnect = true
             checkInstall()
             return
         }
@@ -607,9 +632,13 @@ extension PrivilegedHelperManager {
         useLegacyInstall = ret.0
         let isCancle = ret.1
         if !isCancle, useLegacyInstall  {
+            shouldAutoReconnect = true
             checkInstall()
         } else if isCancle, !useLegacyInstall {
+            shouldAutoReconnect = true
             NSAlert.alert(with: String(localized: "获取管理员授权失败，用户主动取消授权！"))
+        } else {
+            shouldAutoReconnect = true
         }
     }
 }
@@ -681,17 +710,6 @@ extension NSAlert {
         alert.alertStyle = .warning
         alert.addButton(withTitle: NSLocalizedString("OK", comment: ""))
         alert.runModal()
-    }
-}
-
-extension PrivilegedHelperManager {
-    private func setupAutoReconnect() {
-        Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
-            guard let self = self else { return }
-            if self.connectionState == .disconnected {
-                _ = self.connectToHelper()
-            }
-        }
     }
 }
 
