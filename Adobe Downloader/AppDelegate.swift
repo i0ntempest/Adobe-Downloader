@@ -36,7 +36,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         if let window = NSApp.windows.first {
-            window.minSize = NSSize(width: 792, height: 600)
+            window.minSize = NSSize(width: 800, height: 765)
         }
         
         eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in

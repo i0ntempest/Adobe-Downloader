@@ -81,6 +81,8 @@ struct ProductGridView: View {
             ) {
                 ForEach(products, id: \.id) { uniqueProduct in
                     AppCardView(uniqueProduct: uniqueProduct)
+                        .id(uniqueProduct.id)
+                        .modifier(AppearAnimationModifier())
                 }
             }
             .padding()
@@ -96,5 +98,25 @@ struct ProductGridView: View {
             .padding(.bottom, 16)
         }
         .background(Color(.clear))
+    }
+}
+
+struct AppearAnimationModifier: ViewModifier {
+    @State private var opacity: Double = 0
+    @State private var offset: CGFloat = 20
+    @State private var scale: CGFloat = 0.95
+    
+    func body(content: Content) -> some View {
+        content
+            .opacity(opacity)
+            .offset(y: offset)
+            .scaleEffect(scale)
+            .onAppear {
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    opacity = 1
+                    offset = 0
+                    scale = 1
+                }
+            }
     }
 } 

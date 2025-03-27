@@ -25,7 +25,7 @@ struct BeautifulSearchField: View {
         .padding(8)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(Color(NSColor.controlBackgroundColor).opacity(0.8))
+                .fill(Color(NSColor.controlBackgroundColor).opacity(0.3))
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(Color.secondary.opacity(0.1), lineWidth: 1)
