@@ -389,7 +389,7 @@ private struct VersionDetails: View {
                         DependenciesList(dependencies: info.languageSet.first?.dependencies ?? [])
                             .padding(.leading, 8)
                     }
-                    
+                    #if DEBUG
                     if hasModules {
                         if hasDependencies {
                             Divider()
@@ -417,6 +417,7 @@ private struct VersionDetails: View {
                         ModulesList(modules: info.modules)
                             .padding(.leading, 8)
                     }
+                    #endif
                 }
                 .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
                 .cornerRadius(6)

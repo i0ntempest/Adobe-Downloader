@@ -606,48 +606,44 @@ class NewDownloadUtils {
                         return
                     }
 
-                    Task {
-                        await MainActor.run {
-                            package.downloadedSize = package.downloadSize
-                            package.progress = 1.0
-                            package.status = .completed
-                            package.downloaded = true
+                    Task { @MainActor in
+                        package.downloadedSize = package.downloadSize
+                        package.progress = 1.0
+                        package.status = .completed
+                        package.downloaded = true
 
-                            var totalDownloaded: Int64 = 0
-                            var totalSize: Int64 = 0
+                        var totalDownloaded: Int64 = 0
+                        var totalSize: Int64 = 0
 
-                            for prod in task.dependenciesToDownload {
-                                for pkg in prod.packages {
-                                    totalSize += pkg.downloadSize
-                                    if pkg.downloaded {
-                                        totalDownloaded += pkg.downloadSize
-                                    }
+                        for prod in task.dependenciesToDownload {
+                            for pkg in prod.packages {
+                                totalSize += pkg.downloadSize
+                                if pkg.downloaded {
+                                    totalDownloaded += pkg.downloadSize
                                 }
                             }
-
-                            task.totalSize = totalSize
-                            task.totalDownloadedSize = totalDownloaded
-                            task.totalProgress = Double(totalDownloaded) / Double(totalSize)
-                            task.totalSpeed = 0
-
-                            let allCompleted = task.dependenciesToDownload.allSatisfy {
-                                product in product.packages.allSatisfy { $0.downloaded }
-                            }
-
-                            if allCompleted {
-                                task.setStatus(.completed(DownloadStatus.CompletionInfo(
-                                    timestamp: Date(),
-                                    totalTime: Date().timeIntervalSince(task.createAt),
-                                    totalSize: totalSize
-                                )))
-                            }
-
-                            product.updateCompletedPackages()
                         }
+
+                        task.totalSize = totalSize
+                        task.totalDownloadedSize = totalDownloaded
+                        task.totalProgress = Double(totalDownloaded) / Double(totalSize)
+                        task.totalSpeed = 0
+
+                        let allCompleted = task.dependenciesToDownload.allSatisfy {
+                            product in product.packages.allSatisfy { $0.downloaded }
+                        }
+
+                        if allCompleted {
+                            task.setStatus(.completed(DownloadStatus.CompletionInfo(
+                                timestamp: Date(),
+                                totalTime: Date().timeIntervalSince(task.createAt),
+                                totalSize: totalSize
+                            )))
+                        }
+
+                        product.updateCompletedPackages()
                         await globalNetworkManager?.saveTask(task)
-                        await MainActor.run {
-                            globalNetworkManager?.objectWillChange.send()
-                        }
+                        globalNetworkManager?.objectWillChange.send()
                         continuation.resume()
                     }
                 },
@@ -777,7 +773,7 @@ class NewDownloadUtils {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
 
-        var headers = NetworkConstants.adobeRequestHeaders
+        let headers = NetworkConstants.adobeRequestHeaders
 
         headers.forEach { request.setValue($0.value, forHTTPHeaderField: $0.key) }
 
@@ -841,41 +837,35 @@ class NewDownloadUtils {
                         return
                     }
 
-                    Task {
-                        await MainActor.run {
-                            aproPackage.downloadedSize = aproPackage.downloadSize
-                            aproPackage.progress = 1.0
-                            aproPackage.status = .completed
-                            aproPackage.downloaded = true
+                    Task { @MainActor in
+                        aproPackage.downloadedSize = aproPackage.downloadSize
+                        aproPackage.progress = 1.0
+                        aproPackage.status = .completed
+                        aproPackage.downloaded = true
 
-                            var totalDownloaded: Int64 = 0
-                            var totalSize: Int64 = 0
+                        var totalDownloaded: Int64 = 0
+                        var totalSize: Int64 = 0
 
-                            totalSize += aproPackage.downloadSize
-                            if aproPackage.downloaded {
-                                totalDownloaded += aproPackage.downloadSize
-                            }
-
-                            task.totalSize = totalSize
-                            task.totalDownloadedSize = totalDownloaded
-                            task.totalProgress = Double(totalDownloaded) / Double(totalSize)
-                            task.totalSpeed = 0
-
-                            task.setStatus(.completed(DownloadStatus.CompletionInfo(
-                                timestamp: Date(),
-                                totalTime: Date().timeIntervalSince(task.createAt),
-                                totalSize: totalSize
-                            )))
-
-                            task.objectWillChange.send()
+                        totalSize += aproPackage.downloadSize
+                        if aproPackage.downloaded {
+                            totalDownloaded += aproPackage.downloadSize
                         }
 
+                        task.totalSize = totalSize
+                        task.totalDownloadedSize = totalDownloaded
+                        task.totalProgress = Double(totalDownloaded) / Double(totalSize)
+                        task.totalSpeed = 0
+
+                        task.setStatus(.completed(DownloadStatus.CompletionInfo(
+                            timestamp: Date(),
+                            totalTime: Date().timeIntervalSince(task.createAt),
+                            totalSize: totalSize
+                        )))
+
+                        task.objectWillChange.send()
                         await globalNetworkManager?.saveTask(task)
-
-                        await MainActor.run {
-                            globalNetworkManager?.updateDockBadge()
-                            globalNetworkManager?.objectWillChange.send()
-                        }
+                        globalNetworkManager?.updateDockBadge()
+                        globalNetworkManager?.objectWillChange.send()
                         continuation.resume()
                     }
                 },
