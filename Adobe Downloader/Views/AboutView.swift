@@ -676,13 +676,13 @@ struct CleanConfigView: View {
 
             if PrivilegedHelperManager.getHelperStatus {
                 PrivilegedHelperManager.shared.executeCommand("open -a Terminal \(scriptURL.path)") { output in
-                    if output.isEmpty {
+                    if output.starts(with: "Error") {
+                        alertMessage = "清空配置失败: \(output)"
+                        showAlert = true
+                    } else {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                             exit(0)
                         }
-                    } else {
-                        alertMessage = "清空配置失败: \(output)"
-                        showAlert = true
                     }
                 }
             } else {
