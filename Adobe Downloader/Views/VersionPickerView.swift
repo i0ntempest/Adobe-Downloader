@@ -135,7 +135,7 @@ private struct VersionListView: View {
 
                 HStack(spacing: 8) {
                     Capsule()
-                        .fill(Color.secondary.opacity(0.2))
+                        .fill(Color.green)
                         .frame(width: 6, height: 6)
                     Text("获取到 \(filteredVersions.count) 个版本")
                         .font(.system(size: 12))
@@ -144,7 +144,7 @@ private struct VersionListView: View {
                 .padding(.bottom, 16)
             }
         }
-        .background(Color(NSColor.windowBackgroundColor))
+        .background(Color(.clear))
     }
     
     private var filteredVersions: [(key: String, value: Product.Platform)] {
@@ -455,10 +455,7 @@ private struct DependenciesList: View {
                                 .fill(Color.blue.opacity(0.1))
                         )
                         .foregroundColor(.blue.opacity(0.8))
-                }
-                .padding(.vertical, 2)
 
-                HStack(spacing: 10) {
                     if dependency.baseVersion != dependency.productVersion {
                         HStack(spacing: 3) {
                             Text("base:")
@@ -468,12 +465,17 @@ private struct DependenciesList: View {
                                 .font(.system(size: 10, weight: .medium))
                                 .foregroundColor(.secondary.opacity(0.9))
                         }
-                        .padding(.horizontal, 4)
+                        .padding(.horizontal, 5)
                         .padding(.vertical, 1)
-                        .background(Color.secondary.opacity(0.07))
-                        .cornerRadius(2)
+                        .background(
+                            RoundedRectangle(cornerRadius: 3)
+                                .fill(Color.secondary.opacity(0.1))
+                        )
                     }
-                    
+                }
+                .padding(.vertical, 2)
+
+                HStack(spacing: 10) {
                     if !dependency.buildGuid.isEmpty {
                         HStack(spacing: 3) {
                             Text("buildGuid:")

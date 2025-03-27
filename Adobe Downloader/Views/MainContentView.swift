@@ -89,7 +89,7 @@ struct ProductGridView: View {
             
             HStack(spacing: 8) {
                 Capsule()
-                    .fill(Color.secondary.opacity(0.2))
+                    .fill(Color.green)
                     .frame(width: 6, height: 6)
                 Text("获取到 \(products.count) 款产品")
                     .font(.system(size: 12))

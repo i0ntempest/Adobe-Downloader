@@ -22,6 +22,7 @@ struct DownloadProgressView: View {
     @State private var showCommandLineInstall = false
     @State private var showCopiedAlert = false
     @State private var showDeleteConfirmation = false
+    @State private var showCancelConfirmation = false
 
     private var statusLabel: some View {
         Text(task.status.description)
@@ -82,7 +83,7 @@ struct DownloadProgressView: View {
                 }
                 .buttonStyle(BeautifulButtonStyle(baseColor: .orange))
                 
-                Button(action: onCancel) {
+                Button(action: { showCancelConfirmation = true }) {
                     Label("取消", systemImage: "xmark")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.white)
@@ -97,7 +98,7 @@ struct DownloadProgressView: View {
                 }
                 .buttonStyle(BeautifulButtonStyle(baseColor: .blue))
                 
-                Button(action: onCancel) {
+                Button(action: { showCancelConfirmation = true }) {
                     Label("取消", systemImage: "xmark")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.white)
@@ -191,7 +192,7 @@ struct DownloadProgressView: View {
                 }
                 
             case .retrying:
-                Button(action: onCancel) {
+                Button(action: { showCancelConfirmation = true }) {
                     Label("取消", systemImage: "xmark")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.white)
@@ -199,13 +200,21 @@ struct DownloadProgressView: View {
                 .buttonStyle(BeautifulButtonStyle(baseColor: .red))
             }
         }
-        .alert("确认删除", isPresented: $showDeleteConfirmation) {
+        .alert("请确认你的操作", isPresented: $showDeleteConfirmation) {
             Button("取消", role: .cancel) { }
-            Button("删除", role: .destructive) {
+            Button("确认", role: .destructive) {
                 onRemove()
             }
         } message: {
             Text("确定要删除任务\(task.displayName)吗？")
+        }
+        .alert("请确认你的操作", isPresented: $showCancelConfirmation) {
+            Button("返回", role: .cancel) { }
+            Button("确认取消", role: .destructive) {
+                onCancel()
+            }
+        } message: {
+            Text("确定要取消\(task.displayName)的下载吗？")
         }
         .sheet(isPresented: $showInstallPrompt) {
             if task.displayInstallButton {
@@ -673,6 +682,15 @@ private struct PackageListView: View {
                 .buttonStyle(BeautifulButtonStyle(baseColor: .blue))
                 #endif
 
+                #if DEBUG
+                if case .completed = task.status, task.productId != "APRO" {
+                    CommandLineInstallButton(
+                        task: task,
+                        showCommandLineInstall: $showCommandLineInstall,
+                        showCopiedAlert: $showCopiedAlert
+                    )
+                }
+                #else
                 if !ModifySetup.isSetupModified(), case .completed = task.status {
                     HStack {
                         Image(systemName: "exclamationmark.triangle.fill")
@@ -696,17 +714,7 @@ private struct PackageListView: View {
                     }
                     .padding(.top, 5)
                 }
-
-                if case .completed = task.status, task.productId != "APRO" {
-                    if ModifySetup.isSetupModified() {
-                        CommandLineInstallButton(
-                            task: task,
-                            showCommandLineInstall: $showCommandLineInstall,
-                            showCopiedAlert: $showCopiedAlert
-                        )
-                    }
-                }
-                
+                #endif
                 actionButtons
             }
             
