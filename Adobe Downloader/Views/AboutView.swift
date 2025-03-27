@@ -22,7 +22,6 @@ private enum AboutViewConstants {
     static let links: [(title: String, url: String)] = [
         ("@X1a0He", "https://t.me/X1a0He_bot"),
         ("Github: Adobe Downloader", "https://github.com/X1a0He/Adobe-Downloader"),
-        ("Drovosek01: adobe-packager", "https://github.com/Drovosek01/adobe-packager"),
         ("QiuChenly: InjectLib", "https://github.com/QiuChenly/InjectLib")
     ]
 }

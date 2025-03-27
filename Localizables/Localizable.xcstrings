@@ -16,24 +16,22 @@
     "(%lld)" : {
 
     },
-    "(可能导致处理 Setup 组件失败)" : {
-      "extractionState" : "stale",
+    "(可能导致处理失败)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "(May failed to processing the Setup)"
+            "value" : "(May cause processing failure)"
           }
         }
       }
     },
-    "(将导致无法使用安装功能)" : {
-      "extractionState" : "stale",
+    "(无法使用安装功能)" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "（Unavailable to use install）"
+            "value" : "(The installation function cannot be used)"
           }
         }
       }
@@ -137,34 +135,6 @@
     },
     "•" : {
 
-    },
-    "• 错误 2700：不太可能会出现，除非 Setup 组件处理失败了\n• 错误 107：所下载的文件架构与系统架构不一致或者安装文件被损坏\n• 错误 103：出现权限问题，请确保 Helper 状态正常\n• 错误 182：文件不齐全或文件被损坏，或者你的Setup组件不一致，请重新下载 X1a0He CC\n• 错误 133：系统磁盘空间不足\n• 错误 -1：Setup 组件未处理或处理失败，请联系开发者\n• 错误 195：所下载的产品不支持你当前的系统\n• 错误 146：请在 Mac 系统设置中给予 Adobe Downloader 全磁盘权限\n• 错误 255：Setup 组件需要更新，请联系开发者解决" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "• Error 2700: This is unlikely to occur, unless the Setup component processing fails\n• Error 107: The downloaded file architecture does not match the system architecture or the installation file is damaged\n• Error 103: Permission issues, please ensure the Helper status is normal\n• Error 182: The file is incomplete or damaged, or your Setup component is inconsistent, please re-download X1a0He CC\n• Error 133: System disk space is insufficient\n• Error -1: Setup component is not processed or processed failed, please contact the developer\n• Error 195: The downloaded product does not support your current system\n• Error 146: Please grant Adobe Downloader full disk permission in the Mac system settings\n• Error 255: The Setup component needs to be updated, please contact the developer to solve"
-          }
-        }
-      }
-    },
-    "✅" : {
-
-    },
-    "❌" : {
-
-    },
-    "🔔 即将下载 %@ (%@) 版本 🔔" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "🔔 To be downloaded %1$@ (%2$@) version 🔔"
-          }
-        }
-      }
     },
     "Adobe Creative Cloud" : {
 
@@ -308,6 +278,7 @@
 
     },
     "Debug 模式" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -337,22 +308,25 @@
         }
       }
     },
-    "Helper 安装失败" : {
-      "extractionState" : "stale",
+    "Helper 安装失败: %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Helper installation failed"
+            "value" : "Helper installation failed: %@"
           }
         }
       }
     },
-    "Helper 安装失败: %@" : {
-
-    },
     "Helper 已完全卸载" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Helper has been completely uninstalled"
+          }
+        }
+      }
     },
     "Helper 是一个具有管理员权限的辅助工具，用于执行需要管理员权限的操作，如修改系统文件等。没有 Helper 将无法正常使用软件的某些功能。" : {
       "localizations" : {
@@ -384,13 +358,12 @@
         }
       }
     },
-    "Helper 状态: " : {
-      "extractionState" : "stale",
+    "Helper 未连接" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Helper status: "
+            "value" : "Helper Not connected"
           }
         }
       }
@@ -401,17 +374,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Helper Settings"
-          }
-        }
-      }
-    },
-    "Helper 连接状态: " : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Helper connection status:"
           }
         }
       }
@@ -453,25 +415,8 @@
     "macOS %@" : {
 
     },
-    "Match:" : {
-
-    },
     "OK" : {
 
-    },
-    "Reason:" : {
-
-    },
-    "Setup 组件安装成功" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Setup component installed successfully"
-          }
-        }
-      }
     },
     "Setup 组件是 Adobe 官方的安装程序组件，我们需要对其进行修改以实现绕过验证的功能。如果没有下载并处理 Setup 组件，将无法使用安装功能。" : {
       "localizations" : {
@@ -493,6 +438,9 @@
         }
       }
     },
+    "Setup 组件未处理，无法安装" : {
+
+    },
     "Setup未备份提示" : {
       "localizations" : {
         "en" : {
@@ -502,9 +450,6 @@
           }
         }
       }
-    },
-    "Target:" : {
-
     },
     "v%@" : {
 
@@ -530,39 +475,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "X1a0He CC downloaded successfully"
-          }
-        }
-      }
-    },
-    "X1a0He CC 处理状态: " : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "X1a0He CC processing status:"
-          }
-        }
-      }
-    },
-    "X1a0He CC 备份状态: " : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "X1a0He CC backup status:"
-          }
-        }
-      }
-    },
-    "X1a0He CC 版本信息: " : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "X1a0He CC version info: "
           }
         }
       }
@@ -678,18 +590,6 @@
         }
       }
     },
-    "下载此版本" : {
-      "comment" : "版本选择页面",
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Download"
-          }
-        }
-      }
-    },
     "下载管理" : {
       "localizations" : {
         "en" : {
@@ -764,17 +664,6 @@
         }
       }
     },
-    "为什么我安装的时候会遇到错误代码，错误代码表示什么意思？" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Why do I encounter error codes when installing? What do the error codes mean?"
-          }
-        }
-      }
-    },
     "为什么有时候下载会失败？" : {
       "localizations" : {
         "en" : {
@@ -816,7 +705,15 @@
       }
     },
     "产品未找到" : {
-      "comment" : "Product not found"
+      "comment" : "Product not found",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Product not found"
+          }
+        }
+      }
     },
     "仅下载" : {
       "localizations" : {
@@ -878,8 +775,7 @@
         }
       }
     },
-    "依赖包:" : {
-      "extractionState" : "stale",
+    "依赖组件" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -888,20 +784,6 @@
           }
         }
       }
-    },
-    "依赖包: %lld" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dependencies： %lld"
-          }
-        }
-      }
-    },
-    "依赖组件" : {
-
     },
     "修改 Setup 组件失败" : {
       "localizations" : {
@@ -995,7 +877,14 @@
       }
     },
     "准备卸载脚本失败: %@" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparing to uninstall script failed: %@"
+          }
+        }
+      }
     },
     "准备安装..." : {
       "localizations" : {
@@ -1118,7 +1007,14 @@
       }
     },
     "卸载失败: %@" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uninstall failed: %@"
+          }
+        }
+      }
     },
     "取消" : {
       "localizations" : {
@@ -1141,15 +1037,11 @@
       }
     },
     "取消清理" : {
-
-    },
-    "可用版本: %lld" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Availables: %lld"
+            "value" : "Cancel cleaning"
           }
         }
       }
@@ -1164,22 +1056,15 @@
         }
       }
     },
-    "可能已存在目录" : {
-      "extractionState" : "stale",
+    "命令已复制到剪贴板" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Directory may already exist"
+            "value" : "The command has been copied."
           }
         }
       }
-    },
-    "可选模块" : {
-
-    },
-    "命令已复制到剪贴板" : {
-
     },
     "命令行安装" : {
       "localizations" : {
@@ -1192,7 +1077,14 @@
       }
     },
     "处理状态: " : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Processing status:"
+          }
+        }
+      }
     },
     "备份 Setup 组件失败" : {
       "localizations" : {
@@ -1225,13 +1117,34 @@
       }
     },
     "备份状态: " : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup Status:"
+          }
+        }
+      }
     },
     "复制" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy"
+          }
+        }
+      }
     },
     "复制 buildGuid" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy buildGuid"
+          }
+        }
+      }
     },
     "复制命令" : {
       "localizations" : {
@@ -1336,7 +1249,14 @@
       }
     },
     "安装命令" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installation command"
+          }
+        }
+      }
     },
     "安装失败" : {
       "localizations" : {
@@ -1348,67 +1268,12 @@
         }
       }
     },
-    "安装失败 (退出代码: %lld)" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Install failed (Exit Code: %lld)"
-          }
-        }
-      }
-    },
     "安装失败: %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Install failed: %@"
-          }
-        }
-      }
-    },
-    "安装失败: Setup 组件未被处理 (退出代码: %lld)" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Install failed: Setup was not processed. (Exit Code: %lld)"
-          }
-        }
-      }
-    },
-    "安装失败: 安装文件不完整或损坏 (退出代码: %lld)" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Install failed: Incomplete file (Exit Code: %lld)"
-          }
-        }
-      }
-    },
-    "安装失败: 权限问题 (退出代码: %lld)" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Install failed: Permission denied (Exit Code: %lld)"
-          }
-        }
-      }
-    },
-    "安装失败: 架构或版本不一致 (退出代码: %lld)" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Install failed: Architecture or version mismatch (Exit Code: %lld)"
           }
         }
       }
@@ -1434,7 +1299,14 @@
       }
     },
     "安装状态: " : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection status:"
+          }
+        }
+      }
     },
     "安装程序已存在" : {
       "localizations" : {
@@ -1479,6 +1351,7 @@
       }
     },
     "将执行的命令：" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1519,9 +1392,17 @@
       }
     },
     "展开" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expand"
+          }
+        }
+      }
     },
     "展开全部" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1542,13 +1423,26 @@
       }
     },
     "已启用" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enabled"
+          }
+        }
+      }
     },
     "已启用确认" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enabled"
+          }
+        }
+      }
     },
     "已处理" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1559,7 +1453,6 @@
       }
     },
     "已备份" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1580,7 +1473,14 @@
       }
     },
     "已存在" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Existed"
+          }
+        }
+      }
     },
     "已安装 (build %@)" : {
       "localizations" : {
@@ -1688,15 +1588,11 @@
       }
     },
     "当前执行：" : {
-
-    },
-    "当前执行：%@" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Current execution: %@"
+            "value" : "Current execution:"
           }
         }
       }
@@ -1711,8 +1607,7 @@
         }
       }
     },
-    "当前版本：" : {
-      "extractionState" : "stale",
+    "当前版本: " : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1721,9 +1616,6 @@
           }
         }
       }
-    },
-    "当前版本: " : {
-
     },
     "所有操作已成功完成" : {
       "localizations" : {
@@ -1736,7 +1628,14 @@
       }
     },
     "执行卸载脚本失败: %@" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to execute the uninstall script: %@"
+          }
+        }
+      }
     },
     "执行成功" : {
       "localizations" : {
@@ -1779,6 +1678,7 @@
       }
     },
     "折叠全部" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1869,7 +1769,14 @@
       }
     },
     "收起" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
+          }
+        }
+      }
     },
     "数据无效: %@" : {
       "comment" : "Invalid data",
@@ -2032,7 +1939,14 @@
       }
     },
     "日志详情" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log details"
+          }
+        }
+      }
     },
     "是否确认重新下载？这将覆盖现有的安装程序。" : {
       "localizations" : {
@@ -2126,6 +2040,26 @@
         }
       }
     },
+    "未处理" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not processed"
+          }
+        }
+      }
+    },
+    "未备份" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not backed up"
+          }
+        }
+      }
+    },
     "未安装" : {
       "localizations" : {
         "en" : {
@@ -2136,7 +2070,7 @@
         }
       }
     },
-    "未对 Setup 组件进行处理或者 Setup 组件不存在，无法使用安装功能\n你可以通过设置页面再次对 Setup 组件进行处理" : {
+    "未对 Setup 组件进行处理或者 Setup 组件不存在，无法使用安装功能\n你可以通过设置页面对 Setup 组件进行处理" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2224,10 +2158,14 @@
       }
     },
     "查看" : {
-
-    },
-    "查看持久化文件" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check"
+          }
+        }
+      }
     },
     "检查中" : {
       "localizations" : {
@@ -2240,10 +2178,6 @@
       }
     },
     "检查更新" : {
-
-    },
-    "检查更新..." : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2425,7 +2359,14 @@
       }
     },
     "正在清理安装环境..." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleaning up the installation environment..."
+          }
+        }
+      }
     },
     "正在清理安装记录..." : {
       "localizations" : {
@@ -2609,7 +2550,14 @@
       }
     },
     "版本信息: " : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version Info:"
+          }
+        }
+      }
     },
     "确定" : {
       "localizations" : {
@@ -2642,13 +2590,34 @@
       }
     },
     "确定要删除任务%@吗？" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are you sure you want to delete the task %@?"
+          }
+        }
+      }
     },
     "确定要取消%@的下载吗？" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are you sure you want to cancel the download of %@?"
+          }
+        }
+      }
     },
     "确定要重新处理 Setup 组件吗？这将对 Setup 组件进行修改以启用安装功能。" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are you sure you want to reprocess the Setup component? This will modify the Setup component to enable the installation feature."
+          }
+        }
+      }
     },
     "确认" : {
       "localizations" : {
@@ -2681,10 +2650,24 @@
       }
     },
     "确认取消" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirm Cancel"
+          }
+        }
+      }
     },
     "确认处理" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirmation processing"
+          }
+        }
+      }
     },
     "确认清理" : {
       "localizations" : {
@@ -2742,17 +2725,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Program is about to exit"
-          }
-        }
-      }
-    },
-    "程序意外退出" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Program quit unexpectedly"
           }
         }
       }
@@ -2820,7 +2792,14 @@
       }
     },
     "系统信息" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System Info"
+          }
+        }
+      }
     },
     "继续" : {
       "localizations" : {
@@ -2886,7 +2865,14 @@
       }
     },
     "自行安装命令" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Self-installation command"
+          }
+        }
+      }
     },
     "自行安装命令:" : {
       "localizations" : {
@@ -2899,7 +2885,14 @@
       }
     },
     "获取到 %lld 个版本" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld versions obtained"
+          }
+        }
+      }
     },
     "获取到 %lld 款产品" : {
       "localizations" : {
@@ -2965,7 +2958,14 @@
       }
     },
     "请确认你的操作" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please confirm your operation"
+          }
+        }
+      }
     },
     "运行正常" : {
       "localizations" : {
@@ -2978,7 +2978,14 @@
       }
     },
     "返回" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Return"
+          }
+        }
+      }
     },
     "这将删除所选的 Adobe 相关文件，该操作不可撤销。清理过程不会影响 Adobe Downloader 的文件和下载数据。是否继续？" : {
       "localizations" : {
@@ -3021,7 +3028,14 @@
       }
     },
     "连接状态: " : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection status:"
+          }
+        }
+      }
     },
     "连接超时" : {
       "localizations" : {
@@ -3186,13 +3200,16 @@
       }
     },
     "错误代码(%lld)，请查看日志详情并向开发者汇报" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error code (%lld), please check the log details and report to the developer"
+          }
+        }
+      }
     },
     "错误详情" : {
-
-    },
-    "错误详情:" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3203,7 +3220,14 @@
       }
     },
     "需先启用自动检查" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatic checking is required first"
+          }
+        }
+      }
     },
     "需要下载 Setup 组件" : {
       "localizations" : {
