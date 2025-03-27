@@ -228,43 +228,49 @@ class PrivilegedHelperManager: NSObject {
     }
     
     func reinstallHelper(completion: @escaping (Bool, String) -> Void) {
-        disconnectHelper()
-
-        removeInstallHelper()
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+        uninstallHelperViaTerminal { [weak self] success, message in
             guard let self = self else { return }
-
-            let result = self.installHelperDaemon()
-            
-            switch result {
-            case .success:
-                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
-                    guard let self = self else { return }
-
-                    self.tryConnect(retryCount: 5, delay: 2.0, completion: completion)
-                }
+            DispatchQueue.main.asyncAfter(deadline: .now()) {
+                let result = self.installHelperDaemon()
                 
-            case .authorizationFail:
-                completion(false, String(localized: "获取授权失败"))
-            case .getAdminFail:
-                completion(false, String(localized: "获取管理员权限失败"))
-            case .blessError(_):
-                completion(false, String(localized: "安装失败: \(result.alertContent)"))
+                switch result {
+                case .success:
+                    DispatchQueue.main.asyncAfter(deadline: .now()) { [weak self] in
+                        guard let self = self else { return }
+
+                        self.tryConnect(retryCount: 3, delay: 1, completion: completion)
+                    }
+                    
+                case .authorizationFail:
+                    completion(false, String(localized: "获取授权失败"))
+                case .getAdminFail:
+                    completion(false, String(localized: "获取管理员权限失败"))
+                case .blessError(_):
+                    completion(false, String(localized: "安装失败: \(result.alertContent)"))
+                }
             }
         }
     }
     
     private func tryConnect(retryCount: Int, delay: TimeInterval = 2.0, completion: @escaping (Bool, String) -> Void) {
+        struct Static {
+            static var currentAttempt = 0
+        }
+
+        if retryCount == 3 {
+            Static.currentAttempt = 0
+        }
+        
+        Static.currentAttempt += 1
+        
         guard retryCount > 0 else {
             completion(false, String(localized: "多次尝试连接失败"))
             return
         }
         
         guard let connection = connectToHelper() else {
-            print("连接尝试失败，剩余重试次数: \(retryCount - 1)")
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
-                self?.tryConnect(retryCount: retryCount - 1, delay: delay, completion: completion)
+                self?.tryConnect(retryCount: retryCount - 1, delay: delay * 1, completion: completion)
             }
             return
         }
@@ -274,23 +280,29 @@ class PrivilegedHelperManager: NSObject {
             return
         }
         
-        helper.executeCommand(type: .shellCommand, path1: "whoami", path2: "", permissions: 0) { result in
-            if result.contains("root") {
+        helper.executeCommand(type: .shellCommand, path1: "id -u", path2: "", permissions: 0) { result in
+            if result == "0" || result.contains("0") {
                 completion(true, String(localized: "Helper 重新安装成功"))
             } else {
-                completion(false, String(localized: "Helper 安装失败"))
+                print("Helper验证失败，返回结果: \(result)")
+                completion(false, String(localized: "Helper 安装失败: \(result)"))
             }
         }
     }
 
-    func removeInstallHelper() {
-        try? FileManager.default.removeItem(atPath: "/Library/PrivilegedHelperTools/\(PrivilegedHelperManager.machServiceName)")
-        try? FileManager.default.removeItem(atPath: "/Library/LaunchDaemons/\(PrivilegedHelperManager.machServiceName).plist")
+    func removeInstallHelper(completion: ((Bool) -> Void)? = nil) {
+        if FileManager.default.fileExists(atPath: "/Library/LaunchDaemons/\(PrivilegedHelperManager.machServiceName).plist") {
+            try? FileManager.default.removeItem(atPath: "/Library/LaunchDaemons/\(PrivilegedHelperManager.machServiceName).plist")
+        }
+        if FileManager.default.fileExists(atPath: "/Library/PrivilegedHelperTools/\(PrivilegedHelperManager.machServiceName)") {
+            try? FileManager.default.removeItem(atPath: "/Library/PrivilegedHelperTools/\(PrivilegedHelperManager.machServiceName)")
+        }
+        completion?(true)
     }
 
     func connectToHelper() -> NSXPCConnection? {
         return connectionQueue.sync {
-            createConnection()
+            return createConnection()
         }
     }
 
@@ -334,8 +346,8 @@ class PrivilegedHelperManager: NSObject {
         var isConnected = false
         
         if let helper = newConnection.remoteObjectProxy as? HelperToolProtocol {
-            helper.executeCommand(type: .shellCommand, path1: "whoami", path2: "", permissions: 0) { [weak self] result in
-                if result.contains("root") {
+            helper.executeCommand(type: .shellCommand, path1: "id -u", path2: "", permissions: 0) { [weak self] result in
+                if result.contains("0") || result == "0" {
                     isConnected = true
                     DispatchQueue.main.async {
                         self?.connection = newConnection
@@ -344,8 +356,6 @@ class PrivilegedHelperManager: NSObject {
                 }
                 semaphore.signal()
             }
-            
-            _ = semaphore.wait(timeout: .now() + 1.0)
         }
         
         if !isConnected {
@@ -430,7 +440,7 @@ class PrivilegedHelperManager: NSObject {
                 do {
                     let helper = try self.getHelperProxy()
 
-                    helper.executeCommand(type: .install, path1: "whoami", path2: "", permissions: 0) { result in
+                    helper.executeCommand(type: .install, path1: "id -u", path2: "", permissions: 0) { result in
                         DispatchQueue.main.async {
                             if result == "root" {
                                 self.connectionState = .connected
@@ -509,11 +519,14 @@ class PrivilegedHelperManager: NSObject {
     func forceReinstallHelper() {
         guard !isInitializing else { return }
         isInitializing = true
-        
-        removeInstallHelper()
-        notifyInstall()
-        
-        isInitializing = false
+
+        uninstallHelperViaTerminal { [weak self] success, _ in
+            guard let self = self else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                self.notifyInstall()
+                self.isInitializing = false
+            }
+        }
     }
 
     func disconnectHelper() {
@@ -523,6 +536,59 @@ class PrivilegedHelperManager: NSObject {
             }
             connection = nil
             connectionState = .disconnected
+        }
+    }
+    func uninstallHelperViaTerminal(completion: @escaping (Bool, String) -> Void) {
+        disconnectHelper()
+        let script = """
+        #!/bin/bash
+        sudo /bin/launchctl unload /Library/LaunchDaemons/\(PrivilegedHelperManager.machServiceName).plist
+        sudo /bin/rm -f /Library/LaunchDaemons/\(PrivilegedHelperManager.machServiceName).plist
+        sudo /bin/rm -f /Library/PrivilegedHelperTools/\(PrivilegedHelperManager.machServiceName)
+        sudo /usr/bin/killall -u root -9 \(PrivilegedHelperManager.machServiceName)
+        exit 0
+        """
+
+        let tempDir = FileManager.default.temporaryDirectory
+        let scriptURL = tempDir.appendingPathComponent("uninstall_helper.sh")
+        
+        do {
+            try script.write(to: scriptURL, atomically: true, encoding: .utf8)
+            try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: scriptURL.path)
+
+            let task = Process()
+            task.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
+            task.arguments = ["-e", "do shell script \"\(scriptURL.path)\" with administrator privileges"]
+            
+            let outputPipe = Pipe()
+            let errorPipe = Pipe()
+            task.standardOutput = outputPipe
+            task.standardError = errorPipe
+            
+            do {
+                try task.run()
+                task.waitUntilExit()
+                
+                if task.terminationStatus == 0 {
+                    UserDefaults.standard.removeObject(forKey: "InstalledHelperBuild")
+
+                    connectionState = .disconnected
+                    connection = nil
+                    
+                    completion(true, String(localized: "Helper 已完全卸载"))
+                } else {
+                    let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
+                    let errorString = String(data: errorData, encoding: .utf8) ?? "未知错误"
+                    completion(false, String(localized: "卸载失败: \(errorString)"))
+                }
+            } catch {
+                completion(false, String(localized: "执行卸载脚本失败: \(error.localizedDescription)"))
+            }
+
+            try? FileManager.default.removeItem(at: scriptURL)
+            
+        } catch {
+            completion(false, String(localized: "准备卸载脚本失败: \(error.localizedDescription)"))
         }
     }
 }
@@ -663,7 +729,7 @@ extension PrivilegedHelperManager {
         }) as? HelperToolProtocol else {
             throw HelperError.proxyError
         }
-        
+
         return helper
     }
 }

@@ -233,8 +233,6 @@ final class GeneralSettingsViewModel: ObservableObject {
             }
             .store(in: &cancellables)
 
-        PrivilegedHelperManager.shared.executeCommand("whoami") { _ in }
-
         NotificationCenter.default.publisher(for: .storageDidChange)
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in

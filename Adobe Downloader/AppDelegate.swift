@@ -49,6 +49,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
             return event
         }
+
+        PrivilegedHelperManager.shared.executeCommand("id -u") { _ in }
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
