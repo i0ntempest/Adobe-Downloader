@@ -124,8 +124,8 @@ struct DownloadProgressView: View {
             case .completed:
                 HStack(spacing: 12) {
                     if task.displayInstallButton {
+                        #if DEBUG
                         Button(action: { 
-                            #if DEBUG
                             do {
                                 _ = try PrivilegedHelperManager.shared.getHelperProxy()
                                 showInstallPrompt = false
@@ -136,22 +136,6 @@ struct DownloadProgressView: View {
                             } catch {
                                 showSetupProcessAlert = true
                             }
-                            #else
-                            if !ModifySetup.isSetupModified() {
-                                showSetupProcessAlert = true
-                            } else {
-                                do {
-                                    _ = try PrivilegedHelperManager.shared.getHelperProxy()
-                                    showInstallPrompt = false
-                                    isInstalling = true
-                                    Task {
-                                        await globalNetworkManager.installProduct(at: task.directory)
-                                    }
-                                } catch {
-                                    showSetupProcessAlert = true
-                                }
-                            }
-                            #endif
                         }) {
                             Label("安装", systemImage: "square.and.arrow.down.on.square")
                                 .font(.system(size: 13, weight: .medium))
@@ -169,6 +153,33 @@ struct DownloadProgressView: View {
                                     .font(.system(size: 18))
                             }
                         }
+                        #else
+                        if ModifySetup.isSetupModified() {
+                            Button(action: { 
+                                do {
+                                    _ = try PrivilegedHelperManager.shared.getHelperProxy()
+                                    showInstallPrompt = false
+                                    isInstalling = true
+                                    Task {
+                                        await globalNetworkManager.installProduct(at: task.directory)
+                                    }
+                                } catch {
+                                    showSetupProcessAlert = true
+                                }
+                            }) {
+                                Label("安装", systemImage: "square.and.arrow.down.on.square")
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundColor(.white)
+                            }
+                            .buttonStyle(BeautifulButtonStyle(baseColor: .green))
+                            .alert("Helper 未连接", isPresented: $showSetupProcessAlert) {
+                                Button("确定") { }
+                            } message: {
+                                Text("Helper 未安装或未连接，请先在设置中安装并连接 Helper")
+                                    .font(.system(size: 18))
+                            }
+                        } 
+                        #endif
                     }
                     
                     Button(action: { showDeleteConfirmation = true }) {
@@ -377,6 +388,7 @@ struct DownloadProgressView: View {
                     showCommandLineInstall: $showCommandLineInstall,
                     showCopiedAlert: $showCopiedAlert,
                     expandedProducts: $expandedProducts,
+                    showSetupProcessAlert: $showSetupProcessAlert,
                     actionButtons: AnyView(actionButtons)
                 )
             }
@@ -611,6 +623,7 @@ private struct PackageListView: View {
     @Binding var showCommandLineInstall: Bool
     @Binding var showCopiedAlert: Bool
     @Binding var expandedProducts: Set<String>
+    @Binding var showSetupProcessAlert: Bool
     let actionButtons: AnyView
     
     var body: some View {
@@ -660,12 +673,38 @@ private struct PackageListView: View {
                 .buttonStyle(BeautifulButtonStyle(baseColor: .blue))
                 #endif
 
+                if !ModifySetup.isSetupModified(), case .completed = task.status {
+                    HStack {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.yellow)
+                        Text("Setup 组件未处理，无法安装")
+                            .font(.system(size: 12))
+                            .foregroundColor(.yellow)
+                    }
+                    .padding(.vertical, 6)
+                    .padding(.horizontal, 12)
+                    .background(Color.black.opacity(0.1))
+                    .cornerRadius(5)
+                    .onTapGesture {
+                        showSetupProcessAlert = true
+                    }
+                    .alert("Setup 组件未处理", isPresented: $showSetupProcessAlert) {
+                        Button("确定") { }
+                    } message: {
+                        Text("未对 Setup 组件进行处理或者 Setup 组件不存在，无法使用安装功能\n你可以通过设置页面对 Setup 组件进行处理")
+                            .font(.system(size: 18))
+                    }
+                    .padding(.top, 5)
+                }
+
                 if case .completed = task.status, task.productId != "APRO" {
-                    CommandLineInstallButton(
-                        task: task,
-                        showCommandLineInstall: $showCommandLineInstall,
-                        showCopiedAlert: $showCopiedAlert
-                    )
+                    if ModifySetup.isSetupModified() {
+                        CommandLineInstallButton(
+                            task: task,
+                            showCommandLineInstall: $showCommandLineInstall,
+                            showCopiedAlert: $showCopiedAlert
+                        )
+                    }
                 }
                 
                 actionButtons

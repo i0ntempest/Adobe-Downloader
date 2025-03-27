@@ -385,6 +385,9 @@
         }
       }
     },
+    "Helper 未连接" : {
+
+    },
     "Helper 状态: " : {
       "extractionState" : "stale",
       "localizations" : {
@@ -487,6 +490,9 @@
           }
         }
       }
+    },
+    "Setup 组件未处理，无法安装" : {
+
     },
     "Setup未备份提示" : {
       "localizations" : {
@@ -2133,6 +2139,7 @@
       }
     },
     "未对 Setup 组件进行处理或者 Setup 组件不存在，无法使用安装功能\n你可以通过设置页面再次对 Setup 组件进行处理" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2141,6 +2148,9 @@
           }
         }
       }
+    },
+    "未对 Setup 组件进行处理或者 Setup 组件不存在，无法使用安装功能\n你可以通过设置页面对 Setup 组件进行处理" : {
+
     },
     "未找到 Setup 组件" : {
       "localizations" : {
