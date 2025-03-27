@@ -3,6 +3,71 @@
     <channel>
         <title>Adobe Downloader</title>
         <item>
+            <title>2.0.0</title>
+            <pubDate>Thu, 27 Mar 2025 23:43:50 +0800</pubDate>
+            <sparkle:version>200</sparkle:version>
+            <sparkle:shortVersionString>2.0.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>12.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/X1a0He/Adobe-Downloader/releases/download/2.0.0/Adobe.Downloader.dmg" length="4165730" type="application/octet-stream" sparkle:edSignature="CnJs75BRR6Id+9GMibJgFqj9bMox0LZasEMceHWXfPvIV5amPwJW6eRrSAGUSbE5LgNAmWObbshGphf5kozaBA=="/>
+            <description>
+                <![CDATA[
+                    <style>ul{margin-top: 0;margin-bottom: 7;padding-left: 18;}</style>
+                    <h4>Adobe Downloader 更新日志: </h4>
+                    <ul>
+                        <li>1. 全新UI设计，引入了毛玻璃背景</li>
+                        <li>2. 当鼠标移入产品卡片时会有新的交互体验</li>
+                        <li>3. 产品卡片显示优化，优化可用版本，依赖数量的显示</li>
+                        <li>4. 产品卡片显示优化，新增最低系统版本和模块数量显示</li>
+                        <li>5. API版本切换UI优化</li>
+                        <li>6. ToolBar显示优化</li>
+                        <li>7. 产品滚动显示优化</li>
+                        <li>8. 版本选择显示优化，新增更加详细的产品版本信息</li>
+                        <li>9. 版本选择显示优化，新增显示组件详细版本和buildGuid信息</li>
+                        <li>10. 版本选择显示优化，在 DEBUG 模式下，会展示更多的信息</li>
+                        <li>11. 下载管理显示优化，优化了下载管理页面的UI展示</li>
+                        <li>12. 下载管理显示优化，引入了更加明显的按钮设计</li>
+                        <li>13. 下载管理显示优化，对任务下载的进度与包列表显示进行了优化，现在，你可以在对应的包列表中进行复制相关 BuildGuid</li>
+                        <li>14. 完全重构产品加载逻辑，遵循 Adobe Creative Cloud 的数据结构</li>
+                        <li>15. 完全重构主产品与依赖包之间的关系</li>
+                        <li>16. 优化产品安装逻辑，大幅减少由芯片架构，系统版本带来的安装失败问题</li>
+                        <li>17. 新增安装错误的日志详情，当遇到安装错误的时候，显示更详细的错误代码与错误原因</li>
+                        <li>18. 修改安装判断逻辑，当 Setup 未被处理时，不再显示相关安装选项</li>
+                        <li>19. 修复了点击重新处理 Setup 时，程序执行了下载与处理的问题</li>
+                        <li>20. 修复了 Setup 组件处理失败的问题</li>
+                        <li>21. 优化 Helper 的重新安装逻辑</li>
+                        <li>22. 新增系统信息展示</li>
+                    </ul>
+                    <h4>PS: ✅ 2.0.0 版本将继续开源</h4>
+                    <hr>
+                    <h4>Adobe Downloader Changes: </h4>
+                    <ul>
+                        <li>1. Redesigned UI with blurred background effects</li>
+                        <li>2. New hover interactions for product cards</li>
+                        <li>3. Enhanced product card display showing available versions and dependency counts</li>
+                        <li>4. Added system requirements with minimum version and module count indicators</li>
+                        <li>5. Improved API version switching interface</li>
+                        <li>6. Optimized toolbar layout and visual presentation</li>
+                        <li>7. Smoother scrolling for product listings</li>
+                        <li>8. Detailed version information added to version selection</li>
+                        <li>9. Component-specific version details now include buildGuid identifiers</li>
+                        <li>10. DEBUG mode enhancements revealing extended diagnostic information</li>
+                        <li>11. Streamlined download manager with redesigned user interface</li>
+                        <li>12. Prominent action buttons for better download management</li>
+                        <li>13. Enhanced task monitoring with copyable buildGuid support in package lists</li>
+                        <li>14. Complete rewrite of product loading logic following Adobe Creative Cloud data architecture</li>
+                        <li>15. Revised dependency management between core products and components</li>
+                        <li>16. Stability improvements reducing architecture/system version-related installation failures</li>
+                        <li>17. Detailed error logging with specific error codes and causes</li>
+                        <li>18. Smart installation flow hiding options when Setup is unprocessed</li>
+                        <li>19. Fixed unexpected download behavior during Setup reprocessing</li>
+                        <li>20. Resolved Setup component processing errors</li>
+                        <li>21. Optimized Helper reinstallation workflow</li>
+                        <li>22. New system information panel added</li>
+                    </ul>
+                ]]>
+            </description>
+        </item>
+        <item>
             <title>1.5.1</title>
             <pubDate>Fri, 07 Feb 2025 00:01:36 +0800</pubDate>
             <sparkle:version>151</sparkle:version>

@@ -1,5 +1,60 @@
 # Change Log
 
+## 2025-03-27 更新日志
+
+[//]: # (2.0.0)
+```markdown
+1. 全新UI设计，引入了毛玻璃背景
+2. 当鼠标移入产品卡片时会有新的交互体验
+3. 产品卡片显示优化，优化可用版本，依赖数量的显示
+4. 产品卡片显示优化，新增最低系统版本和模块数量显示
+5. API版本切换UI优化
+6. ToolBar显示优化
+7. 产品滚动显示优化
+8. 版本选择显示优化，新增更加详细的产品版本信息
+9. 版本选择显示优化，新增显示组件详细版本和buildGuid信息
+10. 版本选择显示优化，在 DEBUG 模式下，会展示更多的信息
+11. 下载管理显示优化，优化了下载管理页面的UI展示
+12. 下载管理显示优化，引入了更加明显的按钮设计
+13. 下载管理显示优化，对任务下载的进度与包列表显示进行了优化，现在，你可以在对应的包列表中进行复制相关 BuildGuid
+14. 完全重构产品加载逻辑，遵循 Adobe Creative Cloud 的数据结构
+15. 完全重构主产品与依赖包之间的关系
+16. 优化产品安装逻辑，大幅减少由芯片架构，系统版本带来的安装失败问题
+17. 新增安装错误的日志详情，当遇到安装错误的时候，显示更详细的错误代码与错误原因
+18. 修改安装判断逻辑，当 Setup 未被处理时，不再显示相关安装选项
+19. 修复了点击重新处理 Setup 时，程序执行了下载与处理的问题
+20. 修复了 Setup 组件处理失败的问题
+21. 优化 Helper 的重新安装逻辑
+22. 新增系统信息展示
+
+PS: ✅ 2.0.0 版本将继续开源
+
+====================
+
+1. Redesigned UI with blurred background effects
+2. New hover interactions for product cards
+3. Enhanced product card display showing available versions and dependency counts
+4. Added system requirements with minimum version and module count indicators
+5. Improved API version switching interface
+6. Optimized toolbar layout and visual presentation
+7. Smoother scrolling for product listings
+8. Detailed version information added to version selection
+9. Component-specific version details now include buildGuid identifiers
+10. DEBUG mode enhancements revealing extended diagnostic information
+11. Streamlined download manager with redesigned user interface
+12. Prominent action buttons for better download management
+13. Enhanced task monitoring with copyable buildGuid support in package lists
+14. Complete rewrite of product loading logic following Adobe Creative Cloud data architecture
+15. Revised dependency management between core products and components
+16. Stability improvements reducing architecture/system version-related installation failures
+17. Detailed error logging with specific error codes and causes
+18. Smart installation flow hiding options when Setup is unprocessed
+19. Fixed unexpected download behavior during Setup reprocessing
+20. Resolved Setup component processing errors
+21. Optimized Helper reinstallation workflow
+22. New system information panel added
+```
+
 ## 2025-02-06 更新日志
 
 [//]: # (1.5.1)

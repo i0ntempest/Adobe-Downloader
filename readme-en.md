@@ -1,6 +1,6 @@
 # Adobe Downloader
 
-![preview](imgs/Adobe%20Downloader.png)
+![Adobe Downloader 2.0.0](imgs/Adobe%20Downloader%202.0.0.png)
 
 # **[中文版本](readme.md)**
 
@@ -43,19 +43,6 @@ because of macOS's Helper mechanism and signed pop-up windows
 
 If you are still worried about problems, please find a professional to check the relevant code, although it is futile
 
-### **Explanation of relevant error codes**
-
-- 2700: This is unlikely to occur, unless the Setup component processing fails
-- 107: The downloaded file architecture does not match the system architecture or the installation file is damaged
-- 103: Permission issues, please ensure the Helper status is normal
-- 182: The downloaded file is not complete or damaged, or the Setup component does not match the product, please
-  download X1a0He CC
-- 133: System disk space is insufficient
-- -1: Setup component is not processed or processed failed, please contact the developer
-- 195: The downloaded product does not support your current system
-- 146: Please grant Adobe Downloader full disk permission in the Mac system settings
-- 255: Installation failed, please contact the developer
-
 ### Questions about the Setup Component
 
 > It’s mentioned in the usage instructions that to use the installation feature, you need to modify Adobe’s setup
@@ -80,19 +67,31 @@ when prompted.
 
 - For historical update logs, please go to [Update Log](update-log.md)
 
-- 2025-02-06 Update Log
+- 2025-03-27 Update Log
 
 ```markdown
-1. Fixed the issue where after the task download is completed, the program will prompt that it has been paused when
-   re-entering the program
-2. Fixed an issue where tasks were loaded multiple times.
-3. Fixed an issue where Acrobat products displayed the "Command Line" button incorrectly.
-4. Fixed the issue that when the downloaded file exists locally but the persistent data is deleted, the task needs to be
-   created every time by clicking "Use existing program"
-5. Fixed the issue that the persistent file will not be created after clicking "Use existing program" to create the task
-6. Add a 'View Persistent Files' button to download progress in DEBUG mode
-
-PS: ⚠️ 1.5.x version will be the last open source version, please be aware
+1. Redesigned UI with blurred background effects
+2. New hover interactions for product cards
+3. Enhanced product card display showing available versions and dependency counts
+4. Added system requirements with minimum version and module count indicators
+5. Improved API version switching interface
+6. Optimized toolbar layout and visual presentation
+7. Smoother scrolling for product listings
+8. Detailed version information added to version selection
+9. Component-specific version details now include buildGuid identifiers
+10. DEBUG mode enhancements revealing extended diagnostic information
+11. Streamlined download manager with redesigned user interface
+12. Prominent action buttons for better download management
+13. Enhanced task monitoring with copyable buildGuid support in package lists
+14. Complete rewrite of product loading logic following Adobe Creative Cloud data architecture
+15. Revised dependency management between core products and components
+16. Stability improvements reducing architecture/system version-related installation failures
+17. Detailed error logging with specific error codes and causes
+18. Smart installation flow hiding options when Setup is unprocessed
+19. Fixed unexpected download behavior during Setup reprocessing
+20. Resolved Setup component processing errors
+21. Optimized Helper reinstallation workflow
+22. New system information panel added
 ```
 
 ### Language friendly
@@ -151,7 +150,6 @@ via Telegram.**
 
 ## 🔗 References
 
-- [Drovosek01/adobe-packager](https://github.com/Drovosek01/adobe-packager/)
 - [QiuChenly/InjectLib](https://github.com/QiuChenly/InjectLib/)
 
 ## 👨🏻‍💻Author
