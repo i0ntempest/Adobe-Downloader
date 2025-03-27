@@ -5,28 +5,6 @@
 //
 import SwiftUI
 
-public struct BeautifulButtonStyle: ButtonStyle {
-    var baseColor: Color
-    @State private var isHovering = false
-    
-    public func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .padding(.vertical, 6)
-            .padding(.horizontal, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(configuration.isPressed ? baseColor.opacity(0.7) : baseColor)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 6)
-                    .strokeBorder(baseColor.opacity(0.2), lineWidth: 1)
-                    .opacity(configuration.isPressed ? 0 : 1)
-            )
-            .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
-            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
-    }
-}
-
 struct DownloadProgressView: View {
     @ObservedObject var task: NewDownloadTask
     let onCancel: () -> Void
@@ -43,6 +21,7 @@ struct DownloadProgressView: View {
     @State private var showSetupProcessAlert = false
     @State private var showCommandLineInstall = false
     @State private var showCopiedAlert = false
+    @State private var showDeleteConfirmation = false
 
     private var statusLabel: some View {
         Text(task.status.description)
@@ -135,7 +114,7 @@ struct DownloadProgressView: View {
                     .buttonStyle(BeautifulButtonStyle(baseColor: .blue))
                 }
                 
-                Button(action: onRemove) {
+                Button(action: { showDeleteConfirmation = true }) {
                     Label("移除", systemImage: "xmark")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.white)
@@ -192,7 +171,7 @@ struct DownloadProgressView: View {
                         }
                     }
                     
-                    Button(action: onRemove) {
+                    Button(action: { showDeleteConfirmation = true }) {
                         Label("删除", systemImage: "trash")
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.white)
@@ -208,6 +187,14 @@ struct DownloadProgressView: View {
                 }
                 .buttonStyle(BeautifulButtonStyle(baseColor: .red))
             }
+        }
+        .alert("确认删除", isPresented: $showDeleteConfirmation) {
+            Button("取消", role: .cancel) { }
+            Button("删除", role: .destructive) {
+                onRemove()
+            }
+        } message: {
+            Text("确定要删除任务\(task.displayName)吗？")
         }
         .sheet(isPresented: $showInstallPrompt) {
             if task.displayInstallButton {
@@ -742,18 +729,7 @@ private struct CommandLineInstallButton: View {
                         showCopiedAlert = false
                     }
                 }
-                .padding(.vertical, 5)
-                .padding(.horizontal, 10)
-                .background(
-                    LinearGradient(
-                        gradient: Gradient(colors: [
-                            Color.purple.opacity(0.8),
-                            Color.purple
-                        ]),
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
+                .buttonStyle(BeautifulButtonStyle(baseColor: .purple))
                 .foregroundColor(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .shadow(color: Color.purple.opacity(0.3), radius: 3, x: 0, y: 2)

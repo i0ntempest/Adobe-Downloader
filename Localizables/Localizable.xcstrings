@@ -27,6 +27,9 @@
         }
       }
     },
+    "(可能导致处理失败)" : {
+
+    },
     "(将导致无法使用安装功能)" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -37,6 +40,9 @@
           }
         }
       }
+    },
+    "(无法使用安装功能)" : {
+
     },
     "/" : {
 
@@ -139,6 +145,7 @@
 
     },
     "• 错误 2700：不太可能会出现，除非 Setup 组件处理失败了\n• 错误 107：所下载的文件架构与系统架构不一致或者安装文件被损坏\n• 错误 103：出现权限问题，请确保 Helper 状态正常\n• 错误 182：文件不齐全或文件被损坏，或者你的Setup组件不一致，请重新下载 X1a0He CC\n• 错误 133：系统磁盘空间不足\n• 错误 -1：Setup 组件未处理或处理失败，请联系开发者\n• 错误 195：所下载的产品不支持你当前的系统\n• 错误 146：请在 Mac 系统设置中给予 Adobe Downloader 全磁盘权限\n• 错误 255：Setup 组件需要更新，请联系开发者解决" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -147,12 +154,6 @@
           }
         }
       }
-    },
-    "✅" : {
-
-    },
-    "❌" : {
-
     },
     "🔔 即将下载 %@ (%@) 版本 🔔" : {
       "extractionState" : "stale",
@@ -307,6 +308,7 @@
 
     },
     "Debug 模式" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -445,13 +447,7 @@
     "macOS %@" : {
 
     },
-    "Match:" : {
-
-    },
     "OK" : {
-
-    },
-    "Reason:" : {
 
     },
     "Setup 组件安装成功" : {
@@ -494,9 +490,6 @@
           }
         }
       }
-    },
-    "Target:" : {
-
     },
     "v%@" : {
 
@@ -757,6 +750,7 @@
       }
     },
     "为什么我安装的时候会遇到错误代码，错误代码表示什么意思？" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1464,6 +1458,7 @@
       }
     },
     "将执行的命令：" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1507,6 +1502,7 @@
 
     },
     "展开全部" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1533,7 +1529,6 @@
 
     },
     "已处理" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1544,7 +1539,6 @@
       }
     },
     "已备份" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1761,6 +1755,7 @@
       }
     },
     "折叠全部" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2108,6 +2103,12 @@
         }
       }
     },
+    "未处理" : {
+
+    },
+    "未备份" : {
+
+    },
     "未安装" : {
       "localizations" : {
         "en" : {
@@ -2206,9 +2207,6 @@
       }
     },
     "查看" : {
-
-    },
-    "查看持久化文件" : {
 
     },
     "检查中" : {
@@ -2623,6 +2621,12 @@
         }
       }
     },
+    "确定要删除任务%@吗？" : {
+
+    },
+    "确定要重新处理 Setup 组件吗？这将对 Setup 组件进行修改以启用安装功能。" : {
+
+    },
     "确认" : {
       "localizations" : {
         "en" : {
@@ -2652,6 +2656,12 @@
           }
         }
       }
+    },
+    "确认删除" : {
+
+    },
+    "确认处理" : {
+
     },
     "确认清理" : {
       "localizations" : {

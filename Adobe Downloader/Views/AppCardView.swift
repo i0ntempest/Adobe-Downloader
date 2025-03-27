@@ -12,7 +12,7 @@ private enum AppCardConstants {
     static let cardHeight: CGFloat = 200
     static let iconSize: CGFloat = 64
     static let cornerRadius: CGFloat = 12
-    static let buttonHeight: CGFloat = 36
+    static let buttonHeight: CGFloat = 24
     static let titleFontSize: CGFloat = 16
     static let buttonFontSize: CGFloat = 14
     
@@ -472,11 +472,10 @@ private struct DownloadButtonView: View {
                 .frame(minWidth: 0, maxWidth: .infinity)
                 .frame(height: AppCardConstants.buttonHeight)
                 .contentShape(Rectangle())
+                .foregroundColor(.white)
         }
-        .buttonStyle(.borderedProminent)
-        .tint(viewModel.isDownloading ? .gray : .blue)
+        .buttonStyle(BeautifulButtonStyle(baseColor: viewModel.isDownloading ? Color.gray : Color.blue))
         .disabled(!viewModel.canDownload)
-        .scaleEffect(isHovered && viewModel.canDownload ? 1.02 : 1.0)
         .animation(.easeInOut(duration: 0.2), value: isHovered)
         .onHover { hovering in
             isHovered = hovering
@@ -517,7 +516,7 @@ private struct SheetModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .sheet(isPresented: $viewModel.showVersionPicker) {
-                if let product = findProduct(id: viewModel.uniqueProduct.id) {
+                if findProduct(id: viewModel.uniqueProduct.id) != nil {
                     VersionPickerView(productId: viewModel.uniqueProduct.id) { version in
                         Task {
                             await viewModel.handleDownloadRequest(

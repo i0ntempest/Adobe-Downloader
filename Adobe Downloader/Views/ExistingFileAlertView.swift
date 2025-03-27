@@ -11,7 +11,7 @@ private enum AlertConstants {
     static let warningIconSize: CGFloat = 24
     static let warningIconOffset: CGFloat = 10
     static let verticalSpacing: CGFloat = 20
-    static let buttonHeight: CGFloat = 32
+    static let buttonHeight: CGFloat = 24
     static let buttonWidth: CGFloat = 260
     static let buttonFontSize: CGFloat = 14
     static let cornerRadius: CGFloat = 12
@@ -74,6 +74,16 @@ private struct AppIcon: View {
             }
         }
         .frame(width: AlertConstants.iconSize, height: AlertConstants.iconSize)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.secondary.opacity(0.05))
+                .padding(-4)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color.secondary.opacity(0.1), lineWidth: 1)
+                .padding(-4)
+        )
     }
 }
 
@@ -93,7 +103,17 @@ private struct PathSection: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text(path.path)
+                    .font(.system(size: 13))
                     .foregroundColor(.blue)
+                    .padding(8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color.blue.opacity(0.05))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(Color.blue.opacity(0.1), lineWidth: 0.5)
+                    )
                     .onTapGesture {
                         openInFinder(path)
                     }
@@ -112,7 +132,7 @@ private struct ButtonSection: View {
     let onCancel: () -> Void
     
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 12) {
             ActionButton(
                 title: String(localized: "使用现有程序"),
                 icon: "checkmark.circle",
@@ -151,9 +171,9 @@ private struct ActionButton: View {
                 .frame(minWidth: 0, maxWidth: AlertConstants.buttonWidth)
                 .frame(height: AlertConstants.buttonHeight)
                 .font(.system(size: AlertConstants.buttonFontSize))
+                .foregroundColor(.white)
         }
-        .buttonStyle(.borderedProminent)
-        .tint(color)
+        .buttonStyle(BeautifulButtonStyle(baseColor: color))
         .if(isCancel) { view in
             view.keyboardShortcut(.cancelAction)
         }

@@ -159,6 +159,7 @@ final class GeneralSettingsViewModel: ObservableObject {
     @Published var showLanguagePicker = false
     @Published var showDownloadConfirmAlert = false
     @Published var showReprocessConfirmAlert = false
+    @Published var showDownloadOnlyConfirmAlert = false
     @Published var isProcessing = false
     @Published var helperConnectionStatus: HelperConnectionStatus = .disconnected
     @Published var downloadAppleSilicon: Bool {
@@ -358,7 +359,29 @@ private struct GeneralSettingsAlerts: ViewModifier {
             } message: {
                 Text("确定要下载并处理 X1a0He CC 吗？这将完成下载并自动对 Setup 组件进行处理")
             }
-            .alert("确认下载", isPresented: $viewModel.showReprocessConfirmAlert) {
+            .alert("确认处理", isPresented: $viewModel.showReprocessConfirmAlert) {
+                Button("取消", role: .cancel) { }
+                Button("确定") {
+                    Task {
+                        viewModel.isProcessing = true
+                        ModifySetup.backupAndModifySetupFile { success, message in
+                            viewModel.setupVersion = ModifySetup.checkComponentVersion()
+                            viewModel.isSuccess = success
+                            viewModel.alertMessage = success ? "Setup 组件处理成功" : "处理失败: \(message)"
+                            viewModel.showAlert = true
+                            viewModel.isProcessing = false
+                        }
+                    }
+                }
+            } message: {
+                Text("确定要重新处理 Setup 组件吗？这将对 Setup 组件进行修改以启用安装功能。")
+            }
+            .alert(viewModel.isSuccess ? "操作成功" : "操作失败", isPresented: $viewModel.showAlert) {
+                Button("确定") { }
+            } message: {
+                Text(viewModel.alertMessage)
+            }
+            .alert("确认下载", isPresented: $viewModel.showDownloadOnlyConfirmAlert) {
                 Button("取消", role: .cancel) { }
                 Button("确定") {
                     Task {
@@ -367,11 +390,6 @@ private struct GeneralSettingsAlerts: ViewModifier {
                 }
             } message: {
                 Text("确定要下载 X1a0He CC 吗？下载完成后需要手动处理。")
-            }
-            .alert(viewModel.isSuccess ? "操作成功" : "操作失败", isPresented: $viewModel.showAlert) {
-                Button("确定") { }
-            } message: {
-                Text(viewModel.alertMessage)
             }
     }
     
@@ -1284,7 +1302,7 @@ struct SetupComponentRow: View {
                         }
 
                         Button(action: {
-                            viewModel.showReprocessConfirmAlert = true
+                            viewModel.showDownloadOnlyConfirmAlert = true
                         }) {
                             Label("仅下载", systemImage: "arrow.down")
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -1422,11 +1440,6 @@ struct QAView: View {
                     QAItem(
                         question: String(localized: "如何修复安装失败的问题？"),
                         answer: String(localized: "如果安装失败，您可以尝试以下步骤：\n1. 确保已正确安装并连接 Helper\n2. 确保已下载并处理 Setup 组件\n3. 检查磁盘剩余空间是否充足\n4. 尝试重新下载并安装\n如果问题仍然存在，可以尝试重新安装 Helper 和重新处理 Setup 组件。")
-                    )
-
-                    QAItem(
-                        question: String(localized: "为什么我安装的时候会遇到错误代码，错误代码表示什么意思？"),
-                        answer: String(localized: "• 错误 2700：不太可能会出现，除非 Setup 组件处理失败了\n• 错误 107：所下载的文件架构与系统架构不一致或者安装文件被损坏\n• 错误 103：出现权限问题，请确保 Helper 状态正常\n• 错误 182：文件不齐全或文件被损坏，或者你的Setup组件不一致，请重新下载 X1a0He CC\n• 错误 133：系统磁盘空间不足\n• 错误 -1：Setup 组件未处理或处理失败，请联系开发者\n• 错误 195：所下载的产品不支持你当前的系统\n• 错误 146：请在 Mac 系统设置中给予 Adobe Downloader 全磁盘权限\n• 错误 255：Setup 组件需要更新，请联系开发者解决")
                     )
                 }
             }

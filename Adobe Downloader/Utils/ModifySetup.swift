@@ -91,15 +91,15 @@ class ModifySetup {
                 completion(!result.starts(with: "Error:"))
             }
         } else {
-            print("未检测到备份文件，尝试创建备份...")
             PrivilegedHelperManager.shared.executeCommand("/bin/cp -f '\(setupPath)' '\(backupPath)'") { result in
                 if result.starts(with: "Error:") {
                     print("创建备份失败: \(result)")
+                    completion(false)
+                    return
                 }
                 
                 if !result.starts(with: "Error:") {
                     if FileManager.default.fileExists(atPath: backupPath) {
-                        print("备份文件创建成功")
                         PrivilegedHelperManager.shared.executeCommand("/bin/chmod 644 '\(backupPath)'") { chmodResult in
                             if chmodResult.starts(with: "Error:") {
                                 print("设置备份文件权限失败: \(chmodResult)")
@@ -138,7 +138,6 @@ class ModifySetup {
                 return
             }
 
-            print("执行命令 [\(index + 1)/\(commands.count)]: \(commands[index])")
             PrivilegedHelperManager.shared.executeCommand(commands[index]) { result in
                 if result.starts(with: "Error:") {
                     print("命令执行失败: \(commands[index])")
@@ -146,7 +145,6 @@ class ModifySetup {
                     completion(false)
                     return
                 }
-                print("命令执行成功")
                 executeNextCommand(index + 1)
             }
         }

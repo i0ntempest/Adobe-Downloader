@@ -9,8 +9,8 @@ struct Adobe_DownloaderApp: App {
     @State private var showLanguagePicker = false
     @State private var showCreativeCloudAlert = false
     @State private var showBackupResultAlert = false
-    @State private var backupResultMessage = ""
-    @State private var backupSuccess = false
+    
+    @StateObject private var backupResult = BackupResult()
     
     private var storage: StorageData { StorageData.shared }
     private let updaterController: SPUStandardUpdaterController
@@ -72,18 +72,25 @@ struct Adobe_DownloaderApp: App {
                         ShouldExistsSetUpView()
                             .environmentObject(globalNetworkManager)
                     }
-                    .alert("Setup未备份提示", isPresented: $showBackupAlert) {
-                        Button("确定") {
-                            handleBackup()
-                        }
-                        Button("取消", role: .cancel) {}
-                    } message: {
-                        Text("检测到Setup文件尚未备份，如果你需要安装程序，则Setup必须被处理，点击确定后你需要输入密码，Adobe Downloader将自动处理并备份为Setup.original")
+                    .sheet(isPresented: $showBackupAlert) {
+                        SetupBackupAlertView(
+                            onConfirm: {
+                                showBackupAlert = false
+                                handleBackup()
+                            },
+                            onCancel: {
+                                showBackupAlert = false
+                            }
+                        )
                     }
-                    .alert(backupSuccess ? "备份成功" : "备份失败", isPresented: $showBackupResultAlert) {
-                        Button("确定") { }
-                    } message: {
-                        Text(backupResultMessage)
+                    .sheet(isPresented: $showBackupResultAlert) {
+                        SetupBackupResultView(
+                            isSuccess: backupResult.success, 
+                            message: backupResult.message,
+                            onDismiss: {
+                                showBackupResultAlert = false
+                            }
+                        )
                     }
                     .sheet(isPresented: $showTipsSheet) {
                         TipsSheetView(
@@ -141,9 +148,11 @@ struct Adobe_DownloaderApp: App {
     
     private func handleBackup() {
         ModifySetup.backupAndModifySetupFile { success, message in
-            backupSuccess = success
-            backupResultMessage = message
-            showBackupResultAlert = true
+            DispatchQueue.main.async {
+                self.backupResult.success = success
+                self.backupResult.message = message
+                self.showBackupResultAlert = true
+            }
         }
     }
 }
@@ -156,4 +165,9 @@ extension Scene {
             return self
         }
     }
+}
+
+class BackupResult: ObservableObject {
+    @Published var success: Bool = false
+    @Published var message: String = ""
 }
