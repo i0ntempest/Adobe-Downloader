@@ -19,22 +19,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var eventMonitor: Any?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
-        NSApp.mainMenu = nil
-
-        for window in NSApplication.shared.windows {
-            window.titlebarAppearsTransparent = true
-            window.backgroundColor = NSColor(white: 1, alpha: 0)
-
-            if let titlebarView = window.standardWindowButton(.closeButton)?.superview {
-                let blurView = NSVisualEffectView(frame: titlebarView.bounds)
-                blurView.blendingMode = .behindWindow
-                blurView.material = .hudWindow
-                blurView.state = .active
-                blurView.autoresizingMask = [.width, .height]
-                titlebarView.addSubview(blurView, positioned: .below, relativeTo: nil)
-            }
-        }
-
         if let window = NSApp.windows.first {
             window.minSize = NSSize(width: 800, height: 765)
         }

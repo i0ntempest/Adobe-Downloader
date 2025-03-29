@@ -476,3 +476,235 @@ private extension TimeInterval {
         return String(format: NSLocalizedString("%02d:%02d:%02d", comment: ""), hours, minutes, seconds)
     }
 } 
+
+enum CleanupOption: String, CaseIterable, Identifiable {
+    case adobeApps = "Adobe 应用程序"
+    case adobeCreativeCloud = "Adobe Creative Cloud"
+    case adobePreferences = "Adobe 偏好设置"
+    case adobeCaches = "Adobe 缓存文件"
+    case adobeLicenses = "Adobe 许可文件"
+    case adobeLogs = "Adobe 日志文件"
+    case adobeServices = "Adobe 服务"
+    case adobeKeychain = "Adobe 钥匙串"
+    case adobeGenuineService = "Adobe 正版验证服务"
+    case adobeHosts = "Adobe Hosts"
+
+    var id: String { self.rawValue }
+
+    var localizedName: String {
+        switch self {
+        case .adobeApps:
+            return String(localized: "Adobe 应用程序")
+        case .adobeCreativeCloud:
+            return String(localized: "Adobe Creative Cloud")
+        case .adobePreferences:
+            return String(localized: "Adobe 偏好设置")
+        case .adobeCaches:
+            return String(localized: "Adobe 缓存文件")
+        case .adobeLicenses:
+            return String(localized: "Adobe 许可文件")
+        case .adobeLogs:
+            return String(localized: "Adobe 日志文件")
+        case .adobeServices:
+            return String(localized: "Adobe 服务")
+        case .adobeKeychain:
+            return String(localized: "Adobe 钥匙串")
+        case .adobeGenuineService:
+            return String(localized: "Adobe 正版验证服务")
+        case .adobeHosts:
+            return String(localized: "Adobe Hosts")
+        }
+    }
+
+    var commands: [String] {
+        switch self {
+        case .adobeApps:
+            return [
+                "sudo find /Applications -name 'Adobe*' ! -name '*Adobe Downloader*' -print0 | xargs -0 sudo rm -rf",
+                "sudo find /Applications/Utilities -name 'Adobe*' ! -name '*Adobe Downloader*' -print0 | xargs -0 sudo rm -rf",
+                "sudo rm -rf /Applications/Adobe Creative Cloud",
+                "sudo rm -rf /Applications/Utilities/Adobe Creative Cloud",
+                "sudo rm -rf /Applications/Utilities/Adobe Creative Cloud Experience",
+                "sudo rm -rf /Applications/Utilities/Adobe Installers/Uninstall Adobe Creative Cloud",
+                "sudo rm -rf /Applications/Utilities/Adobe Sync",
+                "sudo rm -rf /Applications/Utilities/Adobe Genuine Service"
+            ]
+        case .adobeCreativeCloud:
+            return [
+                "sudo rm -rf /Library/Application Support/Adobe/Adobe Desktop Common/ADBox",
+                "sudo rm -rf /Library/Application Support/Adobe/Adobe Desktop Common/ADS",
+                "sudo rm -rf /Library/Application Support/Adobe/Adobe Desktop Common/AppsPanel",
+                "sudo rm -rf /Library/Application Support/Adobe/Adobe Desktop Common/CEF",
+                "sudo rm -rf /Library/Application Support/Adobe/Adobe Desktop Common/Core",
+                "sudo rm -rf /Library/Application Support/Adobe/Adobe Desktop Common/CoreExt",
+                "sudo rm -rf /Library/Application Support/Adobe/Adobe Desktop Common/DEBox",
+                "sudo rm -rf /Library/Application Support/Adobe/Adobe Desktop Common/ElevationManager",
+                "sudo rm -rf /Library/Application Support/Adobe/Adobe Desktop Common/FilesPanel",
+                "sudo rm -rf /Library/Application Support/Adobe/Adobe Desktop Common/FontsPanel",
+                "sudo rm -rf /Library/Application Support/Adobe/Adobe Desktop Common/HEX",
+                "sudo rm -rf /Library/Application Support/Adobe/Adobe Desktop Common/LCC",
+                "sudo rm -rf /Library/Application Support/Adobe/Adobe Desktop Common/NHEX",
+                "sudo rm -rf /Library/Application Support/Adobe/Adobe Desktop Common/Notifications",
+                "sudo rm -rf /Library/Application Support/Adobe/Adobe Desktop Common/pim.db",
+                "sudo rm -rf /Library/Application Support/Adobe/Adobe Desktop Common/RemoteComponents",
+                "sudo rm -rf /Library/Application Support/Adobe/Adobe Desktop Common/TCC",
+                "sudo rm -rf /Library/Application Support/Adobe/ARMNext",
+                "sudo rm -rf /Library/Application Support/Adobe/ARMDC/Application",
+                "sudo rm -rf /Library/Application Support/Adobe/PII/com.adobe.pii.prefs",
+                "sudo rm -rf /Library/Application Support/Adobe/ACPLocal*",
+                "sudo rm -rf /Library/Application Support/regid.1986-12.com.adobe",
+                "sudo rm -rf /Library/Internet Plug-Ins/AdobeAAMDetect.plugin",
+                "sudo rm -rf /Library/Internet Plug-Ins/AdobePDF*",
+                "sudo rm -rf /Library/PDF Services/Save as Adobe PDF*",
+                "sudo rm -rf /Library/ScriptingAdditions/Adobe Unit Types.osax",
+                "sudo rm -rf /Library/Automator/Save as Adobe PDF.action",
+                "sudo rm -rf ~/.adobe",
+                "sudo rm -rf ~/Creative Cloud Files*",
+                "sudo find ~/Library/Application\\ Scripts -name '*com.adobe*' ! -name '*Adobe Downloader*' -print0 | xargs -0 sudo rm -rf || true",
+                "sudo find ~/Library/Group\\ Containers -name '*com.adobe*' ! -name '*Adobe Downloader*' -print0 | xargs -0 sudo rm -rf || true",
+                "sudo rm -rf ~/Library/Application\\ Scripts/Adobe-Hub-App || true",
+                "sudo rm -rf ~/Library/Group\\ Containers/Adobe-Hub-App || true",
+                "sudo rm -rf ~/Library/Application\\ Support/com.apple.sharedfilelist/com.apple.LSSharedFileList.ApplicationRecentDocuments/com.adobe* || true",
+                "sudo find ~/Library/Application\\ Support -name 'Acrobat*' ! -path '*/Adobe Downloader/*' -print0 | xargs -0 sudo rm -rf || true",
+                "sudo find ~/Library/Application\\ Support -name 'Adobe*' ! -name '*Adobe Downloader*' ! -path '*/Adobe Downloader/*' -print0 | xargs -0 sudo rm -rf || true",
+                "sudo find ~/Library/Application\\ Support -name 'com.adobe*' ! -name '*Adobe Downloader*' ! -path '*/Adobe Downloader/*' -print0 | xargs -0 sudo rm -rf || true",
+                "sudo rm -rf ~/Library/Application Support/io.branch",
+                "sudo rm -rf ~/Library/PhotoshopCrashes",
+                "sudo rm -rf ~/Library/WebKit/com.adobe*"
+            ]
+        case .adobePreferences:
+            return [
+                "sudo find /Library/Preferences -name 'com.adobe*' ! -name '*Adobe Downloader*' -print0 | xargs -0 sudo rm -rf",
+                "sudo find ~/Library/Preferences -name 'com.adobe*' ! -name '*Adobe Downloader*' -print0 | xargs -0 sudo rm -rf",
+                "sudo find ~/Library/Preferences -name 'Adobe*' ! -name '*Adobe Downloader*' -print0 | xargs -0 sudo rm -rf",
+                "sudo find ~/Library/Preferences/ByHost -name 'com.adobe*' ! -name '*Adobe Downloader*' -print0 | xargs -0 sudo rm -rf",
+                "sudo rm -rf ~/Library/Preferences/adobe.com*",
+                "sudo rm -rf ~/Library/Preferences/AIRobin*",
+                "sudo rm -rf ~/Library/Preferences/Macromedia*",
+                "sudo rm -rf ~/Library/Saved Application State/com.adobe*"
+            ]
+        case .adobeCaches:
+            return [
+                "sudo find ~/Library/Caches -name 'Adobe*' ! -name '*Adobe Downloader*' -print0 | xargs -0 sudo rm -rf || true",
+                "sudo find ~/Library/Caches -name 'com.adobe*' ! -name '*Adobe Downloader*' -print0 | xargs -0 sudo rm -rf || true",
+                "sudo rm -rf ~/Library/Caches/Acrobat* || true",
+                "sudo rm -rf ~/Library/Caches/CSXS || true",
+                "sudo rm -rf ~/Library/Caches/com.crashlytics.data/com.adobe* || true",
+                "sudo rm -rf ~/Library/Containers/com.adobe* || true",
+                "sudo rm -rf ~/Library/Cookies/com.adobe* || true",
+                "sudo find ~/Library/HTTPStorages -name '*Adobe*' ! -name '*Adobe Downloader*' ! -name '*com.x1a0he.macOS.Adobe-Downloader*' -print0 | xargs -0 sudo rm -rf || true",
+                "sudo find ~/Library/HTTPStorages -name 'com.adobe*' ! -name '*Adobe Downloader*' ! -name '*com.x1a0he.macOS.Adobe-Downloader*' -print0 | xargs -0 sudo rm -rf || true",
+                "sudo rm -rf ~/Library/HTTPStorages/Creative\\ Cloud\\ Content\\ Manager.node || true"
+            ]
+        case .adobeLicenses:
+            return [
+                "sudo rm -rf /Library/Application Support/Adobe/Adobe PCD",
+                "sudo rm -rf /Library/Application Support/Adobe/AdobeGCClient",
+                "sudo rm -rf /Library/Application Support/regid.1986-12.com.adobe",
+                "sudo rm -rf /private/var/db/receipts/com.adobe*",
+                "sudo rm -rf /private/var/db/receipts/*Photoshop*",
+                "sudo rm -rf /private/var/db/receipts/*CreativeCloud*",
+                "sudo rm -rf /private/var/db/receipts/*CCXP*",
+                "sudo rm -rf /private/var/db/receipts/*mygreatcompany*",
+                "sudo rm -rf /private/var/db/receipts/*AntiCC*",
+                "sudo rm -rf /private/var/db/receipts/*.RiD.*",
+                "sudo rm -rf /private/var/db/receipts/*.CCRuntime.*"
+            ]
+        case .adobeLogs:
+            return [
+                "sudo find ~/Library/Logs -name 'Adobe*' ! -name '*Adobe Downloader*' -print0 | xargs -0 sudo rm -rf",
+                "sudo find ~/Library/Logs -name 'adobe*' ! -name '*Adobe Downloader*' -print0 | xargs -0 sudo rm -rf",
+                "sudo rm -rf ~/Library/Logs/Adobe Creative Cloud Cleaner Tool.log",
+                "sudo rm -rf ~/Library/Logs/CreativeCloud",
+                "sudo rm -rf /Library/Logs/CreativeCloud",
+                "sudo rm -rf ~/Library/Logs/CSXS",
+                "sudo rm -rf ~/Library/Logs/amt3.log",
+                "sudo rm -rf ~/Library/Logs/CoreSyncInstall.log",
+                "sudo rm -rf ~/Library/Logs/CrashReporter/*Adobe*",
+                "sudo rm -rf ~/Library/Logs/acroLicLog.log",
+                "sudo rm -rf ~/Library/Logs/acroNGLLog.txt",
+                "sudo rm -rf ~/Library/Logs/DiagnosticReports/*Adobe*",
+                "sudo rm -rf ~/Library/Logs/distNGLLog.txt",
+                "sudo rm -rf ~/Library/Logs/NGL*",
+                "sudo rm -rf ~/Library/Logs/oobelib.log",
+                "sudo rm -rf ~/Library/Logs/PDApp*",
+                "sudo rm -rf /Library/Logs/adobe*",
+                "sudo rm -rf /Library/Logs/Adobe*",
+                "sudo rm -rf ~/Library/Logs/Adobe*",
+                "sudo rm -rf ~/Library/Logs/adobe*",
+                "sudo rm -rf /Library/Logs/DiagnosticReports/*Adobe*",
+                "sudo rm -rf /Library/Application Support/CrashReporter/*Adobe*",
+                "sudo rm -rf ~/Library/Application Support/CrashReporter/*Adobe*"
+            ]
+        case .adobeServices:
+            return [
+                "sudo launchctl bootout gui/$(id -u) /Library/LaunchAgents/com.adobe.* || true",
+                "sudo launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/com.adobe.* || true",
+                "sudo launchctl unload /Library/LaunchDaemons/com.adobe.* || true",
+                "sudo launchctl remove com.adobe.AdobeCreativeCloud || true",
+                "sudo launchctl remove com.adobe.AdobeGenuineService.plist || true",
+                "sudo ps aux | grep -i 'Adobe' | grep -v 'Adobe Downloader' | grep -v 'Adobe-Downloader.helper' | grep -v grep | awk '{print $2}' | { pids=$(cat); [ ! -z \"$pids\" ] && echo \"$pids\" | xargs sudo kill -9; } || true",
+                "sudo rm -rf /Library/LaunchAgents/com.adobe.*",
+                "sudo rm -rf /Library/LaunchDaemons/com.adobe.*",
+                "sudo rm -rf /Library/LaunchAgents/com.adobe.ARMDCHelper*",
+                "sudo rm -rf /Library/LaunchAgents/com.adobe.AdobeCreativeCloud.plist",
+                "sudo rm -rf /Library/LaunchAgents/com.adobe.ccxprocess.plist"
+            ]
+        case .adobeKeychain:
+            return [
+                "sudo security dump-keychain /Library/Keychains/System.keychain | grep -i 'acrobat.com' | grep -i 'srvr' | awk -F '=' '{print $2}' | cut -d '\"' -f2 | while read -r line; do sudo security delete-internet-password -s \"$line\" /Library/Keychains/System.keychain; done || true",
+                "sudo security dump-keychain ~/Library/Keychains/login.keychain-db | grep -i 'acrobat.com' | grep -i 'srvr' | awk -F '=' '{print $2}' | cut -d '\"' -f2 | while read -r line; do security delete-internet-password -s \"$line\" ~/Library/Keychains/login.keychain-db; done || true",
+                "sudo security dump-keychain /Library/Keychains/System.keychain | grep -i 'Adobe.APS' | grep -v 'Adobe Downloader' | awk -F '=' '{print $2}' | cut -d '\"' -f2 | while read -r line; do sudo security delete-generic-password -l \"$line\" /Library/Keychains/System.keychain; done || true",
+                "sudo security dump-keychain ~/Library/Keychains/login.keychain-db | grep -i 'Adobe.APS' | grep -v 'Adobe Downloader' | awk -F '=' '{print $2}' | cut -d '\"' -f2 | while read -r line; do security delete-generic-password -l \"$line\" ~/Library/Keychains/login.keychain-db; done || true",
+                "sudo security dump-keychain /Library/Keychains/System.keychain | grep -i 'Adobe App Info\\|Adobe App Prefetched Info\\|Adobe User\\|com.adobe\\|Adobe Lightroom' | grep -v 'Adobe Downloader' | grep -i 'svce' | awk -F '=' '{print $2}' | cut -d '\"' -f2 | while read -r line; do sudo security delete-generic-password -s \"$line\" /Library/Keychains/System.keychain; done || true",
+                "sudo security dump-keychain ~/Library/Keychains/login.keychain-db | grep -i 'Adobe App Info\\|Adobe App Prefetched Info\\|Adobe User\\|com.adobe\\|Adobe Lightroom' | grep -v 'Adobe Downloader' | grep -i 'svce' | awk -F '=' '{print $2}' | cut -d '\"' -f2 | while read -r line; do security delete-generic-password -s \"$line\" ~/Library/Keychains/login.keychain-db; done || true",
+                "sudo security dump-keychain /Library/Keychains/System.keychain | grep -i 'Adobe Content \\|Adobe Intermediate' | grep -v 'Adobe Downloader' | grep -i 'alis' | awk -F '=' '{print $2}' | cut -d '\"' -f2 | while read -r line; do sudo security delete-certificate -c \"$line\" /Library/Keychains/System.keychain; done || true",
+                "sudo security dump-keychain ~/Library/Keychains/login.keychain-db | grep -i 'Adobe Content \\|Adobe Intermediate' | grep -v 'Adobe Downloader' | grep -i 'alis' | awk -F '=' '{print $2}' | cut -d '\"' -f2 | while read -r line; do security delete-certificate -c \"$line\" ~/Library/Keychains/login.keychain-db; done || true"
+            ]
+        case .adobeGenuineService:
+            return [
+                "sudo rm -rf /Library/Application Support/Adobe/Adobe Desktop Common/AdobeGenuineClient",
+                "sudo rm -rf /Library/Application Support/Adobe/AdobeGCClient",
+                "sudo rm -rf /Library/Preferences/com.adobe.AdobeGenuineService.plist",
+                "sudo rm -rf /Applications/Utilities/Adobe Creative Cloud/Utils/AdobeGenuineValidator",
+                "sudo rm -rf /Applications/Utilities/Adobe Genuine Service",
+                "sudo rm -rf /Library/PrivilegedHelperTools/com.adobe.acc*",
+                "sudo find /private/tmp -type d -iname '*adobe*' ! -iname '*Adobe Downloader*' -o -type f -iname '*adobe*' ! -iname '*Adobe Downloader*' | xargs rm -rf {} \\+",
+                "sudo find /private/tmp -type d -iname '*CCLBS*' ! -iname '*Adobe Downloader*' -o -type f -iname '*adobe*' ! -iname '*Adobe Downloader*' | xargs rm -rf {} \\+",
+                "sudo find /private/var/folders/ -type d -iname '*adobe*' ! -iname '*Adobe Downloader*' -o -type f -iname '*adobe*' ! -iname '*Adobe Downloader*' | xargs rm -rf {} \\+",
+                "sudo rm -rf /private/tmp/com.adobe*",
+                "sudo rm -rf /private/tmp/Adobe*",
+                "sudo rm -rf /private/tmp/.adobe*"
+            ]
+        case .adobeHosts:
+            return [
+                "sudo sh -c 'grep -v \"adobe\" /etc/hosts > /etc/hosts.temp && mv /etc/hosts.temp /etc/hosts'"
+            ]
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .adobeApps:
+            return String(localized: "删除所有已安装的 Adobe 应用程序（不包括 Adobe Downloader）")
+        case .adobeCreativeCloud:
+            return String(localized: "删除 Adobe Creative Cloud 应用程序及其组件")
+        case .adobePreferences:
+            return String(localized: "删除 Adobe 应用程序的偏好设置文件（不包括 Adobe Downloader）")
+        case .adobeCaches:
+            return String(localized: "删除 Adobe 应用程序的缓存文件（不包括 Adobe Downloader）")
+        case .adobeLicenses:
+            return String(localized: "删除 Adobe 许可和激活相关文件")
+        case .adobeLogs:
+            return String(localized: "删除 Adobe 应用程序的日志文件（不包括 Adobe Downloader）")
+        case .adobeServices:
+            return String(localized: "停止并删除 Adobe 相关服务")
+        case .adobeKeychain:
+            return String(localized: "删除钥匙串中的 Adobe 相关条目")
+        case .adobeGenuineService:
+            return String(localized: "删除 Adobe 正版验证服务及其组件")
+        case .adobeHosts:
+            return String(localized: "清理 hosts 文件中的 Adobe 相关条目")
+        }
+    }
+}

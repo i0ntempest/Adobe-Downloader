@@ -115,39 +115,64 @@ private struct VersionListView: View {
     @Binding var expandedVersions: Set<String>
     let onSelect: (String) -> Void
     let dismiss: DismissAction
+    @State private var scrollPosition: String?
+    @State private var cachedVersions: [(key: String, value: Product.Platform)] = []
     
     var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 0) {
-                LazyVStack(spacing: VersionPickerConstants.verticalSpacing) {
-                    ForEach(filteredVersions, id: \.key) { version, info in
-                        VersionRow(
-                            productId: productId,
-                            version: version,
-                            info: info,
-                            isExpanded: expandedVersions.contains(version),
-                            onSelect: handleVersionSelect,
-                            onToggle: handleVersionToggle
-                        )
+        ScrollViewReader { proxy in
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+                    LazyVStack(spacing: VersionPickerConstants.verticalSpacing) {
+                        ForEach(getFilteredVersions(), id: \.key) { version, info in
+                            VersionRow(
+                                productId: productId,
+                                version: version,
+                                info: info,
+                                isExpanded: expandedVersions.contains(version),
+                                onSelect: handleVersionSelect,
+                                onToggle: handleVersionToggle
+                            )
+                            .id(version)
+                            .transition(.opacity)
+                        }
+                    }
+                    .padding()
+
+                    HStack(spacing: 8) {
+                        Capsule()
+                            .fill(Color.green)
+                            .frame(width: 6, height: 6)
+                        Text("获取到 \(getFilteredVersions().count) 个版本")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.bottom, 16)
+                }
+            }
+            .background(Color(.clear))
+            .onChange(of: expandedVersions) { newValue in
+                if let lastExpanded = newValue.sorted().last {
+                    withAnimation {
+                        proxy.scrollTo(lastExpanded, anchor: .top)
                     }
                 }
-                .padding()
-
-                HStack(spacing: 8) {
-                    Capsule()
-                        .fill(Color.green)
-                        .frame(width: 6, height: 6)
-                    Text("获取到 \(filteredVersions.count) 个版本")
-                        .font(.system(size: 12))
-                        .foregroundColor(.secondary)
+            }
+            .onAppear {
+                if cachedVersions.isEmpty {
+                    cachedVersions = loadFilteredVersions()
                 }
-                .padding(.bottom, 16)
             }
         }
-        .background(Color(.clear))
     }
     
-    private var filteredVersions: [(key: String, value: Product.Platform)] {
+    private func getFilteredVersions() -> [(key: String, value: Product.Platform)] {
+        if !cachedVersions.isEmpty {
+            return cachedVersions
+        }
+        return loadFilteredVersions()
+    }
+    
+    private func loadFilteredVersions() -> [(key: String, value: Product.Platform)] {
         let products = findProducts(id: productId)
         if products.isEmpty {
             return []
@@ -187,7 +212,7 @@ private struct VersionListView: View {
     }
 }
 
-private struct VersionRow: View {
+private struct VersionRow: View, Equatable {
     @StorageValue(\.defaultLanguage) private var defaultLanguage
     
     let productId: String
@@ -197,12 +222,16 @@ private struct VersionRow: View {
     let onSelect: (String) -> Void
     let onToggle: (String) -> Void
     
+    static func == (lhs: VersionRow, rhs: VersionRow) -> Bool {
+        lhs.productId == rhs.productId &&
+        lhs.version == rhs.version &&
+        lhs.isExpanded == rhs.isExpanded
+    }
+    
+    @State private var cachedExistingPath: URL? = nil
+    
     private var existingPath: URL? {
-        globalNetworkManager.isVersionDownloaded(
-            productId: productId,
-            version: version,
-            language: defaultLanguage
-        )
+        cachedExistingPath
     }
     
     var body: some View {
@@ -227,6 +256,16 @@ private struct VersionRow: View {
         .padding(.horizontal)
         .background(Color(NSColor.controlBackgroundColor))
         .cornerRadius(VersionPickerConstants.cornerRadius)
+        .animation(.easeInOut(duration: 0.2), value: isExpanded)
+        .onAppear {
+            if cachedExistingPath == nil {
+                cachedExistingPath = globalNetworkManager.isVersionDownloaded(
+                    productId: productId,
+                    version: version,
+                    language: defaultLanguage
+                )
+            }
+        }
     }
 }
 
@@ -434,99 +473,114 @@ private struct DependenciesList: View {
     let dependencies: [Product.Platform.LanguageSet.Dependency]
 
     var body: some View {
-        ForEach(dependencies, id: \.sapCode) { dependency in
-            VStack(alignment: .leading, spacing: 5) {
-                HStack(spacing: 8) {
-                    getPlatformIcon(for: dependency.selectedPlatform)
-                        .foregroundColor(.blue.opacity(0.8))
-                        .font(.system(size: 12))
-                        .frame(width: 16)
-                    
-                    Text(dependency.sapCode)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.primary.opacity(0.8))
-                    
-                    Text("\(dependency.productVersion)")
-                        .font(.system(size: 11))
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 1)
-                        .background(
-                            RoundedRectangle(cornerRadius: 3)
-                                .fill(Color.blue.opacity(0.1))
-                        )
-                        .foregroundColor(.blue.opacity(0.8))
-
-                    if dependency.baseVersion != dependency.productVersion {
-                        HStack(spacing: 3) {
-                            Text("base:")
-                                .font(.system(size: 10))
-                                .foregroundColor(.secondary.opacity(0.7))
-                            Text(dependency.baseVersion)
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundColor(.secondary.opacity(0.9))
-                        }
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 1)
-                        .background(
-                            RoundedRectangle(cornerRadius: 3)
-                                .fill(Color.secondary.opacity(0.1))
-                        )
-                    }
-                }
-                .padding(.vertical, 2)
-
-                HStack(spacing: 10) {
-                    if !dependency.buildGuid.isEmpty {
-                        HStack(spacing: 3) {
-                            Text("buildGuid:")
-                                .font(.system(size: 10))
-                                .foregroundColor(.secondary.opacity(0.7))
-                            Text(dependency.buildGuid)
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundColor(.secondary.opacity(0.9))
-                                .textSelection(.enabled)
-                        }
-                    }
-                }
-                .padding(.top, 2)
-                .padding(.leading, 24)
-                
-                #if DEBUG
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 4) {
-                        Text("Match:")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                        Text(dependency.isMatchPlatform ? "✅" : "❌")
-                            .font(.caption2)
-                        
-                        Text("•")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                            
-                        Text("Target:")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                        Text(dependency.targetPlatform)
-                            .font(.caption2)
-                            .foregroundColor(.blue)
-                    }
-                    
-                    if !dependency.selectedReason.isEmpty {
-                        HStack(spacing: 4) {
-                            Text("Reason:")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                            Text(dependency.selectedReason)
-                                .font(.caption2)
-                                .foregroundColor(.orange)
-                        }
-                    }
-                }
-                .padding(.leading, 22)
-                #endif
+        LazyVStack(alignment: .leading, spacing: 2) {
+            ForEach(dependencies, id: \.sapCode) { dependency in
+                DependencyRow(dependency: dependency)
+                    .padding(.vertical, 4)
             }
-            .padding(.vertical, 4)
+        }
+    }
+}
+
+private struct DependencyRow: View, Equatable {
+    let dependency: Product.Platform.LanguageSet.Dependency
+    
+    static func == (lhs: DependencyRow, rhs: DependencyRow) -> Bool {
+        lhs.dependency.sapCode == rhs.dependency.sapCode &&
+        lhs.dependency.productVersion == rhs.dependency.productVersion
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            HStack(spacing: 8) {
+                getPlatformIcon(for: dependency.selectedPlatform)
+                    .foregroundColor(.blue.opacity(0.8))
+                    .font(.system(size: 12))
+                    .frame(width: 16)
+                
+                Text(dependency.sapCode)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.primary.opacity(0.8))
+                
+                Text("\(dependency.productVersion)")
+                    .font(.system(size: 11))
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 1)
+                    .background(
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(Color.blue.opacity(0.1))
+                    )
+                    .foregroundColor(.blue.opacity(0.8))
+
+                if dependency.baseVersion != dependency.productVersion {
+                    HStack(spacing: 3) {
+                        Text("base:")
+                            .font(.system(size: 10))
+                            .foregroundColor(.secondary.opacity(0.7))
+                        Text(dependency.baseVersion)
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.secondary.opacity(0.9))
+                    }
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 1)
+                    .background(
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(Color.secondary.opacity(0.1))
+                    )
+                }
+            }
+            .padding(.vertical, 2)
+
+            HStack(spacing: 10) {
+                if !dependency.buildGuid.isEmpty {
+                    HStack(spacing: 3) {
+                        Text("buildGuid:")
+                            .font(.system(size: 10))
+                            .foregroundColor(.secondary.opacity(0.7))
+                        Text(dependency.buildGuid)
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.secondary.opacity(0.9))
+                            .textSelection(.enabled)
+                    }
+                }
+            }
+            .padding(.top, 2)
+            .padding(.leading, 24)
+            
+            #if DEBUG
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 4) {
+                    Text("Match:")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    Text(dependency.isMatchPlatform ? "✅" : "❌")
+                        .font(.caption2)
+                    
+                    Text("•")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        
+                    Text("Target:")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    Text(dependency.targetPlatform)
+                        .font(.caption2)
+                        .foregroundColor(.blue)
+                }
+                
+                if !dependency.selectedReason.isEmpty {
+                    HStack(spacing: 4) {
+                        Text("Reason:")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Text(dependency.selectedReason)
+                            .font(.caption2)
+                            .foregroundColor(.orange)
+                    }
+                }
+            }
+            .padding(.leading, 22)
+            #endif
         }
     }
     

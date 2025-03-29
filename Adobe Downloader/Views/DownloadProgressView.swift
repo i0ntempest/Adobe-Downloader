@@ -138,7 +138,7 @@ struct DownloadProgressView: View {
                                 showSetupProcessAlert = true
                             }
                         }) {
-                            Label("安装", systemImage: "square.and.arrow.down.on.square")
+                            Label("安装", systemImage: "tray.and.arrow.down")
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(.white)
                         }
@@ -168,7 +168,7 @@ struct DownloadProgressView: View {
                                     showSetupProcessAlert = true
                                 }
                             }) {
-                                Label("安装", systemImage: "square.and.arrow.down.on.square")
+                                Label("安装", systemImage: "tray.and.arrow.down")
                                     .font(.system(size: 13, weight: .medium))
                                     .foregroundColor(.white)
                             }

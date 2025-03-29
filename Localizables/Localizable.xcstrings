@@ -433,13 +433,20 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Setup component not processed"
+            "value" : "Setup component unprocessed"
           }
         }
       }
     },
     "Setup 组件未处理，无法安装" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Setup component unprocessed, installation unavailable."
+          }
+        }
+      }
     },
     "Setup未备份提示" : {
       "localizations" : {
@@ -595,7 +602,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Download management"
+            "value" : "Download Management"
           }
         }
       }
@@ -816,21 +823,23 @@
       }
     },
     "全部暂停" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pause All"
+            "value" : "Pause"
           }
         }
       }
     },
     "全部继续" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Continue All"
+            "value" : "Continue"
           }
         }
       }
@@ -1081,7 +1090,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Processing status:"
+            "value" : "Process Status:"
           }
         }
       }
@@ -1303,7 +1312,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connection status:"
+            "value" : "Connection Status:"
           }
         }
       }
@@ -1351,7 +1360,6 @@
       }
     },
     "将执行的命令：" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2509,6 +2517,7 @@
       }
     },
     "清理已完成" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2599,6 +2608,16 @@
         }
       }
     },
+    "确定要删除所有已完成和失败的下载任务吗？此操作将同时删除本地文件。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirm deletion of all completed/failed downloads? This will also remove local files."
+          }
+        }
+      }
+    },
     "确定要取消%@的下载吗？" : {
       "localizations" : {
         "en" : {
@@ -2645,6 +2664,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Confirm download and process"
+          }
+        }
+      }
+    },
+    "确认删除" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confirm Delete"
           }
         }
       }
@@ -3032,7 +3061,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connection status:"
+            "value" : "Connection Status:"
           }
         }
       }

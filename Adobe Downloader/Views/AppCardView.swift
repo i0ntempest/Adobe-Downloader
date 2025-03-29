@@ -164,6 +164,8 @@ final class AppCardViewModel: ObservableObject {
     }
 
     func loadIcon() {
+        if iconImage != nil { return }
+        
         if let bestIcon = globalProducts.first(where: { $0.id == uniqueProduct.id })?.getBestIcon(),
            let iconURL = URL(string: bestIcon.value) {
             if let cachedImage = IconCache.shared.getIcon(for: bestIcon.value) {
@@ -308,6 +310,7 @@ struct AppCardView: View {
                 Spacer()
                 DownloadButtonView(viewModel: viewModel)
             }
+            .drawingGroup()
         }
         .background(
             RoundedRectangle(cornerRadius: 12)

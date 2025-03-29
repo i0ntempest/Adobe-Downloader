@@ -94,6 +94,7 @@ private struct DownloadManagerToolbar: View {
 
 private struct ToolbarButtons: View {
     let dismiss: DismissAction
+    @State private var showClearCompletedConfirmation = false
     
     var body: some View {
         HStack(spacing: 12) {
@@ -109,8 +110,8 @@ private struct ToolbarButtons: View {
                     }
                 }
             }) {
-                Label("全部暂停", systemImage: "pause.circle.fill")
-                    .font(.system(size: 13, weight: .medium))
+                Image(systemName: "pause.circle.fill")
+                    .font(.system(size: 18))
                     .foregroundColor(.white)
             }
             .buttonStyle(BeautifulButtonStyle(baseColor: .orange))
@@ -124,38 +125,49 @@ private struct ToolbarButtons: View {
                     }
                 }
             }) {
-                Label("全部继续", systemImage: "play.circle.fill")
-                    .font(.system(size: 13, weight: .medium))
+                Image(systemName: "play.circle.fill")
+                    .font(.system(size: 18))
                     .foregroundColor(.white)
             }
             .buttonStyle(BeautifulButtonStyle(baseColor: .blue))
             
             Button(action: {
-                globalNetworkManager.downloadTasks.removeAll { task in
-                    if case .completed = task.status {
-                        return true
-                    }
-                    if case .failed = task.status {
-                        return true
-                    }
-                    return false
-                }
-                globalNetworkManager.updateDockBadge()
+                showClearCompletedConfirmation = true
             }) {
-                Label("清理已完成", systemImage: "trash.circle.fill")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(.white)
-            }
-            .buttonStyle(BeautifulButtonStyle(baseColor: .green))
-            
-            Button(action: { dismiss() }) {
-                Label("关闭", systemImage: "xmark.circle.fill")
-                    .font(.system(size: 13, weight: .medium))
+                Image(systemName: "trash.circle.fill")
+                    .font(.system(size: 18))
                     .foregroundColor(.white)
             }
             .buttonStyle(BeautifulButtonStyle(baseColor: .red))
+            
+            Button(action: { dismiss() }) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 18))
+                    .foregroundColor(.white)
+            }
+            .buttonStyle(BeautifulButtonStyle(baseColor: .gray))
         }
         .background(Color(NSColor.clear))
+        .alert("确认删除", isPresented: $showClearCompletedConfirmation) {
+            Button("取消", role: .cancel) { }
+            Button("确认", role: .destructive) {
+                Task {
+                    let tasksToRemove = globalNetworkManager.downloadTasks.filter { task in
+                        if case .completed = task.status { return true }
+                        if case .failed = task.status { return true }
+                        return false
+                    }
+                    
+                    for task in tasksToRemove {
+                        globalNetworkManager.removeTask(taskId: task.id, removeFiles: true)
+                    }
+                    
+                    globalNetworkManager.updateDockBadge()
+                }
+            }
+        } message: {
+            Text("确定要删除所有已完成和失败的下载任务吗？此操作将同时删除本地文件。")
+        }
     }
 }
 

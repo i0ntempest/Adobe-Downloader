@@ -72,32 +72,34 @@ struct ProductGridView: View {
     let products: [UniqueProduct]
     
     var body: some View {
-        ScrollView(showsIndicators: false) {
-            LazyVGrid(
-                columns: [
-                    GridItem(.adaptive(minimum: 240, maximum: 300), spacing: 20)
-                ],
-                spacing: 20
-            ) {
-                ForEach(products, id: \.id) { uniqueProduct in
-                    AppCardView(uniqueProduct: uniqueProduct)
-                        .id(uniqueProduct.id)
-                        .modifier(AppearAnimationModifier())
+        ScrollViewReader { proxy in
+            ScrollView(showsIndicators: false) {
+                LazyVGrid(
+                    columns: [
+                        GridItem(.adaptive(minimum: 240, maximum: 300), spacing: 20)
+                    ],
+                    spacing: 20
+                ) {
+                    ForEach(products, id: \.id) { uniqueProduct in
+                        AppCardView(uniqueProduct: uniqueProduct)
+                            .id(uniqueProduct.id)
+                            .modifier(AppearAnimationModifier())
+                    }
                 }
+                .padding()
+
+                
+                HStack(spacing: 8) {
+                    Capsule()
+                        .fill(Color.green)
+                        .frame(width: 6, height: 6)
+                    Text("获取到 \(products.count) 款产品")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                }
+                .padding(.bottom, 16)
             }
-            .padding()
-            
-            HStack(spacing: 8) {
-                Capsule()
-                    .fill(Color.green)
-                    .frame(width: 6, height: 6)
-                Text("获取到 \(products.count) 款产品")
-                    .font(.system(size: 12))
-                    .foregroundColor(.secondary)
-            }
-            .padding(.bottom, 16)
         }
-        .background(Color(.clear))
     }
 }
 
