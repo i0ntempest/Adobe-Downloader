@@ -67,31 +67,14 @@ when prompted.
 
 - For historical update logs, please go to [Update Log](update-log.md)
 
-- 2025-03-27 Update Log
+- 2025-04-06 Update Log
 
 ```markdown
-1. Redesigned UI with blurred background effects
-2. New hover interactions for product cards
-3. Enhanced product card display showing available versions and dependency counts
-4. Added system requirements with minimum version and module count indicators
-5. Improved API version switching interface
-6. Optimized toolbar layout and visual presentation
-7. Smoother scrolling for product listings
-8. Detailed version information added to version selection
-9. Component-specific version details now include buildGuid identifiers
-10. DEBUG mode enhancements revealing extended diagnostic information
-11. Streamlined download manager with redesigned user interface
-12. Prominent action buttons for better download management
-13. Enhanced task monitoring with copyable buildGuid support in package lists
-14. Complete rewrite of product loading logic following Adobe Creative Cloud data architecture
-15. Revised dependency management between core products and components
-16. Stability improvements reducing architecture/system version-related installation failures
-17. Detailed error logging with specific error codes and causes
-18. Smart installation flow hiding options when Setup is unprocessed
-19. Fixed unexpected download behavior during Setup reprocessing
-20. Resolved Setup component processing errors
-21. Optimized Helper reinstallation workflow
-22. New system information panel added
+1. Fixed an issue where the latest version would still be downloaded even when selecting any specific version
+2. Fixed an issue where Intel-based devices were downloading arm64 packages
+3. Fixed inconsistent architecture downloads for product package dependencies
+4. Added a custom settings view
+5. Significantly optimized overall rendering performance, resolving interface lag during dragging
 ```
 
 ### Language friendly

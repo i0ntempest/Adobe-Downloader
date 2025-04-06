@@ -1,5 +1,24 @@
 # Change Log
 
+## 2025-04-06 更新日志
+
+[//]: # (2.0.1)
+```markdown
+1. 修复了选择任意版本的情况下仍下载最新版本的问题
+2. 修复了在 Intel 机型下下载包为 arm64 的问题
+3. 修复了产品包依赖下载架构不一致的问题
+4. 新增了自定义设置页面
+5. 大幅优化整体渲染性能，解决拖动界面造成卡顿的问题
+
+====================
+
+1. Fixed an issue where the latest version would still be downloaded even when selecting any specific version
+2. Fixed an issue where Intel-based devices were downloading arm64 packages
+3. Fixed inconsistent architecture downloads for product package dependencies
+4. Added a custom settings view
+5. Significantly optimized overall rendering performance, resolving interface lag during dragging
+```
+
 ## 2025-03-27 更新日志
 
 [//]: # (2.0.0)

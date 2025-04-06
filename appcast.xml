@@ -3,6 +3,36 @@
     <channel>
         <title>Adobe Downloader</title>
         <item>
+            <title>2.0.1</title>
+            <pubDate>Sun, 06 Apr 2025 10:26:05 +0800</pubDate>
+            <sparkle:version>201</sparkle:version>
+            <sparkle:shortVersionString>2.0.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>12.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/X1a0He/Adobe-Downloader/releases/download/2.0.1/Adobe.Downloader.dmg" length="4275793" type="application/octet-stream" sparkle:edSignature="DhJ+gUR/OKLEhrssPnQOYL+mGI09ucr4RGX7U4DHZEBNPBKARzOX+zLDml3rwxmuExMSCIVa30qlzhH8zDPBDA=="/>
+            <description>
+                <![CDATA[
+                    <style>ul{margin-top: 0;margin-bottom: 7;padding-left: 18;}</style>
+                    <h4>Adobe Downloader 更新日志: </h4>
+                    <ul>
+                        <li>1. 修复了选择任意版本的情况下仍下载最新版本的问题</li>
+                        <li>2. 修复了在 Intel 机型下下载包为 arm64 的问题</li>
+                        <li>3. 修复了产品包依赖下载架构不一致的问题</li>
+                        <li>4. 新增了自定义设置页面</li>
+                        <li>5. 大幅优化整体渲染性能，解决拖动界面造成卡顿的问题</li>
+                    </ul>
+                    <hr>
+                    <h4>Adobe Downloader Changes: </h4>
+                    <ul>
+                        <li>1. Fixed an issue where the latest version would still be downloaded even when selecting any specific version</li>
+                        <li>2. Fixed an issue where Intel-based devices were downloading arm64 packages</li>
+                        <li>3. Fixed inconsistent architecture downloads for product package dependencies</li>
+                        <li>4. Added a custom settings view</li>
+                        <li>5. Significantly optimized overall rendering performance, resolving interface lag during dragging</li>
+                    </ul>
+                ]]>
+            </description>
+        </item>
+        <item>
             <title>2.0.0</title>
             <pubDate>Thu, 27 Mar 2025 23:43:50 +0800</pubDate>
             <sparkle:version>200</sparkle:version>
