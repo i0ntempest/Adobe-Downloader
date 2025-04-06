@@ -7,6 +7,7 @@ struct ContentView: View {
     @State private var showDownloadManager = false
     @State private var searchText = ""
     @State private var currentApiVersion = StorageData.shared.apiVersion
+    @Binding var showSettingsView: Bool
 
     private var filteredProducts: [UniqueProduct] {
         if searchText.isEmpty { return globalUniqueProducts }
@@ -17,7 +18,7 @@ struct ContentView: View {
     }
 
     private func openSettings() {
-        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        showSettingsView = true
     }
 
     private func refreshData() {

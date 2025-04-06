@@ -284,8 +284,7 @@ class NewJSONParser {
                                       let baseVersion = dep["baseVersion"] as? String else {
                                     return Product.Platform.LanguageSet.Dependency(sapCode: "",baseVersion: "",productVersion: "",buildGuid: "")
                                 }
-
-                                let targetPlatform = AppStatics.isAppleSilicon ? "macarm64" : "osx10-64"
+                                let targetPlatform = StorageData.shared.downloadAppleSilicon ? "macarm64" : "osx10-64"
                                 let cacheKey = DependencyCacheKey(sapCode: sapCode, targetPlatform: targetPlatform)
 
                                 if let cachedDependency = globalDependencyCache[cacheKey] {

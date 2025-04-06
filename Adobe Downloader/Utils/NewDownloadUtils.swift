@@ -165,12 +165,12 @@ class NewDownloadUtils {
                             let isCore = packageType == "core"
 
                             let condition = package["Condition"] as? String ?? ""
-                            
+                            let targetArchitecture = StorageData.shared.downloadAppleSilicon ? "arm64" : "x64"
                             if isCore {
                                 if condition.isEmpty {
                                     shouldKeep = true
                                 } else {
-                                    if condition.contains("[OSArchitecture]==\(AppStatics.architectureSymbol)") {
+                                    if condition.contains("[OSArchitecture]==\(targetArchitecture)") {
                                         shouldKeep = true
                                     }
                                     if condition.contains("[installLanguage]==\(task.language)") || task.language == "ALL" {
@@ -266,8 +266,9 @@ class NewDownloadUtils {
                 
                 if dependencyToDownload.sapCode == productInfo.id {
                     if isCore {
+                        let targetArchitecture = StorageData.shared.downloadAppleSilicon ? "arm64" : "x64"
                         shouldDownload = condition.isEmpty || 
-                                         condition.contains("[OSArchitecture]==\(AppStatics.architectureSymbol)") ||
+                                         condition.contains("[OSArchitecture]==\(targetArchitecture)") ||
                                          condition.contains(installLanguage) || task.language == "ALL"
                     } else {
                         shouldDownload = condition.contains(installLanguage) || task.language == "ALL"
@@ -715,8 +716,8 @@ class NewDownloadUtils {
 
     func generateDriverXML(version: String, language: String, productInfo: Product, displayName: String) -> String {
         // 获取匹配的 platform 和 languageSet
-        guard let platform = globalProducts.first(where: { $0.id == productInfo.id })?.platforms.first?.id,
-              let languageSet = globalProducts.first(where: { $0.id == productInfo.id })?.platforms.first?.languageSet else {
+        guard let platform = globalProducts.first(where: { $0.id == productInfo.id && $0.version == version })?.platforms.first?.id,
+              let languageSet = globalProducts.first(where: { $0.id == productInfo.id && $0.version == version })?.platforms.first?.languageSet else {
             return ""
         }
         

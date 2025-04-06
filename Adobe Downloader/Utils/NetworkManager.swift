@@ -63,7 +63,7 @@ class NetworkManager: ObservableObject {
     }
     func startDownload(productId: String, selectedVersion: String, language: String, destinationURL: URL) async throws {
         // 从 globalCcmResult 中获取 productId 对应的 ProductInfo
-        guard let productInfo = globalCcmResult.products.first(where: { $0.id == productId }) else {
+        guard let productInfo = globalCcmResult.products.first(where: { $0.id == productId && $0.version == selectedVersion }) else {
             throw NetworkError.productNotFound
         }
 
@@ -289,7 +289,7 @@ class NetworkManager: ObservableObject {
             !$0.status.isCompleted
         }) { return task.directory }
 
-        let platform = globalProducts.first(where: { $0.id == productId })?.platforms.first?.id ?? "unknown"
+        let platform = globalProducts.first(where: { $0.id == productId && $0.version == version })?.platforms.first?.id ?? "unknown"
         let fileName = productId == "APRO"
             ? "Adobe Downloader \(productId)_\(version)_\(platform).dmg"
             : "Adobe Downloader \(productId)_\(version)-\(language)-\(platform)"

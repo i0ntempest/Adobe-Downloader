@@ -1065,6 +1065,17 @@
         }
       }
     },
+    "可选模块" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modules"
+          }
+        }
+      }
+    },
     "命令已复制到剪贴板" : {
       "localizations" : {
         "en" : {
@@ -2078,6 +2089,17 @@
         }
       }
     },
+    "未对 Setup 组件进行处理或者 Setup 组件不存在，无法使用安装功能\n你可以通过设置页面再次对 Setup 组件进行处理" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Setup component has not been processed or does not exist, so the installation function cannot be used. You can process the Setup component again through the settings page."
+          }
+        }
+      }
+    },
     "未对 Setup 组件进行处理或者 Setup 组件不存在，无法使用安装功能\n你可以通过设置页面对 Setup 组件进行处理" : {
       "localizations" : {
         "en" : {
@@ -2171,6 +2193,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Check"
+          }
+        }
+      }
+    },
+    "查看持久化文件" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View persistent files"
           }
         }
       }
@@ -2971,6 +3004,16 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Parsing error: %1$@ - %2$@"
+          }
+        }
+      }
+    },
+    "设置..." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings…"
           }
         }
       }

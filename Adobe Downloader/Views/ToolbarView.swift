@@ -148,33 +148,18 @@ struct ToolbarView: View {
                 BeautifulSearchField(text: $searchText)
                     .frame(maxWidth: 200)
 
-                if #available(macOS 14.0, *) {
-                    SettingsLink {
-                        ZStack {
-                            Circle()
-                                .fill(Color.secondary.opacity(0.1))
-                                .frame(width: 34, height: 34)
-                            
-                            Image(systemName: "gearshape")
-                                .font(.system(size: 15, weight: .medium))
-                                .foregroundColor(.secondary)
-                        }
+                Button(action: openSettings) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.secondary.opacity(0.1))
+                            .frame(width: 34, height: 34)
+                        
+                        Image(systemName: "gearshape")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(.secondary)
                     }
-                    .buttonStyle(.plain)
-                } else {
-                    Button(action: openSettings) {
-                        ZStack {
-                            Circle()
-                                .fill(Color.secondary.opacity(0.1))
-                                .frame(width: 34, height: 34)
-                            
-                            Image(systemName: "gearshape")
-                                .font(.system(size: 15, weight: .medium))
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    .buttonStyle(.plain)
                 }
+                .buttonStyle(.plain)
 
                 Button(action: onRefresh) {
                     ZStack {

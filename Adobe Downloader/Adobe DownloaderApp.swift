@@ -9,6 +9,7 @@ struct Adobe_DownloaderApp: App {
     @State private var showLanguagePicker = false
     @State private var showCreativeCloudAlert = false
     @State private var showBackupResultAlert = false
+    @State private var showSettingsView = false
     
     @StateObject private var backupResult = BackupResult()
     
@@ -61,7 +62,7 @@ struct Adobe_DownloaderApp: App {
                 BlurView()
                     .ignoresSafeArea()
 
-                ContentView()
+                ContentView(showSettingsView: $showSettingsView)
                     .environmentObject(globalNetworkManager)
                     .frame(minWidth: 792, minHeight: 600)
                     .tint(.blue)
@@ -105,6 +106,10 @@ struct Adobe_DownloaderApp: App {
                             }
                         }
                     }
+                    .sheet(isPresented: $showSettingsView) {
+                        CustomSettingsView(updater: updaterController.updater)
+                            .interactiveDismissDisabled(false)
+                    }
             }
         }
         .windowStyle(.hiddenTitleBar)
@@ -112,11 +117,14 @@ struct Adobe_DownloaderApp: App {
         .commands {
             CommandGroup(after: .appInfo) {
                 CheckForUpdatesView(updater: updaterController.updater)
+                
+                Divider()
+                
+                Button("设置...") {
+                    showSettingsView = true
+                }
+                .keyboardShortcut(",", modifiers: .command)
             }
-        }
-
-        Settings {
-            AboutView(updater: updaterController.updater)
         }
     }
     
