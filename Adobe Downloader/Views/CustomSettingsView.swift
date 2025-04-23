@@ -29,18 +29,17 @@ struct CustomSettingsView: View {
                         HStack(spacing: 0) {
                             SquareTabButton(
                                 imageName: "gear",
-                                title: "通用",
+                                title: String(localized: "通用"),
                                 isSelected: selectedTab == "general_settings"
                             ) {
                                 withAnimation(.easeInOut(duration: 0.15)) {
                                     selectedTab = "general_settings"
                                 }
                             }
-                            .accessibilityLabel("通用")
                             
                             SquareTabButton(
                                 imageName: "trash",
-                                title: "清理工具",
+                                title: String(localized: "清理工具"),
                                 isSelected: selectedTab == "cleanup_view"
                             ) {
                                 withAnimation(.easeInOut(duration: 0.15)) {
@@ -51,7 +50,7 @@ struct CustomSettingsView: View {
                             
                             SquareTabButton(
                                 imageName: "questionmark.circle",
-                                title: "常见问题",
+                                title: String(localized: "常见问题"),
                                 isSelected: selectedTab == "qa_view"
                             ) {
                                 withAnimation(.easeInOut(duration: 0.15)) {
@@ -62,7 +61,7 @@ struct CustomSettingsView: View {
                             
                             SquareTabButton(
                                 imageName: "info.circle",
-                                title: "关于",
+                                title: String(localized: "关于"),
                                 isSelected: selectedTab == "about_app"
                             ) {
                                 withAnimation(.easeInOut(duration: 0.15)) {
@@ -129,7 +128,7 @@ struct CustomSettingsView: View {
                 .padding(.trailing, 10)
             }
         }
-        .frame(width: 600, height: 830)
+        .frame(width: 700, height: 650)
         .onAppear {
             selectedTab = "general_settings"
         }

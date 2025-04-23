@@ -59,7 +59,7 @@ struct DownloadManagerView: View {
             )
         }
         .background(Color(.clear))
-        .frame(width:750, height: 500)
+        .frame(width:750, height: 600)
     }
 }
 

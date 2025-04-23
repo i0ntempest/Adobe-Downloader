@@ -231,7 +231,7 @@ class NewJSONParser {
                     continue
                 }
 
-                if productDisplayName == "Creative Cloud" { continue }
+                if(productDisplayName == "Creative Cloud" || productDisplayName == "Substance Alchemist") { continue }
 
                 let icons = (product["productIcons"] as? [String: Any])?["icon"] as? [[String: Any]] ?? []
                 let productIcons = icons.compactMap { icon -> Product.ProductIcon? in
@@ -304,7 +304,9 @@ class NewJSONParser {
                                         return AppStatics.compareVersions($0.version, $1.version) > 0
                                     }).first {
                                         if let matchingPlatform = latestProduct.platforms.first(where: { platform in
-                                            platform.id == targetPlatform || platform.id == "macuniversal"
+                                            platform.id == targetPlatform || platform.id == "macuniversal" || 
+                                            (targetPlatform == "osx10-64" && platform.id == "osx10") || 
+                                            (targetPlatform == "osx10" && platform.id == "osx10-64")
                                         }),
                                            let firstLanguageSet = matchingPlatform.languageSet.first {
                                             productVersion = firstLanguageSet.productVersion
@@ -313,7 +315,9 @@ class NewJSONParser {
                                             selectedPlatform = matchingPlatform.id
                                             selectedReason = matchingPlatform.id == "macuniversal" ? 
                                                 "成功匹配通用平台 macuniversal（支持所有 Mac 平台）" : 
-                                                "成功匹配目标平台"
+                                                (matchingPlatform.id != targetPlatform ? 
+                                                 "成功匹配兼容平台 \(matchingPlatform.id)" : 
+                                                 "成功匹配目标平台")
                                         } else {
                                             if let firstAvailablePlatform = latestProduct.platforms.first,
                                                let firstLanguageSet = firstAvailablePlatform.languageSet.first {

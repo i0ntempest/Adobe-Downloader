@@ -635,6 +635,51 @@ private struct PackageListView: View {
     @Binding var showSetupProcessAlert: Bool
     let actionButtons: AnyView
     
+    @State private var showCopyAllAlert = false
+    
+    private func generateAllProductsInfo(task: NewDownloadTask) -> String {
+        var result = ""
+        
+        for (index, product) in task.dependenciesToDownload.enumerated() {
+            let productInfo: String
+            if product.sapCode == "APRO" {
+                productInfo = "\(product.sapCode) \(product.version)"
+            } else {
+                productInfo = "\(product.sapCode) \(product.version) - (\(product.buildGuid))"
+            }
+            result += productInfo + "\n"
+
+            for (pkgIndex, package) in product.packages.enumerated() {
+                let isLastPackage = pkgIndex == product.packages.count - 1
+                let prefix = isLastPackage ? "    └── " : "    ├── "
+                result += "\(prefix)\(package.fullPackageName) (\(package.packageVersion)) - \(package.type)\n"
+            }
+
+            if let originalProduct = findProduct(id: task.productId),
+               let platform = originalProduct.platforms.first,
+               let languageSet = platform.languageSet.first,
+               let dependency = languageSet.dependencies.first(where: { $0.sapCode == product.sapCode }) {
+                
+                let matchPlatform = dependency.isMatchPlatform ? "✅" : "❌"
+                let targetPlatform = dependency.targetPlatform.isEmpty ? "(无)" : dependency.targetPlatform
+                let selectedPlatform = dependency.selectedPlatform.isEmpty ? "(无)" : dependency.selectedPlatform
+                let selectedReason = dependency.selectedReason.isEmpty ? "(无)" : dependency.selectedReason
+                
+                result += "    依赖详情:\n"
+                result += "    - isMatchPlatform: \(matchPlatform)\n"
+                result += "    - targetPlatform: \(targetPlatform)\n"
+                result += "    - selectedPlatform: \(selectedPlatform)\n"
+                result += "    - selectedReason: \(selectedReason)\n"
+            }
+            
+            if index < task.dependenciesToDownload.count - 1 {
+                result += "\n"
+            }
+        }
+        
+        return result
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
@@ -675,7 +720,7 @@ private struct PackageListView: View {
                     let fileURL = tasksDirectory.appendingPathComponent(fileName)
                     NSWorkspace.shared.selectFile(fileURL.path, inFileViewerRootedAtPath: tasksDirectory.path)
                 }) {
-                    Label("查看持久化文件", systemImage: "doc.text.magnifyingglass")
+                    Label("持久化文件", systemImage: "doc.text.magnifyingglass")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.white)
                 }
@@ -719,29 +764,63 @@ private struct PackageListView: View {
             }
             
             if isPackageListExpanded {
-                ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        ForEach(task.dependenciesToDownload, id: \.sapCode) { product in
-                            ProductRow(
-                                product: product,
-                                isCurrentProduct: task.currentPackage?.id == product.packages.first?.id,
-                                expandedProducts: $expandedProducts
-                            )
-                            .shadow(color: Color.black.opacity(0.03), radius: 2, x: 0, y: 1)
+                VStack(alignment: .leading, spacing: 8) {
+                    Button(action: {
+                        let info = generateAllProductsInfo(task: task)
+                        let pasteboard = NSPasteboard.general
+                        pasteboard.clearContents()
+                        pasteboard.setString(info, forType: .string)
+                        showCopyAllAlert = true
+                        
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            showCopyAllAlert = false
                         }
+                    }) {
+                        Label("复制所有信息", systemImage: "doc.on.clipboard")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.white)
                     }
-                    .padding(.horizontal, 2)
-                    .padding(.vertical, 5)
+                    .buttonStyle(BeautifulButtonStyle(baseColor: .green))
+                    .popover(isPresented: $showCopyAllAlert, arrowEdge: .leading) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                            Text("已复制所有信息")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.primary)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color(NSColor.controlBackgroundColor))
+                        .cornerRadius(8)
+                        .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+                        .padding(6)
+                    }
+                    
+                    ScrollView(showsIndicators: false) {
+                        VStack(alignment: .leading, spacing: 10) {
+                            ForEach(task.dependenciesToDownload, id: \.sapCode) { product in
+                                ProductRow(
+                                    product: product,
+                                    isCurrentProduct: task.currentPackage?.id == product.packages.first?.id,
+                                    expandedProducts: $expandedProducts
+                                )
+                                .shadow(color: Color.black.opacity(0.03), radius: 2, x: 0, y: 1)
+                            }
+                        }
+                        .padding(.horizontal, 2)
+                        .padding(.vertical, 5)
+                    }
+                    .frame(maxHeight: 300)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color(NSColor.windowBackgroundColor).opacity(0.5))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color.secondary.opacity(0.1), lineWidth: 0.5)
+                    )
                 }
-                .frame(maxHeight: 300)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color(NSColor.windowBackgroundColor).opacity(0.5))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.secondary.opacity(0.1), lineWidth: 0.5)
-                )
             }
         }
     }
@@ -847,13 +926,19 @@ struct ProductRow: View {
                         .buttonStyle(BeautifulButtonStyle(baseColor: .blue))
                         .help("复制 buildGuid")
                         .popover(isPresented: $showCopiedAlert, arrowEdge: .trailing) {
-                            Text("已复制")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .cornerRadius(6)
-                                .padding(6)
+                            HStack(spacing: 6) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                                Text("已复制")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.primary)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Color(NSColor.controlBackgroundColor))
+                            .cornerRadius(8)
+                            .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+                            .padding(6)
                         }
                     }
 

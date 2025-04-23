@@ -1,5 +1,24 @@
 # Change Log
 
+## 2025-04-23 更新日志
+
+[//]: # (2.0.2)
+```markdown
+1. 修复了 Intel 机型下依赖包判断遇到 osx10 被误判为 arm 导致下载错误的问题
+2. 修复了设置界面上方的文字显示问题
+3. 调整下载管理界面的高度: 500 -> 600
+4. 新增下载任务复制所有产品和包列表信息
+5. 优化产品 Substance Alchemist 的显示问题
+
+====================
+
+1. Fixed an issue where dependency package detection on Intel-based models mistakenly identified osx10 as ARM architecture, leading to incorrect downloads.
+2. Resolved text display issues in the settings interface header.
+3. Adjusted the height of the download management interface from 500 to 600.
+4. Added functionality to copy all product and package list information in download tasks.
+5. Optimized display handling for the product Substance Alchemist.
+```
+
 ## 2025-04-06 更新日志
 
 [//]: # (2.0.1)

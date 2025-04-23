@@ -67,14 +67,14 @@ when prompted.
 
 - For historical update logs, please go to [Update Log](update-log.md)
 
-- 2025-04-06 Update Log
+- 2025-04-23 Update Log
 
 ```markdown
-1. Fixed an issue where the latest version would still be downloaded even when selecting any specific version
-2. Fixed an issue where Intel-based devices were downloading arm64 packages
-3. Fixed inconsistent architecture downloads for product package dependencies
-4. Added a custom settings view
-5. Significantly optimized overall rendering performance, resolving interface lag during dragging
+1. Fixed an issue where dependency package detection on Intel-based models mistakenly identified osx10 as ARM architecture, leading to incorrect downloads.
+2. Resolved text display issues in the settings interface header.
+3. Adjusted the height of the download management interface from 500 to 600.
+4. Added functionality to copy all product and package list information in download tasks.
+5. Optimized display handling for the product Substance Alchemist.
 ```
 
 ### Language friendly
@@ -84,8 +84,6 @@ when prompted.
 
 ## ⚠️ Warning
 
-**For all the SwiftUI seniors, I am just a SwiftUI newbie, some of the code comes from Claude, OpenAI and Apple, etc.**
-\
 **If you have any optimization suggestions or questions about Adobe Downloader, please open an issue or
 contact [@X1a0He](https://t.me/X1a0He_bot)
 via Telegram.**
