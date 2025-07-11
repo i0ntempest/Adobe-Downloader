@@ -598,12 +598,14 @@ private struct EnhancedPackageRow: View {
                     .help("复制包信息")
                 }
                 
+                #if DEBUG
                 if !package.condition.isEmpty {
                     Text("条件: \(package.condition)")
                         .font(.system(size: 10))
                         .foregroundColor(.secondary.opacity(0.8))
                         .textSelection(.enabled)
                 }
+                #endif
             }
         }
         .padding(.horizontal)

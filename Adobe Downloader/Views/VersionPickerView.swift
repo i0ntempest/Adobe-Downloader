@@ -27,6 +27,10 @@ struct VersionPickerView: View {
     @State private var expandedVersions: Set<String> = []
     @State private var showingCustomDownload = false
     @State private var customDownloadVersion = ""
+    @State private var showExistingFileAlert = false
+    @State private var existingFilePath: URL?
+    @State private var pendingDependencies: [DependenciesToDownload] = []
+    @State private var productIcon: NSImage? = nil
     
     private let productId: String
     private let onSelect: (String) -> Void
@@ -51,6 +55,9 @@ struct VersionPickerView: View {
             )
         }
         .frame(width: VersionPickerConstants.viewWidth, height: VersionPickerConstants.viewHeight)
+        .onAppear {
+            loadProductIcon()
+        }
         .sheet(isPresented: $showingCustomDownload) {
             CustomDownloadView(
                 productId: productId,
@@ -59,6 +66,34 @@ struct VersionPickerView: View {
                     handleCustomDownload(dependencies: dependencies)
                 }
             )
+        }
+        .sheet(isPresented: $showExistingFileAlert) {
+            if let existingPath = existingFilePath {
+                ExistingFileAlertView(
+                    path: existingPath,
+                    onUseExisting: {
+                        showExistingFileAlert = false
+                        if let existingPath = existingFilePath {
+                            Task {
+                                await createCompletedCustomTask(
+                                    path: existingPath,
+                                    dependencies: pendingDependencies
+                                )
+                            }
+                        }
+                        pendingDependencies = []
+                    },
+                    onRedownload: {
+                        showExistingFileAlert = false
+                        startCustomDownloadProcess(dependencies: pendingDependencies)
+                    },
+                    onCancel: {
+                        showExistingFileAlert = false
+                        pendingDependencies = []
+                    },
+                    iconImage: productIcon
+                )
+            }
         }
     }
     
@@ -95,6 +130,30 @@ struct VersionPickerView: View {
         showingCustomDownload = false
         
         Task {
+            await checkAndStartCustomDownload(dependencies: dependencies)
+        }
+    }
+    
+    private func checkAndStartCustomDownload(dependencies: [DependenciesToDownload]) async {
+        if let existingPath = globalNetworkManager.isVersionDownloaded(
+            productId: productId, 
+            version: customDownloadVersion, 
+            language: StorageData.shared.defaultLanguage
+        ) {
+            await MainActor.run {
+                existingFilePath = existingPath
+                pendingDependencies = dependencies
+                showExistingFileAlert = true
+            }
+        } else {
+            await MainActor.run {
+                startCustomDownloadProcess(dependencies: dependencies)
+            }
+        }
+    }
+    
+    private func startCustomDownloadProcess(dependencies: [DependenciesToDownload]) {
+        Task {
             let destinationURL: URL
             do {
                 destinationURL = try await getDestinationURL(
@@ -121,6 +180,82 @@ struct VersionPickerView: View {
 
             await MainActor.run {
                 dismiss()
+            }
+        }
+    }
+    
+    private func createCompletedCustomTask(path: URL, dependencies: [DependenciesToDownload]) async {
+        let platform = globalProducts.first(where: { $0.id == productId && $0.version == customDownloadVersion })?.platforms.first?.id ?? "unknown"
+
+        let task = NewDownloadTask(
+            productId: productId,
+            productVersion: customDownloadVersion,
+            language: StorageData.shared.defaultLanguage,
+            displayName: findProduct(id: productId)?.displayName ?? productId,
+            directory: path.deletingLastPathComponent(),
+            dependenciesToDownload: dependencies,
+            retryCount: 0,
+            createAt: Date(),
+            totalProgress: 1.0,
+            platform: platform
+        )
+
+        task.dependenciesToDownload = dependencies
+
+        let totalSize = dependencies.reduce(0) { productSum, product in
+            productSum + product.packages.reduce(0) { packageSum, pkg in
+                packageSum + (pkg.downloadSize > 0 ? pkg.downloadSize : 0)
+            }
+        }
+        task.totalSize = totalSize
+        task.totalDownloadedSize = totalSize
+        task.totalProgress = 1.0
+
+        for dependency in dependencies {
+            for package in dependency.packages where package.isSelected {
+                package.downloaded = true
+                package.progress = 1.0
+                package.downloadedSize = package.downloadSize
+                package.status = .completed
+            }
+        }
+
+        task.setStatus(DownloadStatus.completed(DownloadStatus.CompletionInfo(
+            timestamp: Date(),
+            totalTime: 0,
+            totalSize: totalSize
+        )))
+
+        await MainActor.run {
+            globalNetworkManager.downloadTasks.append(task)
+            globalNetworkManager.updateDockBadge()
+            globalNetworkManager.objectWillChange.send()
+        }
+
+        await globalNetworkManager.saveTask(task)
+        
+        await MainActor.run {
+            dismiss()
+        }
+    }
+    
+    private func loadProductIcon() {
+        guard let product = findProduct(id: productId),
+              let icon = product.getBestIcon(),
+              let iconURL = URL(string: icon.value) else {
+            return
+        }
+        
+        Task {
+            do {
+                let (data, _) = try await URLSession.shared.data(from: iconURL)
+                if let image = NSImage(data: data) {
+                    await MainActor.run {
+                        productIcon = image
+                    }
+                }
+            } catch {
+                print("加载产品图标失败: \(error.localizedDescription)")
             }
         }
     }
