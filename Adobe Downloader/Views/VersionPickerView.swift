@@ -25,6 +25,8 @@ struct VersionPickerView: View {
     @StorageValue(\.defaultLanguage) private var defaultLanguage
     @StorageValue(\.downloadAppleSilicon) private var downloadAppleSilicon
     @State private var expandedVersions: Set<String> = []
+    @State private var showingCustomDownload = false
+    @State private var customDownloadVersion = ""
     
     private let productId: String
     private let onSelect: (String) -> Void
@@ -41,10 +43,86 @@ struct VersionPickerView: View {
                 productId: productId,
                 expandedVersions: $expandedVersions,
                 onSelect: onSelect,
-                dismiss: dismiss
+                dismiss: dismiss,
+                onCustomDownload: { version in
+                    customDownloadVersion = version
+                    showingCustomDownload = true
+                }
             )
         }
         .frame(width: VersionPickerConstants.viewWidth, height: VersionPickerConstants.viewHeight)
+        .sheet(isPresented: $showingCustomDownload) {
+            CustomDownloadView(
+                productId: productId,
+                version: customDownloadVersion,
+                onDownloadStart: { dependencies in
+                    handleCustomDownload(dependencies: dependencies)
+                }
+            )
+        }
+    }
+    
+    private func getDestinationURL(productId: String, version: String, language: String) async throws -> URL {
+        let platform = globalProducts.first(where: { $0.id == productId && $0.version == version })?.platforms.first?.id ?? "unknown"
+        let installerName = productId == "APRO"
+            ? "Adobe Downloader \(productId)_\(version)_\(platform).dmg"
+            : "Adobe Downloader \(productId)_\(version)-\(language)-\(platform)"
+
+        if StorageData.shared.useDefaultDirectory && !StorageData.shared.defaultDirectory.isEmpty {
+            return URL(fileURLWithPath: StorageData.shared.defaultDirectory)
+                .appendingPathComponent(installerName)
+        }
+        
+        return try await withCheckedThrowingContinuation { continuation in
+            DispatchQueue.main.async {
+                let panel = NSOpenPanel()
+                panel.title = "选择保存位置"
+                panel.canCreateDirectories = true
+                panel.canChooseDirectories = true
+                panel.canChooseFiles = false
+                panel.directoryURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
+                
+                if panel.runModal() == .OK, let selectedURL = panel.url {
+                    continuation.resume(returning: selectedURL.appendingPathComponent(installerName))
+                } else {
+                    continuation.resume(throwing: NetworkError.cancelled)
+                }
+            }
+        }
+    }
+
+    private func handleCustomDownload(dependencies: [DependenciesToDownload]) {
+        showingCustomDownload = false
+        
+        Task {
+            let destinationURL: URL
+            do {
+                destinationURL = try await getDestinationURL(
+                    productId: productId,
+                    version: customDownloadVersion,
+                    language: StorageData.shared.defaultLanguage
+                )
+            } catch {
+                await MainActor.run { dismiss() }
+                return
+            }
+            
+            do {
+                try await globalNetworkManager.startCustomDownload(
+                    productId: productId,
+                    selectedVersion: customDownloadVersion,
+                    language: StorageData.shared.defaultLanguage,
+                    destinationURL: destinationURL,
+                    customDependencies: dependencies
+                )
+            } catch {
+                print("自定义下载失败: \(error.localizedDescription)")
+            }
+
+            await MainActor.run {
+                dismiss()
+            }
+        }
     }
 }
 
@@ -115,6 +193,7 @@ private struct VersionListView: View {
     @Binding var expandedVersions: Set<String>
     let onSelect: (String) -> Void
     let dismiss: DismissAction
+    let onCustomDownload: (String) -> Void
     @State private var scrollPosition: String?
     @State private var cachedVersions: [(key: String, value: Product.Platform)] = []
     
@@ -130,7 +209,8 @@ private struct VersionListView: View {
                                 info: info,
                                 isExpanded: expandedVersions.contains(version),
                                 onSelect: handleVersionSelect,
-                                onToggle: handleVersionToggle
+                                onToggle: handleVersionToggle,
+                                onCustomDownload: handleCustomDownload
                             )
                             .id(version)
                             .transition(.opacity)
@@ -210,6 +290,10 @@ private struct VersionListView: View {
             }
         }
     }
+    
+    private func handleCustomDownload(_ version: String) {
+        onCustomDownload(version)
+    }
 }
 
 private struct VersionRow: View, Equatable {
@@ -221,6 +305,7 @@ private struct VersionRow: View, Equatable {
     let isExpanded: Bool
     let onSelect: (String) -> Void
     let onToggle: (String) -> Void
+    let onCustomDownload: (String) -> Void
     
     static func == (lhs: VersionRow, rhs: VersionRow) -> Bool {
         lhs.productId == rhs.productId &&
@@ -249,7 +334,8 @@ private struct VersionRow: View, Equatable {
                 VersionDetails(
                     info: info,
                     version: version,
-                    onSelect: onSelect
+                    onSelect: onSelect,
+                    onCustomDownload: onCustomDownload
                 )
             }
         }
@@ -393,6 +479,7 @@ private struct VersionDetails: View {
     let info: Product.Platform
     let version: String
     let onSelect: (String) -> Void
+    let onCustomDownload: (String) -> Void
     
     private var hasDependencies: Bool {
         !(info.languageSet.first?.dependencies.isEmpty ?? true)
@@ -462,7 +549,13 @@ private struct VersionDetails: View {
                 .cornerRadius(6)
             }
             
-            DownloadButton(version: version, onSelect: onSelect)
+            DownloadButton(
+                version: version, 
+                onSelect: onSelect,
+                onCustomDownload: { version in
+                    onCustomDownload(version)
+                }
+            )
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.bottom, 8)
@@ -628,10 +721,11 @@ private struct ModulesList: View {
 private struct DownloadButton: View {
     let version: String
     let onSelect: (String) -> Void
+    let onCustomDownload: (String) -> Void
     
     var body: some View {
         Button("下载") {
-            onSelect(version)
+            onCustomDownload(version)
         }
         .foregroundColor(.white)
         .buttonStyle(BeautifulButtonStyle(baseColor: Color.blue))

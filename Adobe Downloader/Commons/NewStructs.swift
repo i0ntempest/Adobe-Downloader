@@ -190,6 +190,10 @@ class Package: Identifiable, ObservableObject, Codable {
     @Published var status: PackageStatus = .waiting
     @Published var downloaded: Bool = false
 
+    @Published var isSelected: Bool = false
+    var isRequired: Bool = false
+    var condition: String = ""
+
     var lastUpdated: Date = Date()
     var lastRecordedSize: Int64 = 0
     var retryCount: Int = 0
@@ -221,12 +225,18 @@ class Package: Identifiable, ObservableObject, Codable {
         }
     }
 
-    init(type: String, fullPackageName: String, downloadSize: Int64, downloadURL: String, packageVersion: String) {
+    init(type: String, fullPackageName: String, downloadSize: Int64, downloadURL: String, packageVersion: String, condition: String = "", isRequired: Bool = false) {
         self.type = type
         self.fullPackageName = fullPackageName
         self.downloadSize = downloadSize
         self.downloadURL = downloadURL
         self.packageVersion = packageVersion
+        self.condition = condition
+        self.isRequired = isRequired
+        self.isSelected = isRequired
+        if !isRequired {
+            self.isSelected = shouldBeSelectedByDefault
+        }
     }
 
     func updateProgress(downloadedSize: Int64, speed: Double) {
@@ -264,6 +274,29 @@ class Package: Identifiable, ObservableObject, Codable {
     var hasValidSize: Bool {
         downloadSize > 0
     }
+    
+    var shouldBeSelectedByDefault: Bool {
+        let targetArchitecture = StorageData.shared.downloadAppleSilicon ? "arm64" : "x64"
+        let language = StorageData.shared.defaultLanguage
+        let isCore = type == "core"
+        
+        if isCore {
+            if condition.isEmpty {
+                return true
+            } else {
+                if condition.contains("[OSArchitecture]==\(targetArchitecture)") {
+                    return true
+                }
+                if condition.contains("[installLanguage]==\(language)") || language == "ALL" {
+                    return true
+                }
+            }
+        } else {
+            return condition.contains("[installLanguage]==\(language)") || language == "ALL"
+        }
+        
+        return false
+    }
 
     func updateStatus(_ status: PackageStatus) {
         Task { @MainActor in
@@ -273,7 +306,7 @@ class Package: Identifiable, ObservableObject, Codable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, type, fullPackageName, downloadSize, downloadURL, packageVersion
+        case id, type, fullPackageName, downloadSize, downloadURL, packageVersion, condition, isRequired
     }
 
     func encode(to encoder: Encoder) throws {
@@ -283,6 +316,9 @@ class Package: Identifiable, ObservableObject, Codable {
         try container.encode(fullPackageName, forKey: .fullPackageName)
         try container.encode(downloadSize, forKey: .downloadSize)
         try container.encode(downloadURL, forKey: .downloadURL)
+        try container.encode(packageVersion, forKey: .packageVersion)
+        try container.encode(condition, forKey: .condition)
+        try container.encode(isRequired, forKey: .isRequired)
     }
 
     required init(from decoder: Decoder) throws {
@@ -293,6 +329,12 @@ class Package: Identifiable, ObservableObject, Codable {
         downloadSize = try container.decode(Int64.self, forKey: .downloadSize)
         downloadURL = try container.decode(String.self, forKey: .downloadURL)
         packageVersion = try container.decode(String.self, forKey: .packageVersion)
+        condition = try container.decodeIfPresent(String.self, forKey: .condition) ?? ""
+        isRequired = try container.decodeIfPresent(Bool.self, forKey: .isRequired) ?? false
+        isSelected = isRequired
+        if !isRequired {
+            isSelected = shouldBeSelectedByDefault
+        }
     }
 }
 

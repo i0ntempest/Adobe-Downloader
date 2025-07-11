@@ -287,7 +287,9 @@ class NewDownloadUtils {
                         fullPackageName: fullPackageName,
                         downloadSize: downloadSize,
                         downloadURL: downloadURL,
-                        packageVersion: packageVersion
+                        packageVersion: packageVersion,
+                        condition: condition,
+                        isRequired: dependencyToDownload.sapCode == productInfo.id
                     ))
                 }
             }
@@ -330,6 +332,89 @@ class NewDownloadUtils {
             task.totalSize = totalSize
         }
 
+        await startDownloadProcess(task: task)
+    }
+
+    func handleCustomDownload(task: NewDownloadTask, customDependencies: [DependenciesToDownload]) async throws {
+        await MainActor.run {
+            task.setStatus(.preparing(DownloadStatus.PrepareInfo(
+                message: String(localized: "正在准备自定义下载..."),
+                timestamp: Date(),
+                stage: .fetchingInfo
+            )))
+        }
+
+        for dependencyToDownload in customDependencies {
+            let productDir = task.directory.appendingPathComponent("\(dependencyToDownload.sapCode)")
+            if !FileManager.default.fileExists(atPath: productDir.path) {
+                try FileManager.default.createDirectory(at: productDir, withIntermediateDirectories: true)
+            }
+
+            if let applicationJson = dependencyToDownload.applicationJson {
+                var processedJsonString = applicationJson
+                
+                if let jsonData = applicationJson.data(using: .utf8),
+                   var appInfo = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any] {
+
+                    let selectedPackageNames = Set(dependencyToDownload.packages.filter { $0.isSelected }.map { $0.fullPackageName })
+                    
+                    if var packages = appInfo["Packages"] as? [String: Any],
+                       let packageArray = packages["Package"] as? [[String: Any]] {
+
+                        let filteredPackages = packageArray.filter { package in
+                            if let packageName = package["PackageName"] as? String {
+                                let fullPackageName = packageName.hasSuffix(".zip") ? packageName : "\(packageName).zip"
+                                return selectedPackageNames.contains(fullPackageName)
+                            }
+                            if let fullPackageName = package["fullPackageName"] as? String {
+                                return selectedPackageNames.contains(fullPackageName)
+                            }
+                            return false
+                        }
+                        
+                        packages["Package"] = filteredPackages
+                        appInfo["Packages"] = packages
+                    }
+
+                    if var modules = appInfo["Modules"] as? [String: Any] {
+                        modules["Module"] = [] as [[String: Any]]
+                        appInfo["Modules"] = modules
+                    }
+                    
+                    if let processedData = try? JSONSerialization.data(withJSONObject: appInfo, options: .prettyPrinted),
+                       let processedString = String(data: processedData, encoding: .utf8) {
+                        processedJsonString = processedString
+                    }
+                }
+                
+                let jsonURL = productDir.appendingPathComponent("application.json")
+                try processedJsonString.write(to: jsonURL, atomically: true, encoding: String.Encoding.utf8)
+            }
+        }
+
+        let filteredDependencies = customDependencies.map { dependency in
+            let selectedPackages = dependency.packages.filter { $0.isSelected }
+            let filteredDependency = DependenciesToDownload(
+                sapCode: dependency.sapCode,
+                version: dependency.version,
+                buildGuid: dependency.buildGuid,
+                applicationJson: dependency.applicationJson ?? ""
+            )
+            filteredDependency.packages = selectedPackages
+            return filteredDependency
+        }.filter { !$0.packages.isEmpty }
+        
+        let totalSize = filteredDependencies.reduce(0) { productSum, product in
+            productSum + product.packages.reduce(0) { packageSum, pkg in
+                packageSum + (pkg.downloadSize > 0 ? pkg.downloadSize : 0)
+            }
+        }
+        
+        await MainActor.run {
+            task.dependenciesToDownload = filteredDependencies
+            task.totalSize = totalSize
+        }
+        
         await startDownloadProcess(task: task)
     }
 

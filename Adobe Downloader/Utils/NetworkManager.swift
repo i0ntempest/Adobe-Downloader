@@ -105,6 +105,50 @@ class NetworkManager: ObservableObject {
             }
         }
     }
+    
+    func startCustomDownload(productId: String, selectedVersion: String, language: String, destinationURL: URL, customDependencies: [DependenciesToDownload]) async throws {
+        guard let productInfo = globalCcmResult.products.first(where: { $0.id == productId && $0.version == selectedVersion }) else {
+            throw NetworkError.productNotFound
+        }
+
+        let task = NewDownloadTask(
+            productId: productInfo.id,
+            productVersion: selectedVersion,
+            language: language,
+            displayName: productInfo.displayName,
+            directory: destinationURL,
+            dependenciesToDownload: [],
+            createAt: Date(),
+            totalStatus: .preparing(DownloadStatus.PrepareInfo(
+                message: "正在准备自定义下载...",
+                timestamp: Date(),
+                stage: .initializing
+            )),
+            totalProgress: 0,
+            totalDownloadedSize: 0,
+            totalSize: 0,
+            totalSpeed: 0,
+            platform: globalProducts.first(where: { $0.id == productId })?.platforms.first?.id ?? "unknown")
+
+        downloadTasks.append(task)
+        updateDockBadge()
+        await saveTask(task)
+        
+        do {
+            try await globalNewDownloadUtils.handleCustomDownload(task: task, customDependencies: customDependencies)
+        } catch {
+            task.setStatus(.failed(DownloadStatus.FailureInfo(
+                message: error.localizedDescription,
+                error: error,
+                timestamp: Date(),
+                recoverable: true
+            )))
+            await saveTask(task)
+            await MainActor.run {
+                objectWillChange.send()
+            }
+        }
+    }
 
    func removeTask(taskId: UUID, removeFiles: Bool = true) {
        Task {
