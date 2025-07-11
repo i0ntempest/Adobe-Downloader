@@ -35,6 +35,16 @@ actor InstallManager {
     private var progressHandler: ((Double, String) -> Void)?
     private let setupPath = "/Library/Application Support/Adobe/Adobe Desktop Common/HDBox/Setup"
     
+    private func terminateSetupProcesses() async {
+        let _ = await withCheckedContinuation { continuation in
+            PrivilegedHelperManager.shared.executeCommand("pkill -f Setup") { result in
+                continuation.resume(returning: result)
+            }
+        }
+        
+        try? await Task.sleep(nanoseconds: 500_000_000)
+    }
+    
     actor InstallationState {
         var isCompleted = false
         var error: Error?
@@ -135,6 +145,8 @@ actor InstallManager {
         await MainActor.run {
             progressHandler(0.0, String(localized: "正在清理安装环境..."))
         }
+        
+        await terminateSetupProcesses()
 
         let logFiles = [
             "/Library/Logs/Adobe/Installers/Install.log",
