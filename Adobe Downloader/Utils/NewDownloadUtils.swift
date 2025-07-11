@@ -206,9 +206,7 @@ class NewDownloadUtils {
                   let packageArray = packages["Package"] as? [[String: Any]] else {
                 throw NetworkError.invalidData("无法解析产品信息")
             }
-            // TODO: 暂时没想好module怎么处理
-//            let modules = appInfo["Modules"] as? [String: Any]
-//            let moduleArray = modules?["Module"] as? [[String: Any]] ?? []
+            // Module已在2.1.0版本中由自定义下载处理，只测试了PS的Remove Tool components
 
             var corePackageCount = 0
             var nonCorePackageCount = 0
@@ -376,8 +374,25 @@ class NewDownloadUtils {
                         appInfo["Packages"] = packages
                     }
 
-                    if var modules = appInfo["Modules"] as? [String: Any] {
-                        modules["Module"] = [] as [[String: Any]]
+                    if var modules = appInfo["Modules"] as? [String: Any],
+                       let moduleArray = modules["Module"] as? [[String: Any]] {
+
+                        let selectedPackageNamesWithoutZip = Set(dependencyToDownload.packages.filter { $0.isSelected }.compactMap { package in
+                            let name = package.fullPackageName
+                            return name.hasSuffix(".zip") ? String(name.dropLast(4)) : name
+                        })
+
+                        let filteredModules = moduleArray.filter { module in
+                            if let referencePackages = module["ReferencePackages"] as? [String: Any],
+                               let referencePackageArray = referencePackages["ReferencePackage"] as? [String] {
+                                return referencePackageArray.contains { packageName in
+                                    selectedPackageNamesWithoutZip.contains(packageName)
+                                }
+                            }
+                            return false
+                        }
+                        
+                        modules["Module"] = filteredModules
                         appInfo["Modules"] = modules
                     }
                     
@@ -442,11 +457,27 @@ class NewDownloadUtils {
         let driverPath = task.directory.appendingPathComponent("driver.xml")
         if !FileManager.default.fileExists(atPath: driverPath.path) {
             if let productInfo = globalCcmResult.products.first(where: { $0.id == task.productId && $0.version == task.productVersion }) {
+
+                var selectedModules: [[String: Any]] = []
+                if let mainDependency = task.dependenciesToDownload.first(where: { $0.sapCode == task.productId }) {
+                    let productDir = task.directory.appendingPathComponent(mainDependency.sapCode)
+                    let jsonURL = productDir.appendingPathComponent("application.json")
+                    
+                    if let jsonString = try? String(contentsOf: jsonURL, encoding: .utf8),
+                       let jsonData = jsonString.data(using: .utf8),
+                       let appInfo = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any],
+                       let modules = appInfo["Modules"] as? [String: Any],
+                       let moduleArray = modules["Module"] as? [[String: Any]] {
+                        selectedModules = moduleArray
+                    }
+                }
+                
                 let driverXml = generateDriverXML(
                     version: task.productVersion,
                     language: task.language,
                     productInfo: productInfo,
-                    displayName: task.displayName
+                    displayName: task.displayName,
+                    modules: selectedModules
                 )
                 do {
                     try driverXml.write(to: driverPath, atomically: true, encoding: String.Encoding.utf8)
@@ -799,7 +830,7 @@ class NewDownloadUtils {
         }
     }
 
-    func generateDriverXML(version: String, language: String, productInfo: Product, displayName: String) -> String {
+    func generateDriverXML(version: String, language: String, productInfo: Product, displayName: String, modules: [[String: Any]] = []) -> String {
         // 获取匹配的 platform 和 languageSet
         guard let platform = globalProducts.first(where: { $0.id == productInfo.id && $0.version == version })?.platforms.first?.id,
               let languageSet = globalProducts.first(where: { $0.id == productInfo.id && $0.version == version })?.platforms.first?.languageSet else {
@@ -820,6 +851,19 @@ class NewDownloadUtils {
             """
         }.joined(separator: "\n")) ?? ""
 
+        // 构建模块列表，官方好像就是这个逻辑，只测试了PS，不知道PR是怎样的，估计也是这样吧
+        let moduleXml = modules.compactMap { module in
+            if let moduleId = module["Id"] as? String {
+                return """
+                <Module>
+                    <Id>\(moduleId)</Id>
+                    <Baseline>false</Baseline>
+                </Module>
+                """
+            }
+            return nil
+        }.joined(separator: "\n            ")
+
         let buildGuid = productInfo.platforms.first?.languageSet.first?.buildGuid ?? ""
         let buildVersion = languageSet.first?.productVersion ?? ""
         
@@ -829,7 +873,9 @@ class NewDownloadUtils {
                 <Dependencies>
                     \(dependencies)
                 </Dependencies>
-                <Modules></Modules>
+                <Modules>
+                    \(moduleXml.isEmpty ? "" : moduleXml)
+                </Modules>
                 <BuildGuid>\(buildGuid)</BuildGuid>
                 <BuildVersion>\(buildVersion)</BuildVersion>
                 <CodexVersion>\(productInfo.version)</CodexVersion>
