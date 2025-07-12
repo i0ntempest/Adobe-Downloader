@@ -65,6 +65,22 @@ final class StorageData: ObservableObject {
             NotificationCenter.default.post(name: .storageDidChange, object: nil)
         }
     }
+    
+    @Published var maxConcurrentDownloads: Int {
+        didSet {
+            UserDefaults.standard.set(maxConcurrentDownloads, forKey: "maxConcurrentDownloads")
+            objectWillChange.send()
+            NotificationCenter.default.post(name: .storageDidChange, object: nil)
+        }
+    }
+
+    @Published var chunkSizeMB: Int {
+        didSet {
+            UserDefaults.standard.set(chunkSizeMB, forKey: "chunkSizeMB")
+            objectWillChange.send()
+            NotificationCenter.default.post(name: .storageDidChange, object: nil)
+        }
+    }
 
     @Published var apiVersion: String {
         didSet {
@@ -106,6 +122,8 @@ final class StorageData: ObservableObject {
         self.useDefaultDirectory = UserDefaults.standard.bool(forKey: "useDefaultDirectory")
         self.defaultDirectory = UserDefaults.standard.string(forKey: "defaultDirectory") ?? ""
         self.confirmRedownload = UserDefaults.standard.bool(forKey: "confirmRedownload")
+        self.maxConcurrentDownloads = UserDefaults.standard.integer(forKey: "maxConcurrentDownloads") == 0 ? 3 : UserDefaults.standard.integer(forKey: "maxConcurrentDownloads")
+        self.chunkSizeMB = UserDefaults.standard.integer(forKey: "chunkSizeMB") == 0 ? 2 : UserDefaults.standard.integer(forKey: "chunkSizeMB")
         self.apiVersion = UserDefaults.standard.string(forKey: "apiVersion") ?? "6"
     }
 }

@@ -207,6 +207,22 @@ final class GeneralSettingsViewModel: ObservableObject {
             objectWillChange.send()
         }
     }
+    
+    var maxConcurrentDownloads: Int {
+        get { StorageData.shared.maxConcurrentDownloads }
+        set {
+            StorageData.shared.maxConcurrentDownloads = newValue
+            objectWillChange.send()
+        }
+    }
+    
+    var chunkSizeMB: Int {
+        get { StorageData.shared.chunkSizeMB }
+        set {
+            StorageData.shared.chunkSizeMB = newValue
+            objectWillChange.send()
+        }
+    }
 
     @Published var automaticallyChecksForUpdates: Bool
     @Published var automaticallyDownloadsUpdates: Bool
@@ -466,6 +482,16 @@ struct DownloadSettingsView: View {
                 }
                 
                 ArchitectureSettingRow(viewModel: viewModel)
+
+                Divider()
+
+                ConcurrentDownloadsSettingRow(viewModel: viewModel)
+                    .fixedSize(horizontal: false, vertical: true)
+                
+                Divider()
+                
+                ChunkSizeSettingRow(viewModel: viewModel)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
     }
@@ -1262,6 +1288,130 @@ struct AutoDownloadRow: View {
                 .background(Color.gray.opacity(0.1))
                 .cornerRadius(5)
             }
+        }
+    }
+}
+
+struct ConcurrentDownloadsSettingRow: View {
+    @ObservedObject var viewModel: GeneralSettingsViewModel
+    
+    var body: some View {
+        HStack(spacing: 10) {
+            Text("并发下载数")
+                .font(.system(size: 14))
+                .padding(.leading, 5)
+            
+            Spacer()
+            
+            HStack(spacing: 8) {
+                Button(action: {
+                    if viewModel.maxConcurrentDownloads > 1 {
+                        viewModel.maxConcurrentDownloads -= 1
+                    }
+                }) {
+                    Image(systemName: "minus.circle.fill")
+                        .foregroundColor(viewModel.maxConcurrentDownloads > 1 ? .blue : .gray)
+                        .font(.system(size: 16))
+                }
+                .buttonStyle(PlainButtonStyle())
+                .disabled(viewModel.maxConcurrentDownloads <= 1)
+                
+                Text("\(viewModel.maxConcurrentDownloads)")
+                    .font(.system(size: 14, weight: .medium))
+                    .frame(minWidth: 30)
+                
+                Button(action: {
+                    if viewModel.maxConcurrentDownloads < 10 {
+                        viewModel.maxConcurrentDownloads += 1
+                    }
+                }) {
+                    Image(systemName: "plus.circle.fill")
+                        .foregroundColor(viewModel.maxConcurrentDownloads < 10 ? .blue : .gray)
+                        .font(.system(size: 16))
+                }
+                .buttonStyle(PlainButtonStyle())
+                .disabled(viewModel.maxConcurrentDownloads >= 10)
+            }
+            .padding(.vertical, 3)
+            .padding(.horizontal, 8)
+            .background(Color.secondary.opacity(0.1))
+            .cornerRadius(5)
+            .padding(.trailing, 5)
+            
+            HStack(spacing: 5) {
+                Image(systemName: "arrow.down.circle")
+                    .foregroundColor(.secondary)
+                    .font(.system(size: 12))
+                Text("1-10")
+                    .foregroundColor(.secondary)
+                    .font(.system(size: 12))
+            }
+            .padding(.vertical, 3)
+            .padding(.horizontal, 6)
+            .background(Color.secondary.opacity(0.05))
+            .cornerRadius(4)
+        }
+    }
+}
+
+struct ChunkSizeSettingRow: View {
+    @ObservedObject var viewModel: GeneralSettingsViewModel
+    
+    var body: some View {
+        HStack(spacing: 10) {
+            Text("分片大小")
+                .font(.system(size: 14))
+                .padding(.leading, 5)
+            
+            Spacer()
+            
+            HStack(spacing: 8) {
+                Button(action: {
+                    if viewModel.chunkSizeMB > 2 {
+                        viewModel.chunkSizeMB -= 2
+                    }
+                }) {
+                    Image(systemName: "minus.circle.fill")
+                        .foregroundColor(viewModel.chunkSizeMB > 2 ? .blue : .gray)
+                        .font(.system(size: 16))
+                }
+                .buttonStyle(PlainButtonStyle())
+                .disabled(viewModel.chunkSizeMB <= 2)
+                
+                Text("\(viewModel.chunkSizeMB) MB")
+                    .font(.system(size: 14, weight: .medium))
+                    .frame(minWidth: 50)
+                
+                Button(action: {
+                    if viewModel.chunkSizeMB < 20 {
+                        viewModel.chunkSizeMB += 2
+                    }
+                }) {
+                    Image(systemName: "plus.circle.fill")
+                        .foregroundColor(viewModel.chunkSizeMB < 20 ? .blue : .gray)
+                        .font(.system(size: 16))
+                }
+                .buttonStyle(PlainButtonStyle())
+                .disabled(viewModel.chunkSizeMB >= 20)
+            }
+            .padding(.vertical, 3)
+            .padding(.horizontal, 8)
+            .background(Color.secondary.opacity(0.1))
+            .cornerRadius(5)
+            .padding(.trailing, 5)
+            
+            HStack(spacing: 5) {
+                Image(systemName: "square.and.arrow.down")
+                    .foregroundColor(.secondary)
+                    .font(.system(size: 12))
+                Text("2-20 MB")
+                    .foregroundColor(.secondary)
+                    .font(.system(size: 12))
+            }
+            .padding(.vertical, 3)
+            .padding(.horizontal, 6)
+            .background(Color.secondary.opacity(0.05))
+            .cornerRadius(4)
         }
     }
 }

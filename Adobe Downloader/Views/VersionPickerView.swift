@@ -115,9 +115,13 @@ struct VersionPickerView: View {
                 panel.canCreateDirectories = true
                 panel.canChooseDirectories = true
                 panel.canChooseFiles = false
-                panel.directoryURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
                 
-                if panel.runModal() == .OK, let selectedURL = panel.url {
+                if let downloadsDir = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first {
+                    panel.directoryURL = downloadsDir
+                }
+                
+                let result = panel.runModal()
+                if result == .OK, let selectedURL = panel.url {
                     continuation.resume(returning: selectedURL.appendingPathComponent(installerName))
                 } else {
                     continuation.resume(throwing: NetworkError.cancelled)
