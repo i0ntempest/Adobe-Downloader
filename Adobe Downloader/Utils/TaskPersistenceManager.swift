@@ -5,7 +5,6 @@ class TaskPersistenceManager {
     
     private let fileManager = FileManager.default
     private var tasksDirectory: URL
-    private var resumeDataDirectory: URL
     private weak var cancelTracker: CancelTracker?
     private var taskCache: [String: NewDownloadTask] = [:]
     private let taskCacheQueue = DispatchQueue(label: "com.x1a0he.macOS.Adobe-Downloader.taskCache", attributes: .concurrent)
@@ -13,9 +12,7 @@ class TaskPersistenceManager {
     private init() {
         let containerURL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         tasksDirectory = containerURL.appendingPathComponent("Adobe Downloader/tasks", isDirectory: true)
-        resumeDataDirectory = containerURL.appendingPathComponent("Adobe Downloader/resumeData", isDirectory: true)
         try? fileManager.createDirectory(at: tasksDirectory, withIntermediateDirectories: true)
-        try? fileManager.createDirectory(at: resumeDataDirectory, withIntermediateDirectories: true)
     }
     
     func setCancelTracker(_ tracker: CancelTracker) {
@@ -44,15 +41,6 @@ class TaskPersistenceManager {
         }
         
         let fileURL = tasksDirectory.appendingPathComponent(fileName)
-        
-        var resumeDataDict: [String: Data]? = nil
-
-        if let currentPackage = task.currentPackage,
-           let cancelTracker = self.cancelTracker {
-            if let resumeData = await cancelTracker.getResumeData(task.id) {
-                resumeDataDict = [currentPackage.id.uuidString: resumeData]
-            }
-        }
         
         let taskData = TaskData(
             sapCode: task.productId,
@@ -90,8 +78,7 @@ class TaskPersistenceManager {
             totalSize: task.totalSize,
             totalSpeed: task.totalSpeed,
             displayInstallButton: task.displayInstallButton,
-            platform: task.platform,
-            resumeData: resumeDataDict
+            platform: task.platform
         )
         
         do {
@@ -216,14 +203,6 @@ class TaskPersistenceManager {
             )
             task.displayInstallButton = taskData.displayInstallButton
             
-            if let resumeData = taskData.resumeData?.values.first {
-                Task {
-                    if let cancelTracker = self.cancelTracker {
-                        await cancelTracker.storeResumeData(task.id, data: resumeData)
-                    }
-                }
-            }
-            
             return task
         } catch {
             print("Error loading task from \(url): \(error)")
@@ -308,71 +287,6 @@ class TaskPersistenceManager {
         await saveTask(task)
     }
 
-    func saveResumeData(_ data: Data, for packageIdentifier: String) {
-        let fileName = "\(packageIdentifier.replacingOccurrences(of: "/", with: "_")).resumedata"
-        let fileURL = resumeDataDirectory.appendingPathComponent(fileName)
-        
-        do {
-            if let resumeDict = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any] {
-                let currentBytes = resumeDict["NSURLSessionResumeBytesReceived"] as? Int64 ?? 0
-                let hasETag = resumeDict["NSURLSessionResumeEntityTag"] != nil
-                let hasServerDownloadDate = resumeDict["NSURLSessionResumeServerDownloadDate"] != nil
-                let hasResumeCurrentRequest = resumeDict["NSURLSessionResumeCurrentRequest"] != nil
-                let hasOriginalRequest = resumeDict["NSURLSessionResumeOriginalRequest"] != nil
-            }
-            
-            try data.write(to: fileURL)
-        } catch { }
-    }
-    
-    func loadResumeData(for packageIdentifier: String) -> Data? {
-        let fileName = "\(packageIdentifier.replacingOccurrences(of: "/", with: "_")).resumedata"
-        let fileURL = resumeDataDirectory.appendingPathComponent(fileName)
-        
-        do {
-            let data = try Data(contentsOf: fileURL)
-
-            if let resumeDict = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil) as? [String: Any] {
-                let currentBytes = resumeDict["NSURLSessionResumeBytesReceived"] as? Int64 ?? 0
-                let hasETag = resumeDict["NSURLSessionResumeEntityTag"] != nil
-                let hasServerDownloadDate = resumeDict["NSURLSessionResumeServerDownloadDate"] != nil
-                let hasResumeCurrentRequest = resumeDict["NSURLSessionResumeCurrentRequest"] != nil
-                let hasOriginalRequest = resumeDict["NSURLSessionResumeOriginalRequest"] != nil
-
-                if hasResumeCurrentRequest || hasOriginalRequest || currentBytes > 0 {
-                    return data
-                } else {
-                    try? fileManager.removeItem(at: fileURL)
-                    return nil
-                }
-            } else {
-                try? fileManager.removeItem(at: fileURL)
-                return nil
-            }
-        } catch {
-            return nil
-        }
-    }
-    
-    func clearResumeData(for packageIdentifier: String) {
-        let fileName = "\(packageIdentifier.replacingOccurrences(of: "/", with: "_")).resumedata"
-        let fileURL = resumeDataDirectory.appendingPathComponent(fileName)
-        
-        try? fileManager.removeItem(at: fileURL)
-    }
-    
-    func clearAllResumeDataForTask(_ taskId: UUID) {
-        let taskPrefix = taskId.uuidString
-        
-        do {
-            let files = try fileManager.contentsOfDirectory(at: resumeDataDirectory, includingPropertiesForKeys: nil)
-            for file in files {
-                if file.lastPathComponent.hasPrefix(taskPrefix) {
-                    try fileManager.removeItem(at: file)
-                }
-            }
-        } catch { }
-    }
 }
 
 private struct TaskData: Codable {
@@ -391,7 +305,6 @@ private struct TaskData: Codable {
     let totalSpeed: Double
     let displayInstallButton: Bool
     let platform: String
-    let resumeData: [String: Data]?
 }
 
 private struct ProductData: Codable {

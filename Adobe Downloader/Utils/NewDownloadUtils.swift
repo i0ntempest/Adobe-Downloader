@@ -1001,11 +1001,7 @@ class NewDownloadUtils {
                 guard let url = URL(string: downloadURL) else { continue }
 
                 do {
-                    if let resumeData = await globalCancelTracker.getResumeData(task.id) {
-                        try await downloadPackage(package: package, task: task, product: dependencyToDownload, resumeData: resumeData)
-                    } else {
-                        try await downloadPackage(package: package, task: task, product: dependencyToDownload, url: url)
-                    }
+                    try await downloadPackage(package: package, task: task, product: dependencyToDownload, url: url)
                 } catch {
                     print("Error downloading package \(package.fullPackageName): \(error.localizedDescription)")
                     await handleError(task.id, error)
@@ -1035,18 +1031,6 @@ class NewDownloadUtils {
         guard let task = task else { return }
 
         let (errorMessage, isRecoverable) = classifyError(error)
-
-        if isRecoverable,
-           let downloadTask = await globalCancelTracker.downloadTasks[taskId] {
-            let resumeData = await withCheckedContinuation { continuation in
-                downloadTask.cancel(byProducingResumeData: { data in
-                    continuation.resume(returning: data)
-                })
-            }
-            if let resumeData = resumeData {
-                await globalCancelTracker.storeResumeData(taskId, data: resumeData)
-            }
-        }
 
         if isRecoverable && task.retryCount < NetworkConstants.maxRetryAttempts {
             task.retryCount += 1
@@ -1117,14 +1101,13 @@ class NewDownloadUtils {
         }
 
         if task.productId == "APRO" {
-            if let resumeData = await globalCancelTracker.getResumeData(taskId),
-               let currentPackage = task.currentPackage,
+            if let currentPackage = task.currentPackage,
                let product = task.dependenciesToDownload.first {
                 try? await downloadPackage(
                     package: currentPackage,
                     task: task,
                     product: product,
-                    resumeData: resumeData
+                    url: URL(string: currentPackage.downloadURL)
                 )
             }
         } else {
@@ -1168,7 +1151,7 @@ class NewDownloadUtils {
     }
 
 
-    private func downloadPackage(package: Package, task: NewDownloadTask, product: DependenciesToDownload, url: URL? = nil, resumeData: Data? = nil) async throws {
+    private func downloadPackage(package: Package, task: NewDownloadTask, product: DependenciesToDownload, url: URL? = nil) async throws {
         var lastUpdateTime = Date()
         var lastBytes: Int64 = 0
 
@@ -1275,19 +1258,16 @@ class NewDownloadUtils {
 
             Task {
                 let downloadTask: URLSessionDownloadTask
-                if let resumeData = resumeData {
-                    downloadTask = session.downloadTask(withResumeData: resumeData)
-                } else if let url = url {
+                if let url = url {
                     var request = URLRequest(url: url)
                     NetworkConstants.downloadHeaders.forEach { request.setValue($0.value, forHTTPHeaderField: $0.key) }
                     downloadTask = session.downloadTask(with: request)
                 } else {
-                    continuation.resume(throwing: NetworkError.invalidData("Neither URL nor resume data provided"))
+                    continuation.resume(throwing: NetworkError.invalidData("No URL provided"))
                     return
                 }
 
                 await globalCancelTracker.registerTask(task.id, task: downloadTask, session: session)
-                await globalCancelTracker.clearResumeData(task.id)
                 downloadTask.resume()
             }
         }
@@ -1815,8 +1795,6 @@ class NewDownloadUtils {
                 }
             }
         }
-        
-        TaskPersistenceManager.shared.clearAllResumeDataForTask(taskId)
 
         if let task = await globalNetworkManager.downloadTasks.first(where: { $0.id == taskId }) {
             if removeFiles {

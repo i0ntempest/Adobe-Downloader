@@ -10,7 +10,6 @@ actor CancelTracker {
     private var pausedIds: Set<UUID> = []
     var downloadTasks: [UUID: URLSessionDownloadTask] = [:]
     private var sessions: [UUID: URLSession] = [:]
-    private var resumeData: [UUID: Data] = [:]
     private var taskPackageIdentifiers: [UUID: String] = [:]
     private var taskFirstDataFlags: [UUID: AsyncFlag] = [:]
 
@@ -28,7 +27,6 @@ actor CancelTracker {
     func cancel(_ id: UUID) {
         cancelledIds.insert(id)
         pausedIds.remove(id)
-        resumeData.removeValue(forKey: id)
         taskPackageIdentifiers.removeValue(forKey: id)
         taskFirstDataFlags.removeValue(forKey: id)
         
@@ -47,14 +45,7 @@ actor CancelTracker {
         if !cancelledIds.contains(id) {
             pausedIds.insert(id)
             if let task = downloadTasks[id] {
-                let data = await withCheckedContinuation { continuation in
-                    task.cancel(byProducingResumeData: { data in
-                        continuation.resume(returning: data)
-                    })
-                }
-                if let data = data {
-                    resumeData[id] = data
-                }
+                task.cancel()
             }
         }
     }
@@ -65,24 +56,12 @@ actor CancelTracker {
         }
     }
     
-    func getResumeData(_ id: UUID) -> Data? {
-        return resumeData[id]
-    }
-    
-    func clearResumeData(_ id: UUID) {
-        resumeData.removeValue(forKey: id)
-    }
-    
     func isCancelled(_ id: UUID) -> Bool {
         return cancelledIds.contains(id)
     }
     
     func isPaused(_ id: UUID) -> Bool {
         return pausedIds.contains(id)
-    }
-    
-    func storeResumeData(_ id: UUID, data: Data) {
-        resumeData[id] = data
     }
     
     func cleanupCompletedTasks() {
