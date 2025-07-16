@@ -5,6 +5,7 @@
 //
 
 import Foundation
+import CryptoKit
 
 struct DownloadChunk {
     let index: Int
@@ -14,9 +15,18 @@ struct DownloadChunk {
     var downloadedSize: Int64 = 0
     var isCompleted: Bool = false
     var isPaused: Bool = false
+    let expectedHash: String?
     
     var progress: Double {
         return size > 0 ? Double(downloadedSize) / Double(size) : 0.0
+    }
+    
+    init(index: Int, startOffset: Int64, endOffset: Int64, size: Int64, expectedHash: String? = nil) {
+        self.index = index
+        self.startOffset = startOffset
+        self.endOffset = endOffset
+        self.size = size
+        self.expectedHash = expectedHash
     }
 }
 
@@ -28,6 +38,7 @@ struct ChunkedDownloadState: Codable {
     let totalDownloadedSize: Int64
     let isCompleted: Bool
     let destinationURL: String
+    let validationInfo: ValidationInfo?
     
     struct ChunkInfo: Codable {
         let index: Int
@@ -37,6 +48,53 @@ struct ChunkedDownloadState: Codable {
         let downloadedSize: Int64
         let isCompleted: Bool
         let isPaused: Bool
+        let expectedHash: String?
+    }
+}
+
+extension ValidationInfo: Codable {
+    enum CodingKeys: String, CodingKey {
+        case segmentSize, version, algorithm, segmentCount, lastSegmentSize, packageHashKey, segments
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(segmentSize, forKey: .segmentSize)
+        try container.encode(version, forKey: .version)
+        try container.encode(algorithm, forKey: .algorithm)
+        try container.encode(segmentCount, forKey: .segmentCount)
+        try container.encode(lastSegmentSize, forKey: .lastSegmentSize)
+        try container.encode(packageHashKey, forKey: .packageHashKey)
+        try container.encode(segments, forKey: .segments)
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        segmentSize = try container.decode(Int64.self, forKey: .segmentSize)
+        version = try container.decode(String.self, forKey: .version)
+        algorithm = try container.decode(String.self, forKey: .algorithm)
+        segmentCount = try container.decode(Int.self, forKey: .segmentCount)
+        lastSegmentSize = try container.decode(Int64.self, forKey: .lastSegmentSize)
+        packageHashKey = try container.decode(String.self, forKey: .packageHashKey)
+        segments = try container.decode([SegmentInfo].self, forKey: .segments)
+    }
+}
+
+extension ValidationInfo.SegmentInfo: Codable {
+    enum CodingKeys: String, CodingKey {
+        case segmentNumber, hash
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(segmentNumber, forKey: .segmentNumber)
+        try container.encode(hash, forKey: .hash)
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        segmentNumber = try container.decode(Int.self, forKey: .segmentNumber)
+        hash = try container.decode(String.self, forKey: .hash)
     }
 }
 
@@ -85,27 +143,75 @@ class ChunkedDownloadManager {
         return (acceptsRanges, contentLength, etag)
     }
 
-    func createChunkedDownload(packageIdentifier: String, totalSize: Int64, destinationURL: URL) -> [DownloadChunk] {
-        let numChunks = Int(ceil(Double(totalSize) / Double(chunkSize)))
-        var chunks: [DownloadChunk] = []
-        
-        for i in 0..<numChunks {
-            let startOffset = Int64(i) * chunkSize
-            let endOffset = min(startOffset + chunkSize - 1, totalSize - 1)
-            let size = endOffset - startOffset + 1
+    func createChunkedDownload(packageIdentifier: String, totalSize: Int64, destinationURL: URL, validationInfo: ValidationInfo? = nil) -> [DownloadChunk] {
+        if let validationInfo = validationInfo {
+            var chunks: [DownloadChunk] = []
             
-            chunks.append(DownloadChunk(
-                index: i,
-                startOffset: startOffset,
-                endOffset: endOffset,
-                size: size
-            ))
-        }
+            for segment in validationInfo.segments {
+                let segmentIndex = segment.segmentNumber - 1
+                let startOffset = Int64(segmentIndex) * validationInfo.segmentSize
+                let isLastSegment = segment.segmentNumber == validationInfo.segmentCount
+                let segmentSize = isLastSegment ? validationInfo.lastSegmentSize : validationInfo.segmentSize
+                let endOffset = startOffset + segmentSize - 1
+                
+                chunks.append(DownloadChunk(
+                    index: segmentIndex,
+                    startOffset: startOffset,
+                    endOffset: endOffset,
+                    size: segmentSize,
+                    expectedHash: segment.hash
+                ))
+            }
+            
+            return chunks.sorted { $0.index < $1.index }
+        } else {
+            let standardChunkSize: Int64 = 2 * 1024 * 1024
+            let numChunks = Int(ceil(Double(totalSize) / Double(standardChunkSize)))
+            var chunks: [DownloadChunk] = []
+            
+            for i in 0..<numChunks {
+                let startOffset = Int64(i) * standardChunkSize
+                let isLastChunk = (i == numChunks - 1)
+                let chunkSize = isLastChunk ? (totalSize - startOffset) : standardChunkSize
+                let endOffset = startOffset + chunkSize - 1
+                
+                chunks.append(DownloadChunk(
+                    index: i,
+                    startOffset: startOffset,
+                    endOffset: endOffset,
+                    size: chunkSize
+                ))
+            }
 
-        return chunks
+            return chunks
+        }
     }
 
-    private func writeDataToFile(data: Data, destinationURL: URL, offset: Int64) async throws {
+    private func validateChunkHash(data: Data, expectedHash: String) -> Bool {
+        let hash = Insecure.MD5.hash(data: data)
+        let hashString = hash.map { String(format: "%02hhx", $0) }.joined()
+        return hashString.lowercased() == expectedHash.lowercased()
+    }
+    
+    private func validateCompleteChunkFromFile(destinationURL: URL, chunk: DownloadChunk) -> Bool {
+        guard let expectedHash = chunk.expectedHash else {
+            return true
+        }
+        
+        do {
+            let fileHandle = try FileHandle(forReadingFrom: destinationURL)
+            defer { fileHandle.closeFile() }
+            
+            fileHandle.seek(toFileOffset: UInt64(chunk.startOffset))
+            let chunkData = fileHandle.readData(ofLength: Int(chunk.size))
+            
+            return validateChunkHash(data: chunkData, expectedHash: expectedHash)
+        } catch {
+            return false
+        }
+    }
+    
+    private func writeDataToFile(data: Data, destinationURL: URL, offset: Int64, totalSize: Int64? = nil) async throws {
         return try await withCheckedThrowingContinuation { continuation in
             DispatchQueue.global(qos: .utility).async {
                 do {
@@ -114,18 +220,23 @@ class ChunkedDownloadManager {
                         try self.fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
                     }
 
+                    let fileHandle: FileHandle
                     if !self.fileManager.fileExists(atPath: destinationURL.path) {
                         let success = self.fileManager.createFile(atPath: destinationURL.path, contents: nil)
                         if !success {
                             throw NetworkError.filePermissionDenied(destinationURL.path)
                         }
+                        fileHandle = try FileHandle(forWritingTo: destinationURL)
+                    } else {
+                        fileHandle = try FileHandle(forWritingTo: destinationURL)
                     }
-
-                    let fileHandle = try FileHandle(forWritingTo: destinationURL)
-                    defer { fileHandle.closeFile() }
                     
+                    defer { fileHandle.closeFile() }
+
                     fileHandle.seek(toFileOffset: UInt64(offset))
                     fileHandle.write(data)
+
+                    fileHandle.synchronizeFile()
                     
                     continuation.resume()
                 } catch {
@@ -154,18 +265,28 @@ class ChunkedDownloadManager {
         }
 
         if fileManager.fileExists(atPath: destinationURL.path) {
-            let existingSize = (try? fileManager.attributesOfItem(atPath: destinationURL.path)[.size] as? Int64) ?? 0
+            if let expectedHash = chunk.expectedHash {
+                if validateCompleteChunkFromFile(destinationURL: destinationURL, chunk: chunk) {
+                    modifiedChunk.downloadedSize = chunk.size
+                    modifiedChunk.isCompleted = true
+                    return modifiedChunk
+                }
+                modifiedChunk.downloadedSize = 0
+            } else {
+                let existingSize = (try? fileManager.attributesOfItem(atPath: destinationURL.path)[.size] as? Int64) ?? 0
+                if existingSize > chunk.endOffset {
+                    if let fileHandle = try? FileHandle(forReadingFrom: destinationURL) {
+                        defer { fileHandle.closeFile() }
+                        fileHandle.seek(toFileOffset: UInt64(chunk.startOffset))
+                        let data = fileHandle.readData(ofLength: Int(chunk.size))
 
-            if existingSize > chunk.endOffset {
-                modifiedChunk.downloadedSize = chunk.size
-                modifiedChunk.isCompleted = true
-                return modifiedChunk
-            }
-
-            let chunkActualStartOffset = chunk.startOffset + chunk.downloadedSize
-            if existingSize > chunkActualStartOffset {
-                let alreadyDownloaded = min(existingSize - chunkActualStartOffset, chunk.size - chunk.downloadedSize)
-                modifiedChunk.downloadedSize += alreadyDownloaded
+                        if !data.allSatisfy({ $0 == 0 }) {
+                            modifiedChunk.downloadedSize = chunk.size
+                            modifiedChunk.isCompleted = true
+                            return modifiedChunk
+                        }
+                    }
+                }
             }
         }
 
@@ -201,12 +322,18 @@ class ChunkedDownloadManager {
             }
             
             if httpResponse.statusCode == 206 || httpResponse.statusCode == 200 {
-                try await writeDataToFile(data: data, destinationURL: destinationURL, offset: actualStartOffset)
+                try await writeDataToFile(data: data, destinationURL: destinationURL, offset: actualStartOffset, totalSize: nil)
                 
                 modifiedChunk.downloadedSize += Int64(data.count)
                 
                 if modifiedChunk.downloadedSize >= chunk.size {
                     modifiedChunk.isCompleted = true
+
+                    if let expectedHash = chunk.expectedHash {
+                        if !validateCompleteChunkFromFile(destinationURL: destinationURL, chunk: chunk) {
+                            throw NetworkError.invalidData("分片哈希校验失败: \(chunk.index)")
+                        }
+                    }
                 }
                 
                 progressHandler?(modifiedChunk.downloadedSize, chunk.size)
@@ -241,7 +368,7 @@ class ChunkedDownloadManager {
         clearChunkedDownloadState(packageIdentifier: packageIdentifier)
     }
 
-    func saveChunkedDownloadState(packageIdentifier: String, chunks: [DownloadChunk], totalSize: Int64, destinationURL: URL) {
+    func saveChunkedDownloadState(packageIdentifier: String, chunks: [DownloadChunk], totalSize: Int64, destinationURL: URL, validationInfo: ValidationInfo? = nil) {
         let chunkInfos = chunks.map { chunk in
             ChunkedDownloadState.ChunkInfo(
                 index: chunk.index,
@@ -250,18 +377,20 @@ class ChunkedDownloadManager {
                 size: chunk.size,
                 downloadedSize: chunk.downloadedSize,
                 isCompleted: chunk.isCompleted,
-                isPaused: chunk.isPaused
+                isPaused: chunk.isPaused,
+                expectedHash: chunk.expectedHash
             )
         }
         
         let state = ChunkedDownloadState(
             packageIdentifier: packageIdentifier,
             totalSize: totalSize,
-            chunkSize: self.chunkSize,
+            chunkSize: validationInfo?.segmentSize ?? self.chunkSize,
             chunks: chunkInfos,
             totalDownloadedSize: chunks.reduce(0) { $0 + $1.downloadedSize },
             isCompleted: chunks.allSatisfy { $0.isCompleted },
-            destinationURL: destinationURL.path
+            destinationURL: destinationURL.path,
+            validationInfo: validationInfo
         )
         
         let fileName = "\(packageIdentifier.replacingOccurrences(of: "/", with: "_")).chunkstate"
@@ -294,10 +423,16 @@ class ChunkedDownloadManager {
                 startOffset: chunkInfo.startOffset,
                 endOffset: chunkInfo.endOffset,
                 size: chunkInfo.size,
-                downloadedSize: chunkInfo.downloadedSize,
-                isCompleted: chunkInfo.isCompleted,
-                isPaused: chunkInfo.isPaused
+                expectedHash: chunkInfo.expectedHash
             )
+        }.map { chunk in
+            var restoredChunk = chunk
+            if let chunkInfo = state.chunks.first(where: { $0.index == chunk.index }) {
+                restoredChunk.downloadedSize = chunkInfo.downloadedSize
+                restoredChunk.isCompleted = chunkInfo.isCompleted
+                restoredChunk.isPaused = chunkInfo.isPaused
+            }
+            return restoredChunk
         }
     }
     
@@ -307,11 +442,31 @@ class ChunkedDownloadManager {
         try? fileManager.removeItem(at: fileURL)
     }
 
+    private func fetchValidationInfo(from validationURL: String) async throws -> ValidationInfo? {
+        guard let url = URL(string: validationURL) else {
+            throw NetworkError.invalidData("无效的ValidationURL")
+        }
+        
+        let (data, response) = try await URLSession.shared.data(from: url)
+        
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw NetworkError.httpError((response as? HTTPURLResponse)?.statusCode ?? 0, "获取ValidationInfo失败")
+        }
+        
+        guard let xmlString = String(data: data, encoding: .utf8) else {
+            throw NetworkError.invalidData("无法解析ValidationInfo XML")
+        }
+        
+        return ValidationInfo.parse(from: xmlString)
+    }
+
     func downloadFileWithChunks(
         packageIdentifier: String,
         url: URL,
         destinationURL: URL,
         headers: [String: String] = [:],
+        validationURL: String? = nil,
         progressHandler: ((Double, Int64, Int64, Double) -> Void)? = nil,
         cancellationHandler: (() async -> Bool)? = nil
     ) async throws {
@@ -322,12 +477,22 @@ class ChunkedDownloadManager {
                 throw NetworkError.invalidData("无法获取文件大小")
             }
 
+            var validationInfo: ValidationInfo? = nil
+            if let validationURL = validationURL {
+                do {
+                    validationInfo = try await fetchValidationInfo(from: validationURL)
+                } catch {
+                    print("获取ValidationInfo失败: \(error), 降级到自定义分片")
+                }
+            }
+
             var chunks: [DownloadChunk]
             if let savedState = loadChunkedDownloadState(packageIdentifier: packageIdentifier) {
+                let currentChunkSize = validationInfo?.segmentSize ?? self.chunkSize
                 if savedState.totalSize == totalSize,
                    savedState.destinationURL == destinationURL.path,
                    savedState.packageIdentifier == packageIdentifier,
-                   savedState.chunkSize == self.chunkSize {
+                   savedState.chunkSize == currentChunkSize {
                     chunks = restoreChunksFromState(savedState).map { chunk in
                         var restoredChunk = chunk
                         restoredChunk.isPaused = false
@@ -336,11 +501,12 @@ class ChunkedDownloadManager {
                 } else {
                     clearChunkedDownloadState(packageIdentifier: packageIdentifier)
 
-                    if supportsRange && totalSize > chunkSize {
+                    if supportsRange && (validationInfo != nil || totalSize > chunkSize) {
                         chunks = createChunkedDownload(
                             packageIdentifier: packageIdentifier,
                             totalSize: totalSize,
-                            destinationURL: destinationURL
+                            destinationURL: destinationURL,
+                            validationInfo: validationInfo
                         )
                     } else {
                         chunks = [DownloadChunk(
@@ -352,11 +518,12 @@ class ChunkedDownloadManager {
                     }
                 }
             } else {
-                if supportsRange && totalSize > chunkSize {
+                if supportsRange && (validationInfo != nil || totalSize > chunkSize) {
                     chunks = createChunkedDownload(
                         packageIdentifier: packageIdentifier,
                         totalSize: totalSize,
-                        destinationURL: destinationURL
+                        destinationURL: destinationURL,
+                        validationInfo: validationInfo
                     )
                 } else {
                     chunks = [DownloadChunk(
@@ -368,141 +535,48 @@ class ChunkedDownloadManager {
                 }
             }
 
-            let incompleteChunks = chunks.filter { !$0.isCompleted && !$0.isPaused }
+            let incompleteChunks = chunks.filter { chunk in
+                if chunk.isPaused {
+                    return false
+                }
+
+                if chunk.isCompleted {
+                    return false
+                }
+
+                if chunk.downloadedSize >= chunk.size {
+                    return false
+                }
+
+                if let expectedHash = chunk.expectedHash,
+                   fileManager.fileExists(atPath: destinationURL.path) {
+                    if validateCompleteChunkFromFile(destinationURL: destinationURL, chunk: chunk) {
+                        return false
+                    }
+                }
+                
+                return true
+            }
+            
             if incompleteChunks.isEmpty {
+                clearChunkedDownloadState(packageIdentifier: packageIdentifier)
                 return
             }
-            
-            let chunkConcurrency = min(maxConcurrentChunks, 5)
 
-            actor SpeedTracker {
-                private var lastProgressTime = Date()
-                private var lastDownloadedSize: Int64 = 0
-                
-                func updateSpeed(currentDownloaded: Int64) -> Double {
-                    let now = Date()
-                    let timeDiff = now.timeIntervalSince(lastProgressTime)
-                    
-                    if timeDiff >= 0.5 {
-                        let sizeDiff = currentDownloaded - lastDownloadedSize
-                        let speed = timeDiff > 0 ? Double(sizeDiff) / timeDiff : 0
-                        
-                        lastProgressTime = now
-                        lastDownloadedSize = currentDownloaded
-                        
-                        return speed
-                    }
-                    return 0
-                }
-                
-                func initialize(initialSize: Int64) {
-                    lastDownloadedSize = initialSize
-                    lastProgressTime = Date()
-                }
-            }
+            try await downloadChunksSequentially(
+                chunks: incompleteChunks,
+                url: url,
+                destinationURL: destinationURL,
+                headers: headers,
+                progressHandler: progressHandler,
+                cancellationHandler: cancellationHandler,
+                packageIdentifier: packageIdentifier,
+                totalSize: totalSize,
+                validationInfo: validationInfo
+            )
 
-            actor ChunkStateManager {
-                private var chunks: [DownloadChunk]
-                
-                init(chunks: [DownloadChunk]) {
-                    self.chunks = chunks
-                }
-                
-                func updateChunkProgress(index: Int, downloadedSize: Int64, isCompleted: Bool = false) {
-                    if let chunkIndex = chunks.firstIndex(where: { $0.index == index }) {
-                        chunks[chunkIndex].downloadedSize = downloadedSize
-                        if isCompleted {
-                            chunks[chunkIndex].isCompleted = true
-                        }
-                    }
-                }
-                
-                func updateChunk(_ updatedChunk: DownloadChunk) {
-                    if let index = chunks.firstIndex(where: { $0.index == updatedChunk.index }) {
-                        chunks[index] = updatedChunk
-                    }
-                }
-                
-                func getAllChunks() -> [DownloadChunk] {
-                    return chunks
-                }
-                
-                func getTotalDownloadedSize() -> Int64 {
-                    return chunks.reduce(Int64(0)) { $0 + $1.downloadedSize }
-                }
-            }
-            
-            let speedTracker = SpeedTracker()
-            await speedTracker.initialize(initialSize: chunks.reduce(Int64(0)) { $0 + $1.downloadedSize })
-            
-            let chunkStateManager = ChunkStateManager(chunks: chunks)
-            
-            try await withThrowingTaskGroup(of: DownloadChunk.self) { group in
-                let semaphore = AsyncSemaphore(value: chunkConcurrency)
-
-                let initialChunks = await chunkStateManager.getAllChunks()
-                saveChunkedDownloadState(packageIdentifier: packageIdentifier, chunks: initialChunks, totalSize: totalSize, destinationURL: destinationURL)
-                
-                for chunk in incompleteChunks {
-                    if let cancellationHandler = cancellationHandler {
-                        if await cancellationHandler() {
-                            throw NetworkError.cancelled
-                        }
-                    }
-                    
-                    group.addTask {
-                        await semaphore.wait()
-                        defer {
-                            Task {
-                                await semaphore.signal()
-                            }
-                        }
-                        
-                        if let cancellationHandler = cancellationHandler {
-                            if await cancellationHandler() {
-                                throw NetworkError.cancelled
-                            }
-                        }
-                        
-                        return try await self.downloadChunkToFile(
-                            chunk: chunk,
-                            url: url,
-                            destinationURL: destinationURL,
-                            headers: headers,
-                            progressHandler: { downloaded, total in
-                                Task {
-                                    await chunkStateManager.updateChunkProgress(
-                                        index: chunk.index,
-                                        downloadedSize: downloaded,
-                                        isCompleted: downloaded >= total
-                                    )
-                                    
-                                    let currentTotalDownloaded = await chunkStateManager.getTotalDownloadedSize()
-                                    let progress = Double(currentTotalDownloaded) / Double(totalSize)
-                                    
-                                    let speed = await speedTracker.updateSpeed(currentDownloaded: currentTotalDownloaded)
-                                    if speed > 0 {
-                                        progressHandler?(progress, currentTotalDownloaded, totalSize, speed)
-                                    }
-                                }
-                            },
-                            cancellationHandler: cancellationHandler
-                        )
-                    }
-                }
-
-                do {
-                    for try await completedChunk in group {
-                        await chunkStateManager.updateChunk(completedChunk)
-
-                        let currentChunks = await chunkStateManager.getAllChunks()
-                        saveChunkedDownloadState(packageIdentifier: packageIdentifier, chunks: currentChunks, totalSize: totalSize, destinationURL: destinationURL)
-                    }
-                } catch {
-                    let currentChunks = await chunkStateManager.getAllChunks()
-                    saveChunkedDownloadState(packageIdentifier: packageIdentifier, chunks: currentChunks, totalSize: totalSize, destinationURL: destinationURL)
-                    throw error
-                }
+            if let validationInfo = validationInfo {
+                try await validateCompleteFile(destinationURL: destinationURL, validationInfo: validationInfo, totalSize: totalSize)
             }
 
             clearChunkedDownloadState(packageIdentifier: packageIdentifier)
@@ -519,5 +593,197 @@ class ChunkedDownloadManager {
         }
 
         try await downloadTask.value
+    }
+
+    private func downloadChunksSequentially(
+        chunks: [DownloadChunk],
+        url: URL,
+        destinationURL: URL,
+        headers: [String: String],
+        progressHandler: ((Double, Int64, Int64, Double) -> Void)?,
+        cancellationHandler: (() async -> Bool)?,
+        packageIdentifier: String,
+        totalSize: Int64,
+        validationInfo: ValidationInfo?
+    ) async throws {
+        let sortedChunks = chunks.sorted { $0.index < $1.index }
+        
+        actor SpeedTracker {
+            private var lastProgressTime = Date()
+            private var lastDownloadedSize: Int64 = 0
+            
+            func updateSpeed(currentDownloaded: Int64) -> Double {
+                let now = Date()
+                let timeDiff = now.timeIntervalSince(lastProgressTime)
+                
+                if timeDiff >= 0.5 {
+                    let sizeDiff = currentDownloaded - lastDownloadedSize
+                    let speed = timeDiff > 0 ? Double(sizeDiff) / timeDiff : 0
+                    
+                    lastProgressTime = now
+                    lastDownloadedSize = currentDownloaded
+                    
+                    return speed
+                }
+                return 0
+            }
+            
+            func initialize(initialSize: Int64) {
+                lastDownloadedSize = initialSize
+                lastProgressTime = Date()
+            }
+        }
+
+        actor ChunkStateManager {
+            private var chunks: [DownloadChunk]
+            
+            init(chunks: [DownloadChunk]) {
+                self.chunks = chunks
+            }
+            
+            func updateChunkProgress(index: Int, downloadedSize: Int64, isCompleted: Bool = false) {
+                if let chunkIndex = chunks.firstIndex(where: { $0.index == index }) {
+                    chunks[chunkIndex].downloadedSize = downloadedSize
+                    if isCompleted {
+                        chunks[chunkIndex].isCompleted = true
+                    }
+                }
+            }
+            
+            func updateChunk(_ updatedChunk: DownloadChunk) {
+                if let index = chunks.firstIndex(where: { $0.index == updatedChunk.index }) {
+                    chunks[index] = updatedChunk
+                }
+            }
+            
+            func getAllChunks() -> [DownloadChunk] {
+                return chunks
+            }
+            
+            func getTotalDownloadedSize() -> Int64 {
+                return chunks.reduce(Int64(0)) { $0 + $1.downloadedSize }
+            }
+        }
+        
+        let speedTracker = SpeedTracker()
+        await speedTracker.initialize(initialSize: chunks.reduce(Int64(0)) { $0 + $1.downloadedSize })
+        
+        let chunkStateManager = ChunkStateManager(chunks: chunks)
+        
+        let initialChunks = await chunkStateManager.getAllChunks()
+        saveChunkedDownloadState(packageIdentifier: packageIdentifier, chunks: initialChunks, totalSize: totalSize, destinationURL: destinationURL, validationInfo: validationInfo)
+
+        for chunk in sortedChunks {
+            if let cancellationHandler = cancellationHandler {
+                if await cancellationHandler() {
+                    throw NetworkError.cancelled
+                }
+            }
+            
+            let completedChunk = try await downloadChunkToFile(
+                chunk: chunk,
+                url: url,
+                destinationURL: destinationURL,
+                headers: headers,
+                progressHandler: { downloaded, total in
+                    Task {
+                        await chunkStateManager.updateChunkProgress(
+                            index: chunk.index,
+                            downloadedSize: downloaded,
+                            isCompleted: downloaded >= total
+                        )
+                        
+                        let currentTotalDownloaded = await chunkStateManager.getTotalDownloadedSize()
+                        let progress = Double(currentTotalDownloaded) / Double(totalSize)
+                        
+                        let speed = await speedTracker.updateSpeed(currentDownloaded: currentTotalDownloaded)
+                        if speed > 0 {
+                            progressHandler?(progress, currentTotalDownloaded, totalSize, speed)
+                        }
+                    }
+                },
+                cancellationHandler: cancellationHandler
+            )
+            
+            await chunkStateManager.updateChunk(completedChunk)
+            
+            let currentChunks = await chunkStateManager.getAllChunks()
+            saveChunkedDownloadState(packageIdentifier: packageIdentifier, chunks: currentChunks, totalSize: totalSize, destinationURL: destinationURL, validationInfo: validationInfo)
+        }
+    }
+    
+    private func validateCompleteFile(destinationURL: URL, validationInfo: ValidationInfo, totalSize: Int64) async throws {
+        do {
+            let fileAttributes = try FileManager.default.attributesOfItem(atPath: destinationURL.path)
+            if let fileSize = fileAttributes[.size] as? Int64, fileSize != totalSize {
+                throw NetworkError.invalidData("文件大小不匹配: 期望\(totalSize), 实际\(fileSize)")
+            }
+        } catch {
+            throw NetworkError.invalidData("无法获取文件大小: \(error.localizedDescription)")
+        }
+
+        let fileHandle = try FileHandle(forReadingFrom: destinationURL)
+        defer { fileHandle.closeFile() }
+        
+        for segment in validationInfo.segments {
+            let segmentIndex = segment.segmentNumber - 1
+            let startOffset = Int64(segmentIndex) * validationInfo.segmentSize
+            let isLastSegment = segment.segmentNumber == validationInfo.segmentCount
+            let segmentSize = isLastSegment ? validationInfo.lastSegmentSize : validationInfo.segmentSize
+            
+            fileHandle.seek(toFileOffset: UInt64(startOffset))
+            let segmentData = fileHandle.readData(ofLength: Int(segmentSize))
+            
+            if segmentData.count != Int(segmentSize) {
+                throw NetworkError.invalidData("分片\(segment.segmentNumber)大小不正确: 期望\(segmentSize), 实际\(segmentData.count)")
+            }
+            
+            if !validateChunkHash(data: segmentData, expectedHash: segment.hash) {
+                throw NetworkError.invalidData("分片\(segment.segmentNumber)哈希校验失败")
+            }
+        }
+    }
+    
+    private func ensureFilePreallocated(destinationURL: URL, totalSize: Int64) async throws {
+        return try await withCheckedThrowingContinuation { continuation in
+            DispatchQueue.global(qos: .utility).async {
+                do {
+                    let directory = destinationURL.deletingLastPathComponent()
+                    if !self.fileManager.fileExists(atPath: directory.path) {
+                        try self.fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+                    }
+
+                    if self.fileManager.fileExists(atPath: destinationURL.path) {
+                        if let attributes = try? self.fileManager.attributesOfItem(atPath: destinationURL.path),
+                           let existingSize = attributes[.size] as? Int64 {
+                            if existingSize == totalSize {
+                                continuation.resume()
+                                return
+                            } else if existingSize > totalSize {
+                                try? self.fileManager.removeItem(at: destinationURL)
+                            }
+                        }
+                    }
+
+                    let success = self.fileManager.createFile(atPath: destinationURL.path, contents: nil)
+                    if !success {
+                        throw NetworkError.filePermissionDenied(destinationURL.path)
+                    }
+                    
+                    let fileHandle = try FileHandle(forWritingTo: destinationURL)
+                    defer { fileHandle.closeFile() }
+
+                    if ftruncate(fileHandle.fileDescriptor, off_t(totalSize)) != 0 {
+                        fileHandle.seek(toFileOffset: UInt64(totalSize - 1))
+                        fileHandle.write(Data([0]))
+                    }
+                    
+                    fileHandle.synchronizeFile()
+                    continuation.resume()
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
     }
 }

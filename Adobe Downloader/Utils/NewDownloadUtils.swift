@@ -843,6 +843,7 @@ class NewDownloadUtils {
             url: url,
             destinationURL: destinationURL,
             headers: NetworkConstants.downloadHeaders,
+            validationURL: package.validationURL,
             progressHandler: { progress, downloadedSize, totalSize, speed in
                 Task {
                     await MainActor.run {

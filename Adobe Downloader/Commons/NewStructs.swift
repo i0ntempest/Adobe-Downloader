@@ -177,6 +177,7 @@ class Package: Identifiable, ObservableObject, Codable {
     var downloadSize: Int64
     var downloadURL: String
     var packageVersion: String
+    var validationURL: String?
 
     @Published var downloadedSize: Int64 = 0 {
         didSet {
@@ -225,12 +226,13 @@ class Package: Identifiable, ObservableObject, Codable {
         }
     }
 
-    init(type: String, fullPackageName: String, downloadSize: Int64, downloadURL: String, packageVersion: String, condition: String = "", isRequired: Bool = false) {
+    init(type: String, fullPackageName: String, downloadSize: Int64, downloadURL: String, packageVersion: String, condition: String = "", isRequired: Bool = false, validationURL: String? = nil) {
         self.type = type
         self.fullPackageName = fullPackageName
         self.downloadSize = downloadSize
         self.downloadURL = downloadURL
         self.packageVersion = packageVersion
+        self.validationURL = validationURL
         self.condition = condition
         self.isRequired = isRequired
         self.isSelected = isRequired
@@ -306,7 +308,7 @@ class Package: Identifiable, ObservableObject, Codable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, type, fullPackageName, downloadSize, downloadURL, packageVersion, condition, isRequired
+        case id, type, fullPackageName, downloadSize, downloadURL, packageVersion, validationURL, condition, isRequired
     }
 
     func encode(to encoder: Encoder) throws {
@@ -317,6 +319,7 @@ class Package: Identifiable, ObservableObject, Codable {
         try container.encode(downloadSize, forKey: .downloadSize)
         try container.encode(downloadURL, forKey: .downloadURL)
         try container.encode(packageVersion, forKey: .packageVersion)
+        try container.encodeIfPresent(validationURL, forKey: .validationURL)
         try container.encode(condition, forKey: .condition)
         try container.encode(isRequired, forKey: .isRequired)
     }
@@ -329,11 +332,100 @@ class Package: Identifiable, ObservableObject, Codable {
         downloadSize = try container.decode(Int64.self, forKey: .downloadSize)
         downloadURL = try container.decode(String.self, forKey: .downloadURL)
         packageVersion = try container.decode(String.self, forKey: .packageVersion)
+        validationURL = try container.decodeIfPresent(String.self, forKey: .validationURL)
         condition = try container.decodeIfPresent(String.self, forKey: .condition) ?? ""
         isRequired = try container.decodeIfPresent(Bool.self, forKey: .isRequired) ?? false
         isSelected = isRequired
         if !isRequired {
             isSelected = shouldBeSelectedByDefault
+        }
+    }
+}
+
+/* ========== */
+struct ValidationInfo {
+    var segmentSize: Int64
+    var version: String
+    var algorithm: String
+    var segmentCount: Int
+    var lastSegmentSize: Int64
+    var packageHashKey: String
+    var segments: [SegmentInfo]
+    
+    struct SegmentInfo {
+        var segmentNumber: Int
+        var hash: String
+    }
+    
+    static func parse(from xmlString: String) -> ValidationInfo? {
+        guard let data = xmlString.data(using: .utf8) else { return nil }
+        
+        let parser = ValidationXMLParser()
+        let xmlParser = XMLParser(data: data)
+        xmlParser.delegate = parser
+        
+        guard xmlParser.parse() else { return nil }
+        
+        return ValidationInfo(
+            segmentSize: parser.segmentSize,
+            version: parser.version,
+            algorithm: parser.algorithm,
+            segmentCount: parser.segmentCount,
+            lastSegmentSize: parser.lastSegmentSize,
+            packageHashKey: parser.packageHashKey,
+            segments: parser.segments
+        )
+    }
+}
+
+class ValidationXMLParser: NSObject, XMLParserDelegate {
+    var segmentSize: Int64 = 0
+    var version: String = ""
+    var algorithm: String = ""
+    var segmentCount: Int = 0
+    var lastSegmentSize: Int64 = 0
+    var packageHashKey: String = ""
+    var segments: [ValidationInfo.SegmentInfo] = []
+    
+    private var currentElement: String = ""
+    private var currentSegmentNumber: Int = 0
+    
+    func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String] = [:]) {
+        currentElement = elementName
+        
+        if elementName == "segment", let segmentNumber = attributeDict["segmentNumber"], let number = Int(segmentNumber) {
+            currentSegmentNumber = number
+        }
+    }
+    
+    func parser(_ parser: XMLParser, foundCharacters string: String) {
+        let trimmedString = string.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        switch currentElement {
+        case "segmentSize":
+            if let size = Int64(trimmedString) {
+                segmentSize = size
+            }
+        case "version":
+            version = trimmedString
+        case "algorithm":
+            algorithm = trimmedString
+        case "segmentCount":
+            if let count = Int(trimmedString) {
+                segmentCount = count
+            }
+        case "lastSegmentSize":
+            if let size = Int64(trimmedString) {
+                lastSegmentSize = size
+            }
+        case "packageHashKey":
+            packageHashKey = trimmedString
+        case "segment":
+            if !trimmedString.isEmpty {
+                segments.append(ValidationInfo.SegmentInfo(segmentNumber: currentSegmentNumber, hash: trimmedString))
+            }
+        default:
+            break
         }
     }
 }
