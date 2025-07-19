@@ -127,33 +127,72 @@ struct AboutAppView: View {
 
 struct PulsingCircle: View {
     let color: Color
-    @State private var pulsing = false
+    @State private var isAnimating = false
     
     var body: some View {
         ZStack {
-            ZStack(alignment: .center) {
-                Circle()
-                    .fill(color)
-                    .frame(width: 6, height: 6)
+            Circle()
+                .fill(color.opacity(0.15))
+                .frame(width: isAnimating ? 20 : 8, height: isAnimating ? 20 : 8)
+                .opacity(isAnimating ? 0 : 0.8)
+                .animation(
+                    .easeOut(duration: 2.5)
+                    .repeatForever(autoreverses: false),
+                    value: isAnimating
+                )
 
-                Circle()
-                    .stroke(color, lineWidth: 1)
-                    .frame(width: pulsing ? 14 : 8, height: pulsing ? 14 : 8)
-                    .opacity(pulsing ? 0 : 0.8)
+            Circle()
+                .fill(color.opacity(0.3))
+                .frame(width: isAnimating ? 14 : 6, height: isAnimating ? 14 : 6)
+                .opacity(isAnimating ? 0 : 0.7)
+                .animation(
+                    .easeOut(duration: 2.0)
+                    .delay(0.4)
+                    .repeatForever(autoreverses: false),
+                    value: isAnimating
+                )
 
-                Circle()
-                    .stroke(color, lineWidth: 1)
-                    .frame(width: pulsing ? 12 : 6, height: pulsing ? 12 : 6)
-                    .opacity(pulsing ? 0.2 : 0.6)
-            }
-            .frame(width: 16, height: 16)
+            Circle()
+                .fill(color)
+                .frame(width: 6, height: 6)
+                .scaleEffect(isAnimating ? 1.15 : 1.0)
+                .opacity(0.95)
+                .animation(
+                    .easeInOut(duration: 1.8)
+                    .repeatForever(autoreverses: true),
+                    value: isAnimating
+                )
+
+            Circle()
+                .fill(
+                    RadialGradient(
+                        gradient: Gradient(colors: [
+                            color.opacity(0.8),
+                            color.opacity(0.3),
+                            Color.clear
+                        ]),
+                        center: .center,
+                        startRadius: 1,
+                        endRadius: 4
+                    )
+                )
+                .frame(width: 8, height: 8)
+                .scaleEffect(isAnimating ? 1.3 : 0.8)
+                .opacity(isAnimating ? 0.6 : 1.0)
+                .animation(
+                    .easeInOut(duration: 2.2)
+                    .repeatForever(autoreverses: true),
+                    value: isAnimating
+                )
         }
-        .frame(width: 16, height: 16, alignment: .center)
-        .clipped()
+        .frame(width: 16, height: 16)
         .onAppear {
-            withAnimation(Animation.easeOut(duration: 1.5).repeatForever(autoreverses: false)) {
-                pulsing = true
+            withAnimation {
+                isAnimating = true
             }
+        }
+        .onDisappear {
+            isAnimating = false
         }
     }
 }
@@ -913,7 +952,7 @@ struct HelperStatusRow: View {
                 HStack(alignment: .center, spacing: 5) {
                     PulsingCircle(color: helperStatusColor)
                         .layoutPriority(1)
-                    
+
                     Text(helperStatusText)
                         .font(.system(size: 14))
                         .foregroundColor(helperStatusColor)
