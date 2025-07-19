@@ -1061,10 +1061,15 @@ class NewDownloadUtils {
                 recoverable: isRecoverable
             )))
 
-            if let currentPackage = task.currentPackage {
+            
+            if !isRecoverable, let currentPackage = task.currentPackage {
                 let destinationDir = task.directory.appendingPathComponent("\(task.productId)")
                 let fileURL = destinationDir.appendingPathComponent(currentPackage.fullPackageName)
                 try? FileManager.default.removeItem(at: fileURL)
+
+                if let packageIdentifier = generatePackageIdentifier(package: currentPackage, task: task, dependency: task.dependenciesToDownload.first(where: { $0.packages.contains(where: { $0.id == currentPackage.id }) })!) {
+                    ChunkedDownloadManager.shared.clearChunkedDownloadState(packageIdentifier: packageIdentifier)
+                }
             }
 
             await globalNetworkManager.saveTask(task)
