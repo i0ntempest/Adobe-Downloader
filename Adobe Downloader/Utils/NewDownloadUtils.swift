@@ -1364,7 +1364,7 @@ class NewDownloadUtils {
 
     private func executePrivilegedCommand(_ command: String) async -> String {
         return await withCheckedContinuation { continuation in
-            PrivilegedHelperManager.shared.executeCommand(command) { result in
+            ModernPrivilegedHelperManager.shared.executeCommand(command) { result in
                 if result.starts(with: "Error:") {
                     print("命令执行失败: \(command)")
                     print("错误信息: \(result)")

@@ -84,14 +84,14 @@ class ModifySetup {
 
         if isSetupBackup() {
             print("检测到备份文件，尝试从备份恢复...")
-            PrivilegedHelperManager.shared.executeCommand("/bin/cp -f '\(backupPath)' '\(setupPath)'") { result in
+            ModernPrivilegedHelperManager.shared.executeCommand("/bin/cp -f '\(backupPath)' '\(setupPath)'") { result in
                 if result.starts(with: "Error:") {
                     print("从备份恢复失败: \(result)")
                 }
                 completion(!result.starts(with: "Error:"))
             }
         } else {
-            PrivilegedHelperManager.shared.executeCommand("/bin/cp -f '\(setupPath)' '\(backupPath)'") { result in
+            ModernPrivilegedHelperManager.shared.executeCommand("/bin/cp -f '\(setupPath)' '\(backupPath)'") { result in
                 if result.starts(with: "Error:") {
                     print("创建备份失败: \(result)")
                     completion(false)
@@ -100,7 +100,7 @@ class ModifySetup {
                 
                 if !result.starts(with: "Error:") {
                     if FileManager.default.fileExists(atPath: backupPath) {
-                        PrivilegedHelperManager.shared.executeCommand("/bin/chmod 644 '\(backupPath)'") { chmodResult in
+                        ModernPrivilegedHelperManager.shared.executeCommand("/bin/chmod 644 '\(backupPath)'") { chmodResult in
                             if chmodResult.starts(with: "Error:") {
                                 print("设置备份文件权限失败: \(chmodResult)")
                             }
@@ -138,7 +138,7 @@ class ModifySetup {
                 return
             }
 
-            PrivilegedHelperManager.shared.executeCommand(commands[index]) { result in
+            ModernPrivilegedHelperManager.shared.executeCommand(commands[index]) { result in
                 if result.starts(with: "Error:") {
                     print("命令执行失败: \(commands[index])")
                     print("错误信息: \(result)")

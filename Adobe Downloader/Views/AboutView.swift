@@ -22,7 +22,6 @@ private enum AboutViewConstants {
     static let links: [(title: String, url: String)] = [
         ("@X1a0He", "https://t.me/X1a0He_bot"),
         ("Github: Adobe Downloader", "https://github.com/X1a0He/Adobe-Downloader"),
-        ("QiuChenly: InjectLib", "https://github.com/QiuChenly/InjectLib")
     ]
 }
 
@@ -239,7 +238,7 @@ final class GeneralSettingsViewModel: ObservableObject {
 
         self.helperConnectionStatus = .connecting
 
-        PrivilegedHelperManager.shared.$connectionState
+        ModernPrivilegedHelperManager.shared.$connectionState
             .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
                 switch state {
@@ -819,6 +818,7 @@ struct HelperStatusRow: View {
     @Binding var helperAlertMessage: String
     @Binding var helperAlertSuccess: Bool
     @State private var isReinstallingHelper = false
+    @State private var helperStatus: ModernPrivilegedHelperManager.HelperStatus = .notInstalled
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -826,7 +826,7 @@ struct HelperStatusRow: View {
                 Text("安装状态: ")
                     .font(.system(size: 14, weight: .medium))
                     
-                if PrivilegedHelperManager.getHelperStatus {
+                if helperStatus == .installed {
                     HStack(spacing: 5) {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundColor(.green)
@@ -863,12 +863,25 @@ struct HelperStatusRow: View {
 
                 Button(action: {
                     isReinstallingHelper = true
-                    PrivilegedHelperManager.shared.removeInstallHelper()
-                    PrivilegedHelperManager.shared.reinstallHelper { success, message in
-                        helperAlertSuccess = success
-                        helperAlertMessage = message
-                        showHelperAlert = true
-                        isReinstallingHelper = false
+                    Task {
+                        do {
+                            try await ModernPrivilegedHelperManager.shared.uninstallHelper()
+                            await ModernPrivilegedHelperManager.shared.checkAndInstallHelper()
+                            
+                            await MainActor.run {
+                                helperAlertSuccess = true
+                                helperAlertMessage = "Helper 重新安装成功"
+                                showHelperAlert = true
+                                isReinstallingHelper = false
+                            }
+                        } catch {
+                            await MainActor.run {
+                                helperAlertSuccess = false
+                                helperAlertMessage = error.localizedDescription
+                                showHelperAlert = true
+                                isReinstallingHelper = false
+                            }
+                        }
                     }
                 }) {
                     HStack(spacing: 4) {
@@ -885,7 +898,7 @@ struct HelperStatusRow: View {
                 .help("完全卸载并重新安装 Helper")
             }
 
-            if !PrivilegedHelperManager.getHelperStatus {
+            if helperStatus != .installed {
                 Text("Helper 未安装将导致无法执行需要管理员权限的操作")
                     .font(.caption)
                     .foregroundColor(.red)
@@ -914,12 +927,23 @@ struct HelperStatusRow: View {
                 Spacer()
 
                 Button(action: {
-                    if PrivilegedHelperManager.getHelperStatus &&
+                    if helperStatus == .installed &&
                        viewModel.helperConnectionStatus != .connected {
-                        PrivilegedHelperManager.shared.reconnectHelper { success, message in
-                            helperAlertSuccess = success
-                            helperAlertMessage = message
-                            showHelperAlert = true
+                        Task {
+                            do {
+                                try await ModernPrivilegedHelperManager.shared.reconnectHelper()
+                                await MainActor.run {
+                                    helperAlertSuccess = true
+                                    helperAlertMessage = "重新连接成功"
+                                    showHelperAlert = true
+                                }
+                            } catch {
+                                await MainActor.run {
+                                    helperAlertSuccess = false
+                                    helperAlertMessage = error.localizedDescription
+                                    showHelperAlert = true
+                                }
+                            }
                         }
                     }
                 }) {
@@ -937,6 +961,9 @@ struct HelperStatusRow: View {
                 .help("尝试重新连接到已安装的 Helper")
             }
         }
+        .task {
+            helperStatus = await ModernPrivilegedHelperManager.shared.getHelperStatus()
+        }
     }
 
     private var helperStatusColor: Color {
@@ -949,7 +976,7 @@ struct HelperStatusRow: View {
     }
     
     private var shouldDisableReconnectButton: Bool {
-        return !PrivilegedHelperManager.getHelperStatus || 
+        return helperStatus != .installed || 
                viewModel.helperConnectionStatus == .connected || 
                isReinstallingHelper
     }

@@ -11,6 +11,7 @@ struct CleanConfigView: View {
     @State private var showAlert = false
     @State private var alertMessage = ""
     @State private var chipInfo: String = ""
+    @State private var helperStatus: ModernPrivilegedHelperManager.HelperStatus = .notInstalled
 
     private func getChipInfo() -> String {
         var size = 0
@@ -83,6 +84,9 @@ struct CleanConfigView: View {
         .onAppear {
             chipInfo = getChipInfo()
         }
+        .task {
+            helperStatus = await ModernPrivilegedHelperManager.shared.getHelperStatus()
+        }
     }
 
     private func cleanConfig() {
@@ -103,8 +107,8 @@ struct CleanConfigView: View {
             try FileManager.default.setAttributes([.posixPermissions: 0o755],
                                                 ofItemAtPath: scriptURL.path)
 
-            if PrivilegedHelperManager.getHelperStatus {
-                PrivilegedHelperManager.shared.executeCommand("open -a Terminal \(scriptURL.path)") { output in
+            if helperStatus == .installed {
+                ModernPrivilegedHelperManager.shared.executeCommand("open -a Terminal \(scriptURL.path)") { output in
                     if output.starts(with: "Error") {
                         alertMessage = "清空配置失败: \(output)"
                         showAlert = true

@@ -129,8 +129,10 @@ struct Adobe_DownloaderApp: App {
     }
     
     private func setupApplication() async {
-        PrivilegedHelperManager.shared.checkInstall()
-        
+        Task {
+            await ModernPrivilegedHelperManager.shared.checkAndInstallHelper()
+        }
+
         await MainActor.run {
             globalNetworkManager.loadSavedTasks()
         }

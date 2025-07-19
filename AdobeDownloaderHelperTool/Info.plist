@@ -5,7 +5,11 @@
 	<key>CFBundleIdentifier</key>
 	<string>com.x1a0he.macOS.Adobe-Downloader.helper</string>
 	<key>CFBundleName</key>
-	<string>com.x1a0he.macOS.Adobe-Downloader.helper</string>
+	<string>Adobe Downloader Helper</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
 	<key>SMAuthorizedClients</key>
 	<array>
 		<string>identifier "com.x1a0he.macOS.Adobe-Downloader" and anchor apple generic and certificate leaf[subject.CN] = "Apple Development: x1a0he@outlook.com (LFN2762T4F)" and certificate 1[field.1.2.840.113635.100.6.2.1] /* exists */</string>

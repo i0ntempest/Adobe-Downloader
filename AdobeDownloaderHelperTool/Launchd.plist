@@ -9,12 +9,8 @@
             <key>com.x1a0he.macOS.Adobe-Downloader.helper</key>
             <true/>
         </dict>
-        <key>Program</key>
-        <string>/Library/PrivilegedHelperTools/com.x1a0he.macOS.Adobe-Downloader.helper</string>
-        <key>ProgramArguments</key>
-        <array>
-            <string>/Library/PrivilegedHelperTools/com.x1a0he.macOS.Adobe-Downloader.helper</string>
-        </array>
+        <key>BundleProgram</key>
+        <string>Contents/Library/LaunchDaemons/com.x1a0he.macOS.Adobe-Downloader.helper</string>
         <key>RunAtLoad</key>
         <true/>
         <key>KeepAlive</key>

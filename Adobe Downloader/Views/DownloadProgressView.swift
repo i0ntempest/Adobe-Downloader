@@ -128,7 +128,7 @@ struct DownloadProgressView: View {
                         #if DEBUG
                         Button(action: { 
                             do {
-                                _ = try PrivilegedHelperManager.shared.getHelperProxy()
+                                _ = try ModernPrivilegedHelperManager.shared.getHelperProxy()
                                 showInstallPrompt = false
                                 isInstalling = true
                                 Task {
@@ -158,7 +158,7 @@ struct DownloadProgressView: View {
                         if ModifySetup.isSetupModified() {
                             Button(action: { 
                                 do {
-                                    _ = try PrivilegedHelperManager.shared.getHelperProxy()
+                                    _ = try ModernPrivilegedHelperManager.shared.getHelperProxy()
                                     showInstallPrompt = false
                                     isInstalling = true
                                     Task {
