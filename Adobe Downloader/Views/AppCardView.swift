@@ -228,16 +228,10 @@ final class AppCardViewModel: ObservableObject {
                 showExistingFileAlert = true
             }
         } else {
-            do {
-                let destinationURL = try await getDestinationURL(version: version, language: language)
-                try await globalNetworkManager.startDownload(
-                    productId: uniqueProduct.id,
-                    selectedVersion: version,
-                    language: language,
-                    destinationURL: destinationURL
-                )
-            } catch {
-                handleError(error)
+            await MainActor.run {
+                selectedVersion = version
+                selectedLanguage = language
+                showVersionPicker = true
             }
         }
     }
@@ -520,7 +514,7 @@ private struct SheetModifier: ViewModifier {
         content
             .sheet(isPresented: $viewModel.showVersionPicker) {
                 if findProduct(id: viewModel.uniqueProduct.id) != nil {
-                    VersionPickerView(productId: viewModel.uniqueProduct.id) { version in
+                    NavigationVersionPickerView(productId: viewModel.uniqueProduct.id) { version in
                         Task {
                             await viewModel.handleDownloadRequest(
                                 version,
@@ -626,17 +620,11 @@ struct AlertModifier: ViewModifier {
                 try? FileManager.default.removeItem(at: existingPath)
             }
             
-            let destinationURL = try await viewModel.getDestinationURL(
-                version: viewModel.pendingVersion,
-                language: viewModel.pendingLanguage
-            )
-            
-            try await globalNetworkManager.startDownload(
-                productId: viewModel.uniqueProduct.id,
-                selectedVersion: viewModel.pendingVersion,
-                language: viewModel.pendingLanguage,
-                destinationURL: destinationURL
-            )
+            await MainActor.run {
+                viewModel.selectedVersion = viewModel.pendingVersion
+                viewModel.selectedLanguage = viewModel.pendingLanguage
+                viewModel.showVersionPicker = true
+            }
         } catch {
             viewModel.handleError(error)
         }

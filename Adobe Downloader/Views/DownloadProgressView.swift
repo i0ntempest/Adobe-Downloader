@@ -400,6 +400,61 @@ struct DownloadProgressView: View {
                     showSetupProcessAlert: $showSetupProcessAlert,
                     actionButtons: AnyView(actionButtons)
                 )
+            } else {
+                Divider()
+                HStack {
+                    Spacer()
+                    #if DEBUG
+                    Button(action: {
+                        let containerURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+                        let tasksDirectory = containerURL.appendingPathComponent("Adobe Downloader/tasks", isDirectory: true)
+                        let fileName = "\(task.productId == "APRO" ? "Adobe Downloader \(task.productId)_\(task.productVersion)_\(task.platform)" : "Adobe Downloader \(task.productId)_\(task.productVersion)-\(task.language)-\(task.platform)")-task.json"
+                        let fileURL = tasksDirectory.appendingPathComponent(fileName)
+                        NSWorkspace.shared.selectFile(fileURL.path, inFileViewerRootedAtPath: tasksDirectory.path)
+                    }) {
+                        Label("持久化文件", systemImage: "doc.text.magnifyingglass")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.white)
+                    }
+                    .buttonStyle(BeautifulButtonStyle(baseColor: .blue))
+                    #endif
+
+                    #if DEBUG
+                    if case .completed = task.status, task.productId != "APRO" {
+                        CommandLineInstallButton(
+                            task: task,
+                            showCommandLineInstall: $showCommandLineInstall,
+                            showCopiedAlert: $showCopiedAlert
+                        )
+                    }
+                    #else
+                    if !ModifySetup.isSetupModified(), case .completed = task.status {
+                        HStack {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(.yellow)
+                            Text("Setup 组件未处理，无法安装")
+                                .font(.system(size: 12))
+                                .foregroundColor(.yellow)
+                        }
+                        .padding(.vertical, 6)
+                        .padding(.horizontal, 12)
+                        .background(Color.black.opacity(0.1))
+                        .cornerRadius(5)
+                        .onTapGesture {
+                            showSetupProcessAlert = true
+                        }
+                        .alert("Setup 组件未处理", isPresented: $showSetupProcessAlert) {
+                            Button("确定") { }
+                        } message: {
+                            Text("未对 Setup 组件进行处理或者 Setup 组件不存在，无法使用安装功能\n你可以通过设置页面对 Setup 组件进行处理")
+                                .font(.system(size: 18))
+                        }
+                        .padding(.top, 5)
+                    }
+                    #endif
+                    actionButtons
+                }
+                .padding(.top, 8)
             }
         }
         .padding()

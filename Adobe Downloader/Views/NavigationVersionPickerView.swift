@@ -1,12 +1,13 @@
 //
+//  NavigationVersionPickerView.swift
 //  Adobe Downloader
 //
-//  Created by X1a0He on 2024/10/30.
+//  Created by X1a0He on 2025/07/19.
 //
+
 import SwiftUI
 
-
-private enum VersionPickerConstants {
+private enum NavigationVersionPickerConstants {
     static let headerPadding: CGFloat = 5
     static let viewWidth: CGFloat = 500
     static let viewHeight: CGFloat = 600
@@ -20,17 +21,44 @@ private enum VersionPickerConstants {
     static let captionFontSize: CGFloat = 12
 }
 
-struct VersionPickerView: View {
+enum VersionPickerDestination: Hashable {
+    case customDownload(productId: String, version: String)
+    case duplicateTaskAlert(productId: String, version: String)
+    
+    static func == (lhs: VersionPickerDestination, rhs: VersionPickerDestination) -> Bool {
+        switch (lhs, rhs) {
+        case (.customDownload(let lProductId, let lVersion), .customDownload(let rProductId, let rVersion)):
+            return lProductId == rProductId && lVersion == rVersion
+        case (.duplicateTaskAlert(let lProductId, let lVersion), .duplicateTaskAlert(let rProductId, let rVersion)):
+            return lProductId == rProductId && lVersion == rVersion
+        default:
+            return false
+        }
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        switch self {
+        case .customDownload(let productId, let version):
+            hasher.combine("customDownload")
+            hasher.combine(productId)
+            hasher.combine(version)
+        case .duplicateTaskAlert(let productId, let version):
+            hasher.combine("duplicateTaskAlert")
+            hasher.combine(productId)
+            hasher.combine(version)
+        }
+    }
+}
+
+struct NavigationVersionPickerView: View {
     @Environment(\.dismiss) private var dismiss
     @StorageValue(\.defaultLanguage) private var defaultLanguage
     @StorageValue(\.downloadAppleSilicon) private var downloadAppleSilicon
     @State private var expandedVersions: Set<String> = []
-    @State private var showingCustomDownload = false
-    @State private var customDownloadVersion = ""
-    @State private var showExistingFileAlert = false
     @State private var existingFilePath: URL?
     @State private var pendingDependencies: [DependenciesToDownload] = []
     @State private var productIcon: NSImage? = nil
+    @State private var navigationPath = NavigationPath()
     
     private let productId: String
     private let onSelect: (String) -> Void
@@ -41,59 +69,51 @@ struct VersionPickerView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            VersionPickerHeaderView(productId: productId, downloadAppleSilicon: downloadAppleSilicon)
-            VersionListView(
-                productId: productId,
-                expandedVersions: $expandedVersions,
-                onSelect: onSelect,
-                dismiss: dismiss,
-                onCustomDownload: { version in
-                    customDownloadVersion = version
-                    showingCustomDownload = true
-                }
-            )
-        }
-        .frame(width: VersionPickerConstants.viewWidth, height: VersionPickerConstants.viewHeight)
-        .onAppear {
-            loadProductIcon()
-        }
-        .sheet(isPresented: $showingCustomDownload) {
-            CustomDownloadView(
-                productId: productId,
-                version: customDownloadVersion,
-                onDownloadStart: { dependencies in
-                    handleCustomDownload(dependencies: dependencies)
-                }
-            )
-        }
-        .sheet(isPresented: $showExistingFileAlert) {
-            if let existingPath = existingFilePath {
-                ExistingFileAlertView(
-                    path: existingPath,
-                    onUseExisting: {
-                        showExistingFileAlert = false
-                        if let existingPath = existingFilePath {
-                            Task {
-                                await createCompletedCustomTask(
-                                    path: existingPath,
-                                    dependencies: pendingDependencies
-                                )
-                            }
-                        }
-                        pendingDependencies = []
-                    },
-                    onRedownload: {
-                        showExistingFileAlert = false
-                        startCustomDownloadProcess(dependencies: pendingDependencies)
-                    },
-                    onCancel: {
-                        showExistingFileAlert = false
-                        pendingDependencies = []
-                    },
-                    iconImage: productIcon
+        NavigationStack(path: $navigationPath) {
+            VStack(spacing: 0) {
+                NavigationVersionPickerHeaderView(
+                    productId: productId, 
+                    downloadAppleSilicon: downloadAppleSilicon,
+                    onDismiss: { dismiss() }
+                )
+                NavigationVersionListView(
+                    productId: productId,
+                    expandedVersions: $expandedVersions,
+                    onSelect: onSelect,
+                    dismiss: dismiss,
+                    onCustomDownload: { version in
+                        navigationPath.append(VersionPickerDestination.customDownload(productId: productId, version: version))
+                    }
                 )
             }
+            .frame(width: NavigationVersionPickerConstants.viewWidth, height: NavigationVersionPickerConstants.viewHeight)
+            .navigationDestination(for: VersionPickerDestination.self) { destination in
+                switch destination {
+                case .customDownload(let productId, let version):
+                    NavigationCustomDownloadView(
+                        productId: productId,
+                        version: version,
+                        onDownloadStart: { dependencies in
+                            handleCustomDownload(dependencies: dependencies)
+                        },
+                        onDismiss: {
+                            dismiss()
+                        }
+                    )
+                case .duplicateTaskAlert(let productId, let version):
+                    DuplicateTaskAlertView(
+                        productId: productId,
+                        version: version,
+                        onCancel: {
+                            navigationPath.removeLast()
+                        },
+                        iconImage: productIcon
+                    )
+                }
+            }
+        }
+        .onAppear {
+            loadProductIcon()
         }
     }
     
@@ -131,124 +151,54 @@ struct VersionPickerView: View {
     }
 
     private func handleCustomDownload(dependencies: [DependenciesToDownload]) {
-        showingCustomDownload = false
+        guard let firstDependency = dependencies.first else { return }
+        let version = firstDependency.version
         
-        Task {
-            await checkAndStartCustomDownload(dependencies: dependencies)
-        }
-    }
-    
-    private func checkAndStartCustomDownload(dependencies: [DependenciesToDownload]) async {
-        if let existingPath = globalNetworkManager.isVersionDownloaded(
-            productId: productId, 
-            version: customDownloadVersion, 
-            language: StorageData.shared.defaultLanguage
-        ) {
-            await MainActor.run {
-                existingFilePath = existingPath
-                pendingDependencies = dependencies
-                showExistingFileAlert = true
-            }
-        } else {
-            await MainActor.run {
-                startCustomDownloadProcess(dependencies: dependencies)
-            }
-        }
-    }
-    
-    private func startCustomDownloadProcess(dependencies: [DependenciesToDownload]) {
-        Task {
-            let destinationURL: URL
-            do {
-                destinationURL = try await getDestinationURL(
-                    productId: productId,
-                    version: customDownloadVersion,
-                    language: StorageData.shared.defaultLanguage
-                )
-            } catch {
-                await MainActor.run { dismiss() }
-                return
-            }
-            
-            do {
-                try await globalNetworkManager.startCustomDownload(
-                    productId: productId,
-                    selectedVersion: customDownloadVersion,
-                    language: StorageData.shared.defaultLanguage,
-                    destinationURL: destinationURL,
-                    customDependencies: dependencies
-                )
-            } catch {
-                print("自定义下载失败: \(error.localizedDescription)")
-            }
-
-            await MainActor.run {
-                dismiss()
-            }
-        }
-    }
-    
-    private func createCompletedCustomTask(path: URL, dependencies: [DependenciesToDownload]) async {
         let existingTask = globalNetworkManager.downloadTasks.first { task in
-            return task.productId == productId &&
-                   task.productVersion == customDownloadVersion &&
-                   task.language == StorageData.shared.defaultLanguage &&
-                   task.directory == path.deletingLastPathComponent()
+            task.productId == productId &&
+            task.productVersion == version &&
+            task.language == StorageData.shared.defaultLanguage &&
+            task.status.isActive
         }
-        
+
         if existingTask != nil {
+            navigationPath.append(VersionPickerDestination.duplicateTaskAlert(productId: productId, version: version))
             return
         }
         
-        let platform = globalProducts.first(where: { $0.id == productId && $0.version == customDownloadVersion })?.platforms.first?.id ?? "unknown"
-
-        let task = NewDownloadTask(
-            productId: productId,
-            productVersion: customDownloadVersion,
-            language: StorageData.shared.defaultLanguage,
-            displayName: findProduct(id: productId)?.displayName ?? productId,
-            directory: path.deletingLastPathComponent(),
-            dependenciesToDownload: dependencies,
-            retryCount: 0,
-            createAt: Date(),
-            totalProgress: 1.0,
-            platform: platform
-        )
-
-        task.dependenciesToDownload = dependencies
-
-        let totalSize = dependencies.reduce(0) { productSum, product in
-            productSum + product.packages.reduce(0) { packageSum, pkg in
-                packageSum + (pkg.downloadSize > 0 ? pkg.downloadSize : 0)
-            }
+        Task {
+            await startCustomDownloadProcess(dependencies: dependencies)
         }
-        task.totalSize = totalSize
-        task.totalDownloadedSize = totalSize
-        task.totalProgress = 1.0
-
-        for dependency in dependencies {
-            for package in dependency.packages where package.isSelected {
-                package.downloaded = true
-                package.progress = 1.0
-                package.downloadedSize = package.downloadSize
-                package.status = .completed
-            }
-        }
-
-        task.setStatus(DownloadStatus.completed(DownloadStatus.CompletionInfo(
-            timestamp: Date(),
-            totalTime: 0,
-            totalSize: totalSize
-        )))
-
-        await MainActor.run {
-            globalNetworkManager.downloadTasks.append(task)
-            globalNetworkManager.updateDockBadge()
-            globalNetworkManager.objectWillChange.send()
-        }
-
-        await globalNetworkManager.saveTask(task)
+    }
+    
+    private func startCustomDownloadProcess(dependencies: [DependenciesToDownload]) async {
+        guard let firstDependency = dependencies.first else { return }
+        let version = firstDependency.version
         
+        let destinationURL: URL
+        do {
+            destinationURL = try await getDestinationURL(
+                productId: productId,
+                version: version,
+                language: StorageData.shared.defaultLanguage
+            )
+        } catch {
+            await MainActor.run { dismiss() }
+            return
+        }
+        
+        do {
+            try await globalNetworkManager.startCustomDownload(
+                productId: productId,
+                selectedVersion: version,
+                language: StorageData.shared.defaultLanguage,
+                destinationURL: destinationURL,
+                customDependencies: dependencies
+            )
+        } catch {
+            print("自定义下载失败: \(error.localizedDescription)")
+        }
+
         await MainActor.run {
             dismiss()
         }
@@ -276,10 +226,10 @@ struct VersionPickerView: View {
     }
 }
 
-private struct VersionPickerHeaderView: View {
+private struct NavigationVersionPickerHeaderView: View {
     let productId: String
     let downloadAppleSilicon: Bool
-    @Environment(\.dismiss) private var dismiss
+    let onDismiss: () -> Void
     
     var body: some View {
         VStack {
@@ -307,11 +257,11 @@ private struct VersionPickerHeaderView: View {
                     .foregroundColor(.secondary)
                 Spacer()
                 Button("取消") {
-                    dismiss()
+                    onDismiss()
                 }
                 .buttonStyle(BeautifulButtonStyle(baseColor: Color.gray.opacity(0.2)))
             }
-            .padding(.bottom, VersionPickerConstants.headerPadding)
+            .padding(.bottom, NavigationVersionPickerConstants.headerPadding)
             
             HStack(spacing: 6) {
                 Image(systemName: downloadAppleSilicon ? "m.square" : "x.square")
@@ -338,7 +288,7 @@ private struct VersionPickerHeaderView: View {
     }
 }
 
-private struct VersionListView: View {
+private struct NavigationVersionListView: View {
     let productId: String
     @Binding var expandedVersions: Set<String>
     let onSelect: (String) -> Void
@@ -351,9 +301,9 @@ private struct VersionListView: View {
         ScrollViewReader { proxy in
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
-                    LazyVStack(spacing: VersionPickerConstants.verticalSpacing) {
+                    LazyVStack(spacing: NavigationVersionPickerConstants.verticalSpacing) {
                         ForEach(getFilteredVersions(), id: \.key) { version, info in
-                            VersionRow(
+                            NavigationVersionRow(
                                 productId: productId,
                                 version: version,
                                 info: info,
@@ -446,7 +396,7 @@ private struct VersionListView: View {
     }
 }
 
-private struct VersionRow: View, Equatable {
+private struct NavigationVersionRow: View, Equatable {
     @StorageValue(\.defaultLanguage) private var defaultLanguage
     
     let productId: String
@@ -457,7 +407,7 @@ private struct VersionRow: View, Equatable {
     let onToggle: (String) -> Void
     let onCustomDownload: (String) -> Void
     
-    static func == (lhs: VersionRow, rhs: VersionRow) -> Bool {
+    static func == (lhs: NavigationVersionRow, rhs: NavigationVersionRow) -> Bool {
         lhs.productId == rhs.productId &&
         lhs.version == rhs.version &&
         lhs.isExpanded == rhs.isExpanded
@@ -471,7 +421,7 @@ private struct VersionRow: View, Equatable {
     
     var body: some View {
         VStack(spacing: 0) {
-            VersionHeader(
+            NavigationVersionHeader(
                 version: version,
                 info: info,
                 isExpanded: isExpanded,
@@ -481,7 +431,7 @@ private struct VersionRow: View, Equatable {
             )
             
             if isExpanded {
-                VersionDetails(
+                NavigationVersionDetails(
                     info: info,
                     version: version,
                     onSelect: onSelect,
@@ -491,7 +441,7 @@ private struct VersionRow: View, Equatable {
         }
         .padding(.horizontal)
         .background(Color(NSColor.controlBackgroundColor))
-        .cornerRadius(VersionPickerConstants.cornerRadius)
+        .cornerRadius(NavigationVersionPickerConstants.cornerRadius)
         .animation(.easeInOut(duration: 0.2), value: isExpanded)
         .onAppear {
             if cachedExistingPath == nil {
@@ -505,7 +455,7 @@ private struct VersionRow: View, Equatable {
     }
 }
 
-private struct VersionHeader: View {
+private struct NavigationVersionHeader: View {
     let version: String
     let info: Product.Platform
     let isExpanded: Bool
@@ -529,10 +479,112 @@ private struct VersionHeader: View {
                     hasDependencies: hasDependencies
                 )
             }
-            .padding(.vertical, VersionPickerConstants.buttonPadding)
+            .padding(.vertical, NavigationVersionPickerConstants.buttonPadding)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+}
+
+private struct NavigationVersionDetails: View {
+    let info: Product.Platform
+    let version: String
+    let onSelect: (String) -> Void
+    let onCustomDownload: (String) -> Void
+    
+    private var hasDependencies: Bool {
+        !(info.languageSet.first?.dependencies.isEmpty ?? true)
+    }
+    
+    private var hasModules: Bool {
+        !(info.modules.isEmpty)
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: NavigationVersionPickerConstants.verticalSpacing) {
+            if hasDependencies || hasModules {
+                VStack(alignment: .leading, spacing: 8) {
+                    if hasDependencies {
+                        HStack(spacing: 5) {
+                            Image(systemName: "shippingbox.fill")
+                                .font(.system(size: 11))
+                                .foregroundColor(.blue.opacity(0.8))
+                            Text("依赖组件")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.secondary)
+                            Text("(\(info.languageSet.first?.dependencies.count ?? 0))")
+                                .font(.system(size: 11))
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 1)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 3)
+                                        .fill(Color.blue.opacity(0.1))
+                                )
+                                .foregroundColor(.blue.opacity(0.8))
+                        }
+                        .padding(.vertical, 4)
+                        DependenciesList(dependencies: info.languageSet.first?.dependencies ?? [])
+                            .padding(.leading, 8)
+                    }
+                    #if DEBUG
+                    if hasModules {
+                        if hasDependencies {
+                            Divider()
+                                .padding(.vertical, 4)
+                        }
+                        
+                        HStack(spacing: 5) {
+                            Image(systemName: "square.stack.3d.up.fill")
+                                .font(.system(size: 11))
+                                .foregroundColor(.blue.opacity(0.8))
+                            Text("可选模块")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.secondary)
+                            Text("(\(info.modules.count))")
+                                .font(.system(size: 11))
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 1)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 3)
+                                        .fill(Color.blue.opacity(0.1))
+                                )
+                                .foregroundColor(.blue.opacity(0.8))
+                        }
+                        .padding(.vertical, 4)
+                        ModulesList(modules: info.modules)
+                            .padding(.leading, 8)
+                    }
+                    #endif
+                }
+                .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
+                .cornerRadius(6)
+            }
+            
+            NavigationDownloadButton(
+                version: version, 
+                onSelect: onSelect,
+                onCustomDownload: { version in
+                    onCustomDownload(version)
+                }
+            )
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.bottom, 8)
+    }
+}
+
+private struct NavigationDownloadButton: View {
+    let version: String
+    let onSelect: (String) -> Void
+    let onCustomDownload: (String) -> Void
+    
+    var body: some View {
+        Button("下载") {
+            onCustomDownload(version)
+        }
+        .foregroundColor(.white)
+        .buttonStyle(BeautifulButtonStyle(baseColor: Color.blue))
+        .padding(.top, 8)
     }
 }
 
@@ -622,93 +674,6 @@ private struct ExpandButton: View {
             .foregroundColor(.secondary)
             .contentShape(Rectangle())
             .onTapGesture(perform: onToggle)
-    }
-}
-
-private struct VersionDetails: View {
-    let info: Product.Platform
-    let version: String
-    let onSelect: (String) -> Void
-    let onCustomDownload: (String) -> Void
-    
-    private var hasDependencies: Bool {
-        !(info.languageSet.first?.dependencies.isEmpty ?? true)
-    }
-    
-    private var hasModules: Bool {
-        !(info.modules.isEmpty)
-    }
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: VersionPickerConstants.verticalSpacing) {
-            if hasDependencies || hasModules {
-                VStack(alignment: .leading, spacing: 8) {
-                    if hasDependencies {
-                        HStack(spacing: 5) {
-                            Image(systemName: "shippingbox.fill")
-                                .font(.system(size: 11))
-                                .foregroundColor(.blue.opacity(0.8))
-                            Text("依赖组件")
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(.secondary)
-                            Text("(\(info.languageSet.first?.dependencies.count ?? 0))")
-                                .font(.system(size: 11))
-                                .padding(.horizontal, 5)
-                                .padding(.vertical, 1)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 3)
-                                        .fill(Color.blue.opacity(0.1))
-                                )
-                                .foregroundColor(.blue.opacity(0.8))
-                        }
-                        .padding(.vertical, 4)
-                        DependenciesList(dependencies: info.languageSet.first?.dependencies ?? [])
-                            .padding(.leading, 8)
-                    }
-                    #if DEBUG
-                    if hasModules {
-                        if hasDependencies {
-                            Divider()
-                                .padding(.vertical, 4)
-                        }
-                        
-                        HStack(spacing: 5) {
-                            Image(systemName: "square.stack.3d.up.fill")
-                                .font(.system(size: 11))
-                                .foregroundColor(.blue.opacity(0.8))
-                            Text("可选模块")
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(.secondary)
-                            Text("(\(info.modules.count))")
-                                .font(.system(size: 11))
-                                .padding(.horizontal, 5)
-                                .padding(.vertical, 1)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 3)
-                                        .fill(Color.blue.opacity(0.1))
-                                )
-                                .foregroundColor(.blue.opacity(0.8))
-                        }
-                        .padding(.vertical, 4)
-                        ModulesList(modules: info.modules)
-                            .padding(.leading, 8)
-                    }
-                    #endif
-                }
-                .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
-                .cornerRadius(6)
-            }
-            
-            DownloadButton(
-                version: version, 
-                onSelect: onSelect,
-                onCustomDownload: { version in
-                    onCustomDownload(version)
-                }
-            )
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.bottom, 8)
     }
 }
 
@@ -868,17 +833,66 @@ private struct ModulesList: View {
     }
 }
 
-private struct DownloadButton: View {
+private struct DuplicateTaskAlertView: View {
+    let productId: String
     let version: String
-    let onSelect: (String) -> Void
-    let onCustomDownload: (String) -> Void
+    let onCancel: () -> Void
+    let iconImage: NSImage?
+    
+    private var productName: String {
+        findProduct(id: productId)?.displayName ?? productId
+    }
     
     var body: some View {
-        Button("下载") {
-            onCustomDownload(version)
+        VStack(spacing: 20) {
+            ZStack {
+                if let iconImage = iconImage {
+                    Image(nsImage: iconImage)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 64, height: 64)
+                } else {
+                    Image(systemName: "app.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 64, height: 64)
+                        .foregroundColor(.blue)
+                }
+
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 24))
+                    .foregroundColor(.orange)
+                    .background(Color.white)
+                    .clipShape(Circle())
+                    .offset(x: 24, y: -24)
+            }
+            
+            Text("下载任务已存在")
+                .font(.headline)
+            
+            VStack(spacing: 8) {
+                Text("产品 \(productName) (版本 \(version)) 已有正在进行的下载任务")
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.secondary)
+                
+                Text("请在下载管理器中查看进度")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            Button("确定") {
+                onCancel()
+            }
+            .buttonStyle(BeautifulButtonStyle(baseColor: Color.blue))
+            .frame(width: 200)
         }
-        .foregroundColor(.white)
-        .buttonStyle(BeautifulButtonStyle(baseColor: Color.blue))
-        .padding(.top, 8)
+        .padding()
+        .frame(width: 400, height: 300)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(NSColor.windowBackgroundColor))
+                .shadow(radius: 10)
+        )
+        .navigationTitle("任务提示")
     }
 }

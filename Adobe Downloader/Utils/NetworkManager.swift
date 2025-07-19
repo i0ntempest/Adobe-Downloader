@@ -61,50 +61,6 @@ class NetworkManager: ObservableObject {
             }
         }
     }
-    func startDownload(productId: String, selectedVersion: String, language: String, destinationURL: URL) async throws {
-        // 从 globalCcmResult 中获取 productId 对应的 ProductInfo
-        guard let productInfo = globalCcmResult.products.first(where: { $0.id == productId && $0.version == selectedVersion }) else {
-            throw NetworkError.productNotFound
-        }
-
-        let task = NewDownloadTask(
-            productId: productInfo.id,
-            productVersion: selectedVersion,
-            language: language,
-            displayName: productInfo.displayName,
-            directory: destinationURL,
-            dependenciesToDownload: [],
-            createAt: Date(),
-            totalStatus: .preparing(DownloadStatus.PrepareInfo(
-                message: "正在准备下载...",
-                timestamp: Date(),
-                stage: .initializing
-            )),
-            totalProgress: 0,
-            totalDownloadedSize: 0,
-            totalSize: 0,
-            totalSpeed: 0,
-            platform: globalProducts.first(where: { $0.id == productId })?.platforms.first?.id ?? "unknown")
-
-        downloadTasks.append(task)
-        updateDockBadge()
-        await saveTask(task)
-        
-        do {
-            try await globalNewDownloadUtils.handleDownload(task: task, productInfo: productInfo, allowedPlatform: StorageData.shared.allowedPlatform)
-        } catch {
-            task.setStatus(.failed(DownloadStatus.FailureInfo(
-                message: error.localizedDescription,
-                error: error,
-                timestamp: Date(),
-                recoverable: true
-            )))
-            await saveTask(task)
-            await MainActor.run {
-                objectWillChange.send()
-            }
-        }
-    }
     
     func startCustomDownload(productId: String, selectedVersion: String, language: String, destinationURL: URL, customDependencies: [DependenciesToDownload]) async throws {
         guard let productInfo = globalCcmResult.products.first(where: { $0.id == productId && $0.version == selectedVersion }) else {
