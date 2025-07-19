@@ -609,24 +609,20 @@ struct AlertModifier: ViewModifier {
     }
     
     private func startRedownload() async {
-        do {
-            globalNetworkManager.downloadTasks.removeAll { task in
-                task.productId == viewModel.uniqueProduct.id &&
-                task.productVersion == viewModel.pendingVersion &&
-                task.language == viewModel.pendingLanguage
-            }
-            
-            if let existingPath = viewModel.existingFilePath {
-                try? FileManager.default.removeItem(at: existingPath)
-            }
-            
-            await MainActor.run {
-                viewModel.selectedVersion = viewModel.pendingVersion
-                viewModel.selectedLanguage = viewModel.pendingLanguage
-                viewModel.showVersionPicker = true
-            }
-        } catch {
-            viewModel.handleError(error)
+        globalNetworkManager.downloadTasks.removeAll { task in
+            task.productId == viewModel.uniqueProduct.id &&
+            task.productVersion == viewModel.pendingVersion &&
+            task.language == viewModel.pendingLanguage
+        }
+        
+        if let existingPath = viewModel.existingFilePath {
+            try? FileManager.default.removeItem(at: existingPath)
+        }
+        
+        await MainActor.run {
+            viewModel.selectedVersion = viewModel.pendingVersion
+            viewModel.selectedLanguage = viewModel.pendingLanguage
+            viewModel.showVersionPicker = true
         }
     }
 }

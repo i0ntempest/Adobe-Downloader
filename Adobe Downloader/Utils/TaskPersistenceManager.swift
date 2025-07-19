@@ -1,6 +1,6 @@
 import Foundation
 
-class TaskPersistenceManager {
+class TaskPersistenceManager: @unchecked Sendable {
     static let shared = TaskPersistenceManager()
     
     private let fileManager = FileManager.default
@@ -33,9 +33,9 @@ class TaskPersistenceManager {
             platform: task.platform
         )
 
-        await withCheckedContinuation { continuation in
-            taskCacheQueue.async(flags: .barrier) {
-                self.taskCache[fileName] = task
+        await withCheckedContinuation { [weak self] continuation in
+            self?.taskCacheQueue.async(flags: .barrier) { [weak self] in
+                self?.taskCache[fileName] = task
                 continuation.resume()
             }
         }
@@ -100,18 +100,18 @@ class TaskPersistenceManager {
             for file in files where file.pathExtension == "json" {
                 let fileName = file.lastPathComponent
 
-                let cachedTask = await withCheckedContinuation { continuation in
-                    taskCacheQueue.sync {
-                        continuation.resume(returning: self.taskCache[fileName])
+                let cachedTask = await withCheckedContinuation { [weak self] continuation in
+                    self?.taskCacheQueue.sync { [weak self] in
+                        continuation.resume(returning: self?.taskCache[fileName])
                     }
                 }
                 
                 if let cachedTask = cachedTask {
                     tasks.append(cachedTask)
                 } else if let task = await loadTask(from: file) {
-                    await withCheckedContinuation { continuation in
-                        taskCacheQueue.async(flags: .barrier) {
-                            self.taskCache[fileName] = task
+                    await withCheckedContinuation { [weak self] continuation in
+                        self?.taskCacheQueue.async(flags: .barrier) { [weak self] in
+                            self?.taskCache[fileName] = task
                             continuation.resume()
                         }
                     }
@@ -219,8 +219,8 @@ class TaskPersistenceManager {
         )
         let fileURL = tasksDirectory.appendingPathComponent(fileName)
 
-        taskCacheQueue.async(flags: .barrier) {
-            self.taskCache.removeValue(forKey: fileName)
+        taskCacheQueue.async(flags: .barrier) { [weak self] in
+            self?.taskCache.removeValue(forKey: fileName)
         }
         
         try? fileManager.removeItem(at: fileURL)
@@ -277,9 +277,9 @@ class TaskPersistenceManager {
         )
         task.displayInstallButton = true
 
-        await withCheckedContinuation { continuation in
-            taskCacheQueue.async(flags: .barrier) {
-                self.taskCache[fileName] = task
+        await withCheckedContinuation { [weak self] continuation in
+            self?.taskCacheQueue.async(flags: .barrier) { [weak self] in
+                self?.taskCache[fileName] = task
                 continuation.resume()
             }
         }

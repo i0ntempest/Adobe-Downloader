@@ -98,7 +98,7 @@ extension ValidationInfo.SegmentInfo: Codable {
     }
 }
 
-class ChunkedDownloadManager {
+class ChunkedDownloadManager: @unchecked Sendable {
     static let shared = ChunkedDownloadManager()
 
     private var chunkSize: Int64 {
@@ -113,7 +113,26 @@ class ChunkedDownloadManager {
     }
 
     private var activeTasks: [String: Task<Void, Error>] = [:]
-    private let taskLock = NSLock()
+    
+    private let taskQueue = DispatchQueue(label: "com.x1a0he.macOS.Adobe-Downloader.chunkDownloadTasks", attributes: .concurrent)
+    
+    private func setActiveTask(packageIdentifier: String, task: Task<Void, Error>) async {
+        await withCheckedContinuation { continuation in
+            taskQueue.async(flags: .barrier) { [weak self] in
+                self?.activeTasks[packageIdentifier] = task
+                continuation.resume()
+            }
+        }
+    }
+    
+    private func removeActiveTask(packageIdentifier: String) async {
+        await withCheckedContinuation { continuation in
+            taskQueue.async(flags: .barrier) { [weak self] in
+                self?.activeTasks.removeValue(forKey: packageIdentifier)
+                continuation.resume()
+            }
+        }
+    }
     
     private init() {
         let containerURL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
@@ -212,9 +231,13 @@ class ChunkedDownloadManager {
     }
     
     private func writeDataToFile(data: Data, destinationURL: URL, offset: Int64, totalSize: Int64? = nil) async throws {
-        return try await withCheckedThrowingContinuation { continuation in
-            DispatchQueue.global(qos: .utility).async {
+        return try await withCheckedThrowingContinuation { [weak self] continuation in
+            DispatchQueue.global(qos: .utility).async { [weak self] in
                 do {
+                    guard let self = self else {
+                        continuation.resume(throwing: NSError(domain: "ChunkedDownloadManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Manager deallocated"]))
+                        return
+                    }
                     let directory = destinationURL.deletingLastPathComponent()
                     if !self.fileManager.fileExists(atPath: directory.path) {
                         try self.fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -265,7 +288,7 @@ class ChunkedDownloadManager {
         }
 
         if fileManager.fileExists(atPath: destinationURL.path) {
-            if let expectedHash = chunk.expectedHash {
+            if chunk.expectedHash != nil {
                 if validateCompleteChunkFromFile(destinationURL: destinationURL, chunk: chunk) {
                     modifiedChunk.downloadedSize = chunk.size
                     modifiedChunk.isCompleted = true
@@ -304,9 +327,7 @@ class ChunkedDownloadManager {
         headers.forEach { request.setValue($0.value, forHTTPHeaderField: $0.key) }
 
 
-        return try await withTaskCancellationHandler {
-            modifiedChunk.isPaused = true
-        } operation: {
+        return try await withTaskCancellationHandler(operation: {
             let (data, response) = try await URLSession.shared.data(for: request)
             
             try Task.checkCancellation()
@@ -329,7 +350,7 @@ class ChunkedDownloadManager {
                 if modifiedChunk.downloadedSize >= chunk.size {
                     modifiedChunk.isCompleted = true
 
-                    if let expectedHash = chunk.expectedHash {
+                    if chunk.expectedHash != nil {
                         if !validateCompleteChunkFromFile(destinationURL: destinationURL, chunk: chunk) {
                             throw NetworkError.invalidData("分片哈希校验失败: \(chunk.index)")
                         }
@@ -343,26 +364,34 @@ class ChunkedDownloadManager {
             }
             
             return modifiedChunk
-        }
+        }, onCancel: {})
     }
 
     func pauseDownload(packageIdentifier: String) {
-        taskLock.lock()
-        defer { taskLock.unlock() }
-        
-        if let task = activeTasks[packageIdentifier] {
-            task.cancel()
-            activeTasks.removeValue(forKey: packageIdentifier)
+        Task {
+            await withCheckedContinuation { [weak self] continuation in
+                self?.taskQueue.async(flags: .barrier) { [weak self] in
+                    if let task = self?.activeTasks[packageIdentifier] {
+                        task.cancel()
+                        self?.activeTasks.removeValue(forKey: packageIdentifier)
+                    }
+                    continuation.resume()
+                }
+            }
         }
     }
 
     func cancelDownload(packageIdentifier: String) {
-        taskLock.lock()
-        defer { taskLock.unlock() }
-        
-        if let task = activeTasks[packageIdentifier] {
-            task.cancel()
-            activeTasks.removeValue(forKey: packageIdentifier)
+        Task {
+            await withCheckedContinuation { [weak self] continuation in
+                self?.taskQueue.async(flags: .barrier) { [weak self] in
+                    if let task = self?.activeTasks[packageIdentifier] {
+                        task.cancel()
+                        self?.activeTasks.removeValue(forKey: packageIdentifier)
+                    }
+                    continuation.resume()
+                }
+            }
         }
         
         clearChunkedDownloadState(packageIdentifier: packageIdentifier)
@@ -471,7 +500,7 @@ class ChunkedDownloadManager {
         cancellationHandler: (() async -> Bool)? = nil
     ) async throws {
         let downloadTask = Task<Void, Error> {
-            let (supportsRange, totalSize, etag) = try await checkRangeSupport(url: url, headers: headers)
+            let (supportsRange, totalSize, _) = try await checkRangeSupport(url: url, headers: headers)
             
             guard totalSize > 0 else {
                 throw NetworkError.invalidData("无法获取文件大小")
@@ -548,7 +577,7 @@ class ChunkedDownloadManager {
                     return false
                 }
 
-                if let expectedHash = chunk.expectedHash,
+                if chunk.expectedHash != nil &&
                    fileManager.fileExists(atPath: destinationURL.path) {
                     if validateCompleteChunkFromFile(destinationURL: destinationURL, chunk: chunk) {
                         return false
@@ -582,14 +611,12 @@ class ChunkedDownloadManager {
             clearChunkedDownloadState(packageIdentifier: packageIdentifier)
         }
 
-        taskLock.lock()
-        activeTasks[packageIdentifier] = downloadTask
-        taskLock.unlock()
+        await setActiveTask(packageIdentifier: packageIdentifier, task: downloadTask)
         
         defer {
-            taskLock.lock()
-            activeTasks.removeValue(forKey: packageIdentifier)
-            taskLock.unlock()
+            Task {
+                await removeActiveTask(packageIdentifier: packageIdentifier)
+            }
         }
 
         try await downloadTask.value

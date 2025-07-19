@@ -183,13 +183,6 @@ class NewDownloadUtils {
             )
         }
 
-        func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
-            completionHandler(.becomeDownload)
-        }
-        
-        func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didBecome downloadTask: URLSessionDownloadTask) {
-        }
-
         func cleanup() {
             completionHandler = { _, _, _ in }
             progressHandler = nil
@@ -370,13 +363,12 @@ class NewDownloadUtils {
             }
         }
 
-        let initialProgress = await progressManager.getTotalProgress()
-
+        let packagesSnapshot = allPackages
         await MainActor.run {
-            let totalPackages = allPackages.count
-            task.currentPackage = allPackages.first?.package
+            let totalPackages = packagesSnapshot.count
+            task.currentPackage = packagesSnapshot.first?.package
             task.setStatus(.downloading(DownloadStatus.DownloadInfo(
-                fileName: allPackages.first?.package.fullPackageName ?? "",
+                fileName: packagesSnapshot.first?.package.fullPackageName ?? "",
                 currentPackageIndex: 0,
                 totalPackages: totalPackages,
                 startTime: Date(),
@@ -1295,7 +1287,7 @@ class NewDownloadUtils {
         let taskPackageMap = await globalCancelTracker.getTaskPackageMap()
 
         
-        for (downloadTaskId, (downloadTask, _, _)) in taskPackageMap {
+        for (_, (downloadTask, _, _)) in taskPackageMap {
             downloadTask.cancel()
         }
 

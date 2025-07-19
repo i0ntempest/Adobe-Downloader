@@ -6,7 +6,7 @@
 //
 import Foundation
 
-class NewDownloadTask: Identifiable, ObservableObject  {
+class NewDownloadTask: Identifiable, ObservableObject, @unchecked Sendable  {
     let id = UUID()
     var productId: String
     let productVersion: String
