@@ -101,7 +101,7 @@ struct CustomDownloadView: View {
         
         for dependencyInfo in dependencyInfos {
             await MainActor.run {
-                loadingState.currentTask = "正在处理 \(dependencyInfo.sapCode) 的包信息..."
+                loadingState.currentTask = String(localized: "正在处理 \(dependencyInfo.sapCode) 的包信息...")
             }
             
             let jsonString = try await globalNetworkService.getApplicationInfo(buildGuid: dependencyInfo.buildGuid)

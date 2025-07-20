@@ -1,5 +1,26 @@
 # Change Log
 
+## 2025-07-20 更新日志
+
+[//]: # (2.1)
+```markdown
+1. 新增安装前终止 Setup 的特性
+2. 新增并发下载数控制
+3. 重写版本选择界面，采用 NavigationStack 的特性支持版本选择和自定义包选择
+4. 重写下载逻辑，支持线程池 + 分片的单任务多个包同时下载
+5. 重写 Helper 逻辑，使用 macOS 13.0+ 的 SMAppService 新特性
+6. 调整 Helper 链接状态的呼吸灯表现
+
+====================
+
+1. Added feature to cancel Setup before installation.
+2. Added concurrency control for downloads.
+3. Rewritten version selection interface using NavigationStack with package customization.
+4. Rewritten download logic with thread pooling + segmented downloading for parallel package fetching.
+5. Rewritten Helper logic using SMAppService \(macOS 13.0+\).
+6. Refined breathing light indicator for Helper connection status.
+```
+
 ## 2025-04-23 更新日志
 
 [//]: # (2.0.2)

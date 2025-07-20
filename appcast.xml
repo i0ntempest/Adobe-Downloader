@@ -3,6 +3,38 @@
     <channel>
         <title>Adobe Downloader</title>
         <item>
+            <title>2.1</title>
+            <pubDate>Sun, 20 Jul 2025 13:05:23 +0800</pubDate>
+            <sparkle:version>210</sparkle:version>
+            <sparkle:shortVersionString>2.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/X1a0He/Adobe-Downloader/releases/download/2.1.0/Adobe.Downloader.dmg" length="4859082" type="application/octet-stream" sparkle:edSignature="/kj3r/o+4sZSlFxS0/T0tI3ju7pKD1oFeJNhUh9++gafwnDYY1mVVy0CRzetVU3R6jw9uz+liEvl6rYmkrKKCg=="/>
+            <description>
+                <![CDATA[
+                    <style>ul{margin-top: 0;margin-bottom: 7;padding-left: 18;}</style>
+                    <h4>Adobe Downloader 更新日志: </h4>
+                    <ul>
+                        <li>1. 新增安装前终止 Setup 的特性</li>
+                        <li>2. 新增并发下载数控制</li>
+                        <li>3. 重写版本选择界面，采用 NavigationStack 的特性支持版本选择和自定义包选择</li>
+                        <li>4. 重写下载逻辑，支持线程池 + 分片的单任务多个包同时下载</li>
+                        <li>5. 重写 Helper 逻辑，使用 macOS 13.0+ 的 SMAppService 新特性</li>
+                        <li>6. 调整 Helper 链接状态的呼吸灯表现</li>
+                    </ul>
+                    <hr>
+                    <h4>Adobe Downloader Changes: </h4>
+                    <ul>
+                        <li>1. Added feature to cancel Setup before installation.</li>
+                        <li>2. Added concurrency control for downloads.</li>
+                        <li>3. Rewritten version selection interface using NavigationStack with package customization.</li>
+                        <li>4. Rewritten download logic with thread pooling + segmented downloading for parallel package fetching.</li>
+                        <li>5. Rewritten Helper logic using SMAppService \(macOS 13.0+\).</li>
+                        <li>6. Refined breathing light indicator for Helper connection status.</li>
+                    </ul>
+                ]]>
+            </description>
+        </item>
+        <item>
             <title>2.0.2</title>
             <pubDate>Wed, 23 Apr 2025 23:06:42 +0800</pubDate>
             <sparkle:version>202</sparkle:version>

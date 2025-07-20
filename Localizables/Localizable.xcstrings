@@ -1654,7 +1654,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Existed"
+            "value" : "Exists"
           }
         }
       }
@@ -2570,7 +2570,6 @@
       }
     },
     "正在处理 %@ 的包信息..." : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2780,6 +2779,9 @@
         }
       }
     },
+    "没有写入权限" : {
+
+    },
     "没有找到产品" : {
       "localizations" : {
         "en" : {
@@ -2867,6 +2869,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Progress: %1$lld/%2$lld"
+          }
+        }
+      }
+    },
+    "清空配置失败: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to clear configuration: %@"
           }
         }
       }
@@ -3027,7 +3039,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Confirm Cancel"
+            "value" : "Confirm"
           }
         }
       }
@@ -3266,6 +3278,9 @@
           }
         }
       }
+    },
+    "自行安装命令" : {
+
     },
     "自行安装命令:" : {
       "localizations" : {
@@ -3544,6 +3559,16 @@
         }
       }
     },
+    "选择要清理的内容" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select the content to clean up"
+          }
+        }
+      }
+    },
     "通用" : {
       "localizations" : {
         "en" : {
@@ -3630,6 +3655,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Reconnect successful"
+          }
+        }
+      }
+    },
+    "重置程序" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset Program"
           }
         }
       }

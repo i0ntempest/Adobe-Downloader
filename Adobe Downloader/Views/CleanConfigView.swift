@@ -110,7 +110,7 @@ struct CleanConfigView: View {
             if helperStatus == .installed {
                 ModernPrivilegedHelperManager.shared.executeCommand("open -a Terminal \(scriptURL.path)") { output in
                     if output.starts(with: "Error") {
-                        alertMessage = "清空配置失败: \(output)"
+                        alertMessage = String(localized: "清空配置失败: \(output)")
                         showAlert = true
                     } else {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -136,7 +136,7 @@ struct CleanConfigView: View {
             }
 
         } catch {
-            alertMessage = "清空配置失败: \(error.localizedDescription)"
+            alertMessage = String(localized: "清空配置失败: \(error.localizedDescription)")
             showAlert = true
         }
     }

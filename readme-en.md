@@ -8,7 +8,8 @@
 
 > ⚠️ This repository does not support any PR submission
 
-**🍎Only for macOS 12.0+.**
+**Due to the rewritten Helper in v2.1, the minimum macOS requirement is now 13.0+ (no longer supports 12.0).**
+**🍎Only for macOS 13.0+.**
 
 > **If you like Adobe Downloader, or it helps you, please Star🌟 it.**
 >
@@ -67,14 +68,15 @@ when prompted.
 
 - For historical update logs, please go to [Update Log](update-log.md)
 
-- 2025-04-23 Update Log
+- 2025-07-20 Update Log
 
 ```markdown
-1. Fixed an issue where dependency package detection on Intel-based models mistakenly identified osx10 as ARM architecture, leading to incorrect downloads.
-2. Resolved text display issues in the settings interface header.
-3. Adjusted the height of the download management interface from 500 to 600.
-4. Added functionality to copy all product and package list information in download tasks.
-5. Optimized display handling for the product Substance Alchemist.
+1. Added feature to cancel Setup before installation.
+2. Added concurrency control for downloads.
+3. Rewritten version selection interface using NavigationStack with package customization.
+4. Rewritten download logic with thread pooling + segmented downloading for parallel package fetching.
+5. Rewritten Helper logic using SMAppService \(macOS 13.0+\).
+6. Refined breathing light indicator for Helper connection status.
 ```
 
 ### Language friendly
