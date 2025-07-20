@@ -99,6 +99,16 @@
         }
       }
     },
+    "%@ 执行失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Execute failed"
+          }
+        }
+      }
+    },
     "%02d:%02d:%02d" : {
       "comment" : "Download time format (HH:mm:ss)",
       "localizations" : {
@@ -136,6 +146,9 @@
     "•" : {
 
     },
+    "1-10" : {
+
+    },
     "Adobe Creative Cloud" : {
 
     },
@@ -162,12 +175,12 @@
         }
       }
     },
-    "Adobe Downloader 需要通过后台Daemon进程来安装与移动文件，请在\"系统偏好设置->登录项->允许在后台 中\"允许当前App" : {
+    "Adobe Downloader 需要通过后台服务来安装与移动文件。请在\"系统设置 → 通用 → 登录项与扩展\"中允许此应用的后台项目。" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Adobe Downloader needs to use the background Daemon process to install and move files. Please allow the current App in \"System Preferences->Login Items->Allow in the Background\""
+            "value" : "Adobe Downloader needs to use the background service to install and move files. Please allow this app's background project in \"System Settings → General → Login Items and Extensions\"."
           }
         }
       }
@@ -299,6 +312,7 @@
       }
     },
     "Helper 响应异常: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -309,6 +323,7 @@
       }
     },
     "Helper 安装失败: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -328,12 +343,32 @@
         }
       }
     },
+    "Helper 文件不存在或损坏，请重新安装应用" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Helper file does not exist or is damaged, please re-install the app"
+          }
+        }
+      }
+    },
     "Helper 是一个具有管理员权限的辅助工具，用于执行需要管理员权限的操作，如修改系统文件等。没有 Helper 将无法正常使用软件的某些功能。" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Helper is a tool with administrator privileges, used to perform operations that require administrator privileges, such as modifying system files. Without Helper, some features of the software may not work properly."
+          }
+        }
+      }
+    },
+    "Helper 服务不可用" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Helper service is unavailable"
           }
         }
       }
@@ -368,6 +403,16 @@
         }
       }
     },
+    "Helper 注册失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Helper registration failed"
+          }
+        }
+      }
+    },
     "Helper 设置" : {
       "localizations" : {
         "en" : {
@@ -379,6 +424,7 @@
       }
     },
     "Helper 重新安装成功" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -389,6 +435,7 @@
       }
     },
     "Helper 重新连接成功" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -413,9 +460,6 @@
 
     },
     "macOS %@" : {
-
-    },
-    "OK" : {
 
     },
     "Setup 组件是 Adobe 官方的安装程序组件，我们需要对其进行修改以实现绕过验证的功能。如果没有下载并处理 Setup 组件，将无法使用安装功能。" : {
@@ -552,6 +596,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Downloading…"
+          }
+        }
+      }
+    },
+    "下载任务已存在" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download task already exists"
           }
         }
       }
@@ -711,6 +765,16 @@
         }
       }
     },
+    "产品 %@ (版本 %@) 已有正在进行的下载任务" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Product %@ (version %@) already has a download task in progress"
+          }
+        }
+      }
+    },
     "产品和包列表" : {
       "localizations" : {
         "en" : {
@@ -738,6 +802,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Only download"
+          }
+        }
+      }
+    },
+    "任务提示" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Task Prompt"
           }
         }
       }
@@ -896,6 +970,7 @@
       }
     },
     "准备卸载脚本失败: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1025,7 +1100,18 @@
         }
       }
     },
+    "升级" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upgrade"
+          }
+        }
+      }
+    },
     "卸载失败: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1061,6 +1147,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cancel cleaning"
+          }
+        }
+      }
+    },
+    "取消选择所有包" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deselect all packages"
           }
         }
       }
@@ -1177,10 +1273,24 @@
       }
     },
     "复制全部" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy all"
+          }
+        }
+      }
     },
     "复制包信息" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy package information"
+          }
+        }
+      }
     },
     "复制命令" : {
       "localizations" : {
@@ -1213,9 +1323,17 @@
       }
     },
     "复制所有包信息" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy all package information"
+          }
+        }
+      }
     },
     "多次尝试连接失败" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1247,6 +1365,7 @@
       }
     },
     "如果在设置里没找到当前App，可以尝试重置守护程序" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1604,7 +1723,14 @@
       }
     },
     "已选择 %lld 个包" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected %lld packages"
+          }
+        }
+      }
     },
     "常见问题" : {
       "localizations" : {
@@ -1612,6 +1738,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Q & A"
+          }
+        }
+      }
+    },
+    "并发下载数" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Concurrency"
           }
         }
       }
@@ -1639,7 +1775,14 @@
       }
     },
     "开始下载" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start downloading"
+          }
+        }
+      }
     },
     "开始清理" : {
       "localizations" : {
@@ -1682,10 +1825,24 @@
       }
     },
     "必需" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Required"
+          }
+        }
+      }
     },
     "总大小: %@" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Total size: %@"
+          }
+        }
+      }
     },
     "所有操作已成功完成" : {
       "localizations" : {
@@ -1697,7 +1854,18 @@
         }
       }
     },
+    "打开系统设置" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open System Settings"
+          }
+        }
+      }
+    },
     "执行卸载脚本失败: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1936,6 +2104,16 @@
         }
       }
     },
+    "新 Helper 服务验证失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Helper service verification failed"
+          }
+        }
+      }
+    },
     "无效的URL: %@" : {
       "comment" : "Invalid URL",
       "localizations" : {
@@ -1979,6 +2157,7 @@
       }
     },
     "无法获取Helper代理" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2249,6 +2428,16 @@
         }
       }
     },
+    "权限被拒绝，请检查应用签名和权限设置" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permission denied, please check the app signature and permission settings"
+          }
+        }
+      }
+    },
     "查看" : {
       "localizations" : {
         "en" : {
@@ -2289,6 +2478,26 @@
         }
       }
     },
+    "检测到旧版本安装，需要清理" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It has been detected that the old version is installed. Cleanup is required."
+          }
+        }
+      }
+    },
+    "检测到旧版本的 Helper" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It has been detected that the old version of Helper is installed."
+          }
+        }
+      }
+    },
     "检测到系统中不存在 Setup 组件，需要先下载组件才能继续操作。" : {
       "localizations" : {
         "en" : {
@@ -2306,6 +2515,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Downloading %1$@ (%2$d/%3$d)"
+          }
+        }
+      }
+    },
+    "正在下载..." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloading..."
           }
         }
       }
@@ -2331,7 +2550,14 @@
       }
     },
     "正在准备自定义下载..." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparing..."
+          }
+        }
+      }
     },
     "正在加载..." : {
       "localizations" : {
@@ -2344,6 +2570,7 @@
       }
     },
     "正在处理 %@ 的包信息..." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2524,7 +2751,14 @@
       }
     },
     "正在获取包信息..." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Getting package information..."
+          }
+        }
+      }
     },
     "正在连接" : {
       "localizations" : {
@@ -2536,12 +2770,12 @@
         }
       }
     },
-    "没有写入权限" : {
+    "此包为必需包，无法取消选择" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No write permission"
+            "value" : "This package is a required package and cannot be canceled"
           }
         }
       }
@@ -2637,8 +2871,25 @@
         }
       }
     },
+    "点击切换选择状态" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click to switch selection status"
+          }
+        }
+      }
+    },
     "版本 %@" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version %1$@"
+          }
+        }
+      }
     },
     "版本不兼容: 当前版本 %@, 需要版本 %@" : {
       "comment" : "Incompatible version",
@@ -2881,6 +3132,16 @@
         }
       }
     },
+    "稍后设置" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set later"
+          }
+        }
+      }
+    },
     "等待中" : {
       "comment" : "Download status waiting",
       "localizations" : {
@@ -2919,6 +3180,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "System Info"
+          }
+        }
+      }
+    },
+    "系统检测到旧版本的 Adobe Downloader Helper，需要升级到新版本。这将需要管理员权限来清理旧安装。" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System detected an old version of Adobe Downloader Helper. Upgrade to the new version is required. This will require administrator permissions to clean up the old installation."
           }
         }
       }
@@ -2986,7 +3257,7 @@
         }
       }
     },
-    "自行安装命令" : {
+    "自定义下载" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3037,6 +3308,7 @@
       }
     },
     "获取管理员授权失败，用户主动取消授权！" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3047,6 +3319,7 @@
       }
     },
     "获取管理员权限失败" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3078,6 +3351,16 @@
         }
       }
     },
+    "请在下载管理器中查看进度" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please check the progress in the download manager"
+          }
+        }
+      }
+    },
     "请求超时，请检查网络连接后重试" : {
       "comment" : "Network timeout",
       "localizations" : {
@@ -3095,6 +3378,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Please confirm your operation"
+          }
+        }
+      }
+    },
+    "迁移完成，但需要在系统设置中批准新的 Helper 服务" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Migration completed, but approval of the new Helper service is required in the system settings"
           }
         }
       }
@@ -3140,6 +3433,7 @@
       }
     },
     "连接出现错误: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3219,6 +3513,16 @@
         }
       }
     },
+    "选择所有包" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select all packages"
+          }
+        }
+      }
+    },
     "选择版本" : {
       "comment" : "版本选择页面",
       "localizations" : {
@@ -3231,14 +3535,11 @@
       }
     },
     "选择要下载的包" : {
-
-    },
-    "选择要清理的内容" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Select options to clean up"
+            "value" : "Select the packages to download"
           }
         }
       }
@@ -3293,6 +3594,26 @@
         }
       }
     },
+    "重新安装失败" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reinstall failed"
+          }
+        }
+      }
+    },
+    "重新安装成功" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reinstall successful"
+          }
+        }
+      }
+    },
     "重新连接" : {
       "localizations" : {
         "en" : {
@@ -3303,12 +3624,12 @@
         }
       }
     },
-    "重置程序" : {
+    "重新连接成功" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reset Program"
+            "value" : "Reconnect successful"
           }
         }
       }
@@ -3370,6 +3691,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Need to download the Setup component"
+          }
+        }
+      }
+    },
+    "需要在系统设置中允许 Helper" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Need to allow Helper in system settings"
+          }
+        }
+      }
+    },
+    "需要在系统设置中批准" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Need to approve in system settings"
+          }
+        }
+      }
+    },
+    "默认" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Default"
           }
         }
       }
