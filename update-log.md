@@ -1,5 +1,16 @@
 # Change Log
 
+## 2025-07-22 更新日志
+
+[//]: # (2.1.1)
+```markdown
+1. 修复了无法下载 Acrobat 的问题
+
+====================
+
+1. Fixed an issue where Acrobat products could not be downloaded.
+```
+
 ## 2025-07-20 更新日志
 
 [//]: # (2.1)

@@ -68,15 +68,10 @@ when prompted.
 
 - For historical update logs, please go to [Update Log](update-log.md)
 
-- 2025-07-20 Update Log
+- 2025-07-22 Update Log
 
 ```markdown
-1. Added feature to cancel Setup before installation.
-2. Added concurrency control for downloads.
-3. Rewritten version selection interface using NavigationStack with package customization.
-4. Rewritten download logic with thread pooling + segmented downloading for parallel package fetching.
-5. Rewritten Helper logic using SMAppService \(macOS 13.0+\).
-6. Refined breathing light indicator for Helper connection status.
+1. Fixed an issue where Acrobat products could not be downloaded.
 ```
 
 ### Language friendly
