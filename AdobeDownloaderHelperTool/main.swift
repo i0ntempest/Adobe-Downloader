@@ -243,7 +243,7 @@ extension HelperTool: NSXPCListenerDelegate {
         }
         
         var requirement: SecRequirement?
-        let requirementString = "identifier \"com.x1a0he.macOS.Adobe-Downloader\" and anchor apple generic and certificate leaf[subject.CN] = \"Apple Development: x1a0he@outlook.com (LFN2762T4F)\" and certificate 1[field.1.2.840.113635.100.6.2.1] /* exists */"
+        let requirementString = "anchor apple generic and identifier \"com.x1a0he.macOS.Adobe-Downloader\""
         guard SecRequirementCreateWithString(requirementString as CFString,
                                            [], &requirement) == errSecSuccess,
               let req = requirement else {
