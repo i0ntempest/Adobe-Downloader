@@ -432,6 +432,7 @@ private struct NavigationVersionRow: View, Equatable {
             
             if isExpanded {
                 NavigationVersionDetails(
+                    productId: productId,
                     info: info,
                     version: version,
                     onSelect: onSelect,
@@ -487,6 +488,7 @@ private struct NavigationVersionHeader: View {
 }
 
 private struct NavigationVersionDetails: View {
+    let productId: String
     let info: Product.Platform
     let version: String
     let onSelect: (String) -> Void
@@ -561,6 +563,7 @@ private struct NavigationVersionDetails: View {
             }
             
             NavigationDownloadButton(
+                productId: productId,
                 version: version, 
                 onSelect: onSelect,
                 onCustomDownload: { version in
@@ -574,13 +577,18 @@ private struct NavigationVersionDetails: View {
 }
 
 private struct NavigationDownloadButton: View {
+    let productId: String
     let version: String
     let onSelect: (String) -> Void
     let onCustomDownload: (String) -> Void
     
     var body: some View {
         Button("下载") {
-            onCustomDownload(version)
+            if productId == "APRO" {
+                onSelect(version)
+            } else {
+                onCustomDownload(version)
+            }
         }
         .foregroundColor(.white)
         .buttonStyle(BeautifulButtonStyle(baseColor: Color.blue))

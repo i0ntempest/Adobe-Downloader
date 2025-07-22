@@ -91,7 +91,11 @@ class NetworkManager: ObservableObject {
         await saveTask(task)
         
         do {
-            try await globalNewDownloadUtils.handleCustomDownload(task: task, customDependencies: customDependencies)
+            if productId == "APRO" {
+                try await globalNewDownloadUtils.downloadAPRO(task: task, productInfo: productInfo)
+            } else {
+                try await globalNewDownloadUtils.handleCustomDownload(task: task, customDependencies: customDependencies)
+            }
         } catch {
             task.setStatus(.failed(DownloadStatus.FailureInfo(
                 message: error.localizedDescription,

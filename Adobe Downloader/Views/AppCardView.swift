@@ -228,11 +228,31 @@ final class AppCardViewModel: ObservableObject {
                 showExistingFileAlert = true
             }
         } else {
-            await MainActor.run {
-                selectedVersion = version
-                selectedLanguage = language
-                showVersionPicker = true
+            if uniqueProduct.id == "APRO" {
+                await startAPRODownload(version: version, language: language)
+            } else {
+                await MainActor.run {
+                    selectedVersion = version
+                    selectedLanguage = language
+                    showVersionPicker = true
+                }
             }
+        }
+    }
+    
+    func startAPRODownload(version: String, language: String) async {
+        do {
+            let destinationURL = try await getDestinationURL(version: version, language: language)
+            
+            try await globalNetworkManager.startCustomDownload(
+                productId: uniqueProduct.id,
+                selectedVersion: version,
+                language: language,
+                destinationURL: destinationURL,
+                customDependencies: []
+            )
+        } catch {
+            handleError(error)
         }
     }
 

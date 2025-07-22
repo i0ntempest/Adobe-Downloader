@@ -482,6 +482,7 @@ private struct VersionRow: View, Equatable {
             
             if isExpanded {
                 VersionDetails(
+                    productId: productId,
                     info: info,
                     version: version,
                     onSelect: onSelect,
@@ -626,6 +627,7 @@ private struct ExpandButton: View {
 }
 
 private struct VersionDetails: View {
+    let productId: String
     let info: Product.Platform
     let version: String
     let onSelect: (String) -> Void
@@ -700,6 +702,7 @@ private struct VersionDetails: View {
             }
             
             DownloadButton(
+                productId: productId,
                 version: version, 
                 onSelect: onSelect,
                 onCustomDownload: { version in
@@ -869,13 +872,18 @@ private struct ModulesList: View {
 }
 
 private struct DownloadButton: View {
+    let productId: String
     let version: String
     let onSelect: (String) -> Void
     let onCustomDownload: (String) -> Void
     
     var body: some View {
         Button("下载") {
-            onCustomDownload(version)
+            if productId == "APRO" {
+                onSelect(version)
+            } else {
+                onCustomDownload(version)
+            }
         }
         .foregroundColor(.white)
         .buttonStyle(BeautifulButtonStyle(baseColor: Color.blue))
