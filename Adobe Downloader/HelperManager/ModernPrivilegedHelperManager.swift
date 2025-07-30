@@ -387,7 +387,6 @@ class ModernPrivilegedHelperManager: NSObject, ObservableObject {
 
     func disconnectHelper() async {
         connectionQueue.sync {
-            shouldAutoReconnect = false
             connection?.invalidate()
             connection = nil
             
@@ -398,12 +397,17 @@ class ModernPrivilegedHelperManager: NSObject, ObservableObject {
     }
 
     func reconnectHelper() async throws {
-        await disconnectHelper()
+        logger.info("开始重新连接Helper")
         shouldAutoReconnect = true
-        
-        if await attemptConnection() {
+        await disconnectHelper()
+
+        try await Task.sleep(nanoseconds: 500_000_000) // 0.5秒
+
+        let connectionResult = await attemptConnection()
+        if connectionResult {
             logger.info("重新连接成功")
         } else {
+            logger.error("重新连接失败")
             throw HelperError.connectionFailed
         }
     }

@@ -973,8 +973,7 @@ struct HelperStatusRow: View {
                     if viewModel.helperConnectionStatus == .needsApproval {
                         // 打开系统设置让用户批准Helper
                         SMAppService.openSystemSettingsLoginItems()
-                    } else if helperStatus == .installed &&
-                              viewModel.helperConnectionStatus != .connected {
+                    } else {
                         Task {
                             do {
                                 try await ModernPrivilegedHelperManager.shared.reconnectHelper()
