@@ -7,6 +7,7 @@
 import SwiftUI
 import Sparkle
 import Combine
+import ServiceManagement
 
 
 private enum AboutViewConstants {
@@ -267,6 +268,7 @@ final class GeneralSettingsViewModel: ObservableObject {
         case connecting
         case disconnected
         case checking
+        case needsApproval
     }
 
     init(updater: SPUUpdater) {
@@ -287,6 +289,8 @@ final class GeneralSettingsViewModel: ObservableObject {
                     self?.helperConnectionStatus = .disconnected
                 case .connecting:
                     self?.helperConnectionStatus = .connecting
+                case .needsApproval:
+                    self?.helperConnectionStatus = .needsApproval
                 }
             }
             .store(in: &cancellables)
@@ -966,8 +970,11 @@ struct HelperStatusRow: View {
                 Spacer()
 
                 Button(action: {
-                    if helperStatus == .installed &&
-                       viewModel.helperConnectionStatus != .connected {
+                    if viewModel.helperConnectionStatus == .needsApproval {
+                        // 打开系统设置让用户批准Helper
+                        SMAppService.openSystemSettingsLoginItems()
+                    } else if helperStatus == .installed &&
+                              viewModel.helperConnectionStatus != .connected {
                         Task {
                             do {
                                 try await ModernPrivilegedHelperManager.shared.reconnectHelper()
@@ -987,9 +994,9 @@ struct HelperStatusRow: View {
                     }
                 }) {
                     HStack(spacing: 4) {
-                        Image(systemName: "network")
+                        Image(systemName: viewModel.helperConnectionStatus == .needsApproval ? "gear" : "network")
                             .font(.system(size: 12))
-                        Text("重新连接")
+                        Text(viewModel.helperConnectionStatus == .needsApproval ? "打开设置" : "重新连接")
                             .font(.system(size: 13))
                     }
                     .frame(minWidth: 90)
@@ -997,7 +1004,7 @@ struct HelperStatusRow: View {
                 .buttonStyle(BeautifulButtonStyle(baseColor: shouldDisableReconnectButton ? Color.gray.opacity(0.6) : Color.blue.opacity(0.8)))
                 .foregroundColor(shouldDisableReconnectButton ? Color.white.opacity(0.8) : .white)
                 .disabled(shouldDisableReconnectButton)
-                .help("尝试重新连接到已安装的 Helper")
+                .help(viewModel.helperConnectionStatus == .needsApproval ? "打开系统设置批准Helper" : "尝试重新连接到已安装的 Helper")
             }
         }
         .task {
@@ -1011,13 +1018,13 @@ struct HelperStatusRow: View {
         case .connecting: return .orange
         case .disconnected: return .red
         case .checking: return .orange
+        case .needsApproval: return .yellow
         }
     }
     
     private var shouldDisableReconnectButton: Bool {
-        return helperStatus != .installed || 
-               viewModel.helperConnectionStatus == .connected || 
-               isReinstallingHelper
+        // 只在重新安装Helper时禁用按钮，其他情况都允许用户点击
+        return isReinstallingHelper
     }
 
     private var helperStatusBackgroundColor: Color {
@@ -1026,6 +1033,7 @@ struct HelperStatusRow: View {
         case .connecting: return Color.orange.opacity(0.1)
         case .disconnected: return Color.red.opacity(0.1)
         case .checking: return Color.orange.opacity(0.1)
+        case .needsApproval: return Color.yellow.opacity(0.1)
         }
     }
 
@@ -1035,6 +1043,7 @@ struct HelperStatusRow: View {
         case .connecting: return String(localized: "正在连接")
         case .disconnected: return String(localized: "连接断开")
         case .checking: return String(localized: "检查中")
+        case .needsApproval: return String(localized: "需要批准")
         }
     }
 }

@@ -181,6 +181,8 @@ class PrivilegedHelperAdapter: NSObject, ObservableObject {
             return .disconnected
         case .connecting:
             return .connecting
+        case .needsApproval:
+            return .disconnected
         }
     }
     

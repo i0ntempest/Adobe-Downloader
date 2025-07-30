@@ -39,6 +39,7 @@ class ModernPrivilegedHelperManager: NSObject, ObservableObject {
         case connected
         case disconnected
         case connecting
+        case needsApproval
         
         var description: String {
             switch self {
@@ -48,6 +49,8 @@ class ModernPrivilegedHelperManager: NSObject, ObservableObject {
                 return String(localized: "未连接")
             case .connecting:
                 return String(localized: "正在连接")
+            case .needsApproval:
+                return String(localized: "需要批准")
             }
         }
     }
@@ -111,9 +114,10 @@ class ModernPrivilegedHelperManager: NSObject, ObservableObject {
     }
     
     private func setupAutoReconnect() {
-        Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
+        Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { [weak self] _ in
             guard let self = self else { return }
-            if self.connectionState == .disconnected && self.shouldAutoReconnect {
+            if self.connectionState == .disconnected && self.shouldAutoReconnect && !self.isInitializing {
+                self.logger.info("尝试自动重连Helper...")
                 Task {
                     await self.attemptConnection()
                 }
@@ -122,6 +126,7 @@ class ModernPrivilegedHelperManager: NSObject, ObservableObject {
     }
 
     func checkAndInstallHelper() async {
+        isInitializing = true
         logger.info("开始检查 Helper 状态")
         
         let status = await getHelperStatus()
@@ -135,6 +140,7 @@ class ModernPrivilegedHelperManager: NSObject, ObservableObject {
                 registerHelper()
                 break
             case .needsApproval:
+                self.connectionState = .needsApproval
                 showApprovalGuidance()
                 break
             case .requiresUpdate:
@@ -142,8 +148,17 @@ class ModernPrivilegedHelperManager: NSObject, ObservableObject {
                 break
             case .installed:
                 Task {
-                    await attemptConnection()
-                    connectionSuccessBlock?()
+                    let connectionResult = await attemptConnection()
+                    if connectionResult {
+                        logger.info("Helper 连接成功")
+                        connectionSuccessBlock?()
+                    } else {
+                        logger.warning("Helper 安装成功但连接失败，可能存在权限问题")
+                        await MainActor.run {
+                            self.connectionState = .disconnected
+                        }
+                    }
+                    self.isInitializing = false
                 }
             }
         }
@@ -172,6 +187,7 @@ class ModernPrivilegedHelperManager: NSObject, ObservableObject {
             return .installed
             
         case .requiresApproval:
+            logger.info("Helper需要用户批准")
             return .needsApproval
             
         case .notFound:
@@ -179,7 +195,7 @@ class ModernPrivilegedHelperManager: NSObject, ObservableObject {
             
         @unknown default:
             logger.warning("未知的 SMAppService 状态: \(status.rawValue)")
-            return .notInstalled
+            return .needsApproval
         }
     }
 
@@ -199,14 +215,56 @@ class ModernPrivilegedHelperManager: NSObject, ObservableObject {
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 Task {
-                    await self.attemptConnection()
+                    await self.tryEnableHelper()
                 }
             }
             
         } catch {
             logger.error("Helper 注册失败: \(error)")
             handleRegistrationError(error)
+            isInitializing = false
         }
+    }
+    
+    private func tryEnableHelper() async {
+        guard let appService = appService else { return }
+
+        let currentStatus = appService.status
+        logger.info("尝试启用Helper，当前状态: \(currentStatus.rawValue)")
+
+        if currentStatus != .enabled {
+            do {
+                logger.info("尝试重新注册Helper以启用")
+                try appService.register()
+
+                try await Task.sleep(nanoseconds: 2_000_000_000)
+                
+                let newStatus = appService.status
+                logger.info("重新注册后状态: \(newStatus.rawValue)")
+                
+                if newStatus == .enabled {
+                    logger.info("Helper成功启用")
+                    let connectionResult = await attemptConnection()
+                    if connectionResult {
+                        logger.info("Helper连接成功")
+                        return
+                    }
+                }
+            } catch {
+                logger.error("重新注册失败: \(error)")
+            }
+        }
+
+        let connectionResult = await attemptConnection()
+        if !connectionResult {
+            logger.warning("Helper 注册成功但连接失败，需要用户批准")
+            await MainActor.run {
+                self.connectionState = .needsApproval
+                self.showApprovalGuidance()
+            }
+        }
+        
+        self.isInitializing = false
     }
 
     private func updateHelper() {
@@ -286,17 +344,33 @@ class ModernPrivilegedHelperManager: NSObject, ObservableObject {
         var isConnected = false
         
         if let helper = newConnection.remoteObjectProxy as? HelperToolProtocol {
-            helper.executeCommand(type: .shellCommand, path1: "id -u", path2: "", permissions: 0) { [weak self] result in
-                if result.contains("0") || result == "0" {
+            helper.executeCommand(type: .shellCommand, path1: "whoami", path2: "", permissions: 0) { [weak self] result in
+                let trimmedResult = result.trimmingCharacters(in: .whitespacesAndNewlines)
+                self?.logger.info("Helper 响应: \(trimmedResult)")
+                
+                if trimmedResult == "root" {
                     isConnected = true
                     DispatchQueue.main.async {
                         self?.connection = newConnection
                         self?.connectionState = .connected
+                        self?.logger.info("Helper 权限验证成功，当前用户: \(trimmedResult)")
                     }
+                } else if !trimmedResult.starts(with: "Error:") && !trimmedResult.isEmpty {
+                    isConnected = true
+                    DispatchQueue.main.async {
+                        self?.connection = newConnection
+                        self?.connectionState = .connected
+                        self?.logger.warning("Helper 连接成功但权限可能不足，当前用户: \(trimmedResult)")
+                    }
+                } else {
+                    self?.logger.error("Helper 连接失败或权限不足: \(trimmedResult)")
                 }
                 semaphore.signal()
             }
-            _ = semaphore.wait(timeout: .now() + 1.0)
+            let waitResult = semaphore.wait(timeout: .now() + 8.0)
+            if waitResult == .timedOut {
+                logger.warning("Helper 连接超时")
+            }
         }
         
         if !isConnected {
@@ -335,7 +409,7 @@ class ModernPrivilegedHelperManager: NSObject, ObservableObject {
     }
 
     func getHelperProxy() throws -> HelperToolProtocol {
-        if connectionState != .connected {
+        if connectionState != .connected || connection == nil {
             guard let newConnection = connectionQueue.sync(execute: { createConnection() }) else {
                 throw HelperError.connectionFailed
             }
@@ -344,7 +418,9 @@ class ModernPrivilegedHelperManager: NSObject, ObservableObject {
         
         guard let helper = connection?.remoteObjectProxyWithErrorHandler({ [weak self] error in
             self?.logger.error("XPC 代理错误: \(error)")
-            self?.connectionState = .disconnected
+            DispatchQueue.main.async {
+                self?.connectionState = .disconnected
+            }
         }) as? HelperToolProtocol else {
             throw HelperError.proxyError
         }
@@ -375,8 +451,11 @@ class ModernPrivilegedHelperManager: NSObject, ObservableObject {
                 }
             }
         } catch {
-            connectionState = .disconnected
-            completion("Error: \(error.localizedDescription)")
+            DispatchQueue.main.async { [weak self] in
+                self?.connectionState = .disconnected
+                self?.logger.error("执行命令失败: \(error.localizedDescription)")
+                completion("Error: \(error.localizedDescription)")
+            }
         }
     }
 
@@ -435,10 +514,13 @@ class ModernPrivilegedHelperManager: NSObject, ObservableObject {
     }
 
     private func updateConnectionState(from result: String) {
-        if result.starts(with: "Error:") {
-            connectionState = .disconnected
-        } else {
-            connectionState = .connected
+        DispatchQueue.main.async { [weak self] in
+            if result.starts(with: "Error:") {
+                self?.connectionState = .disconnected
+                self?.logger.warning("命令执行失败，连接状态设为断开: \(result)")
+            } else {
+                self?.connectionState = .connected
+            }
         }
     }
     
@@ -554,8 +636,20 @@ class ModernPrivilegedHelperManager: NSObject, ObservableObject {
 
     private func showApprovalGuidance() {
         let alert = NSAlert()
-        alert.messageText = String(localized: "需要在系统设置中允许 Helper")
-        alert.informativeText = String(localized: "Adobe Downloader 需要通过后台服务来安装与移动文件。请在\"系统设置 → 通用 → 登录项与扩展\"中允许此应用的后台项目。")
+        alert.messageText = String(localized: "Helper服务需要批准")
+        alert.informativeText = String(localized: """
+        Adobe Downloader需要后台Helper服务来执行安装和文件操作。
+        
+        解决方法：
+        1. 点击下方「打开系统设置」按钮
+        2. 在「登录项与扩展」中找到 Adobe Downloader
+        3. 确保应用已被允许，并检查是否有任何需要启用的后台项目
+        4. 如果看不到相关选项，请尝试：
+           - 重启 Adobe Downloader
+           - 或重启系统后再试
+        
+        注意：macOS可能需要重启才能完全激活Helper服务。
+        """)
         alert.addButton(withTitle: String(localized: "打开系统设置"))
         alert.addButton(withTitle: String(localized: "稍后设置"))
         
