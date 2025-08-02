@@ -28,7 +28,16 @@ struct DownloadManagerView: View {
     
     private func removeTask(_ task: NewDownloadTask) {
         Task { @MainActor in
-            globalNetworkManager.removeTask(taskId: task.id)
+            let shouldRemoveFiles: Bool
+            if case .failed = task.status {
+                shouldRemoveFiles = true
+            } else if case .completed = task.status {
+                shouldRemoveFiles = StorageData.shared.deleteCompletedTasksWithFiles
+            } else {
+                shouldRemoveFiles = true
+            }
+            
+            globalNetworkManager.removeTask(taskId: task.id, removeFiles: shouldRemoveFiles)
         }
     }
 
@@ -159,14 +168,27 @@ private struct ToolbarButtons: View {
                     }
                     
                     for task in tasksToRemove {
-                        globalNetworkManager.removeTask(taskId: task.id, removeFiles: true)
+                        let shouldRemoveFiles: Bool
+                        if case .failed = task.status {
+                            shouldRemoveFiles = true
+                        } else if case .completed = task.status {
+                            shouldRemoveFiles = StorageData.shared.deleteCompletedTasksWithFiles
+                        } else {
+                            shouldRemoveFiles = false
+                        }
+                        
+                        globalNetworkManager.removeTask(taskId: task.id, removeFiles: shouldRemoveFiles)
                     }
                     
                     globalNetworkManager.updateDockBadge()
                 }
             }
         } message: {
-            Text("确定要删除所有已完成和失败的下载任务吗？此操作将同时删除本地文件。")
+            if StorageData.shared.deleteCompletedTasksWithFiles {
+                Text("确定要删除所有已完成和失败的下载任务吗？\n\n• 已完成的任务：将删除任务记录和本地文件\n• 失败的任务：将删除任务记录和本地文件")
+            } else {
+                Text("确定要删除所有已完成和失败的下载任务吗？\n\n• 已完成的任务：仅删除任务记录，保留本地文件\n• 失败的任务：将删除任务记录和本地文件")
+            }
         }
     }
 }

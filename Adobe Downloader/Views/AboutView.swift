@@ -247,6 +247,14 @@ final class GeneralSettingsViewModel: ObservableObject {
         }
     }
     
+    var deleteCompletedTasksWithFiles: Bool {
+        get { StorageData.shared.deleteCompletedTasksWithFiles }
+        set {
+            StorageData.shared.deleteCompletedTasksWithFiles = newValue
+            objectWillChange.send()
+        }
+    }
+    
     var maxConcurrentDownloads: Int {
         get { StorageData.shared.maxConcurrentDownloads }
         set {
@@ -505,6 +513,11 @@ struct DownloadSettingsView: View {
                 Divider()
                 
                 RedownloadConfirmRow(viewModel: viewModel)
+                    .fixedSize(horizontal: false, vertical: true)
+                
+                Divider()
+                
+                DeleteCompletedTasksRow(viewModel: viewModel)
                     .fixedSize(horizontal: false, vertical: true)
                 
                 HStack {
@@ -1411,6 +1424,55 @@ struct ConcurrentDownloadsSettingRow: View {
             .padding(.horizontal, 6)
             .background(Color.secondary.opacity(0.05))
             .cornerRadius(4)
+        }
+    }
+}
+
+struct DeleteCompletedTasksRow: View {
+    @ObservedObject var viewModel: GeneralSettingsViewModel
+    
+    var body: some View {
+        HStack(spacing: 10) {
+            Toggle("删除已完成任务时同时删除本地文件", isOn: $viewModel.deleteCompletedTasksWithFiles)
+                .toggleStyle(SwitchToggleStyle(tint: Color.red))
+                .padding(.leading, 5)
+                .controlSize(.small)
+                .labelsHidden()
+                
+            Text("删除已完成任务时同时删除本地文件")
+                .font(.system(size: 14))
+            
+            Spacer()
+            
+            if viewModel.deleteCompletedTasksWithFiles {
+                HStack(spacing: 5) {
+                    Image(systemName: "trash")
+                        .foregroundColor(.red)
+                        .font(.system(size: 12))
+                    Text("将删除文件")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 13))
+                }
+                .padding(.vertical, 3)
+                .padding(.horizontal, 8)
+                .background(Color.red.opacity(0.1))
+                .cornerRadius(5)
+                .padding(.trailing, 5)
+            } else {
+                HStack(spacing: 5) {
+                    Image(systemName: "doc.on.doc")
+                        .foregroundColor(.blue)
+                        .font(.system(size: 12))
+                    Text("保留文件")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 13))
+                }
+                .padding(.vertical, 3)
+                .padding(.horizontal, 8)
+                .background(Color.blue.opacity(0.1))
+                .cornerRadius(5)
+                .padding(.trailing, 5)
+            }
         }
     }
 }

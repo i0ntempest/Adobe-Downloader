@@ -98,6 +98,14 @@ final class StorageData: ObservableObject {
         }
     }
     
+    @Published var deleteCompletedTasksWithFiles: Bool {
+        didSet {
+            UserDefaults.standard.set(deleteCompletedTasksWithFiles, forKey: "deleteCompletedTasksWithFiles")
+            objectWillChange.send()
+            NotificationCenter.default.post(name: .storageDidChange, object: nil)
+        }
+    }
+    
     var allowedPlatform: [String] {
         if downloadAppleSilicon {
             return ["macuniversal", "macarm64"]
@@ -125,6 +133,7 @@ final class StorageData: ObservableObject {
         self.maxConcurrentDownloads = UserDefaults.standard.integer(forKey: "maxConcurrentDownloads") == 0 ? 3 : UserDefaults.standard.integer(forKey: "maxConcurrentDownloads")
         self.chunkSizeMB = UserDefaults.standard.integer(forKey: "chunkSizeMB") == 0 ? 2 : UserDefaults.standard.integer(forKey: "chunkSizeMB")
         self.apiVersion = UserDefaults.standard.string(forKey: "apiVersion") ?? "6"
+        self.deleteCompletedTasksWithFiles = UserDefaults.standard.bool(forKey: "deleteCompletedTasksWithFiles")
     }
 }
 
