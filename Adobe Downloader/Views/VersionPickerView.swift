@@ -58,15 +58,6 @@ struct VersionPickerView: View {
         .onAppear {
             loadProductIcon()
         }
-        .sheet(isPresented: $showingCustomDownload) {
-            CustomDownloadView(
-                productId: productId,
-                version: customDownloadVersion,
-                onDownloadStart: { dependencies in
-                    handleCustomDownload(dependencies: dependencies)
-                }
-            )
-        }
         .sheet(isPresented: $showExistingFileAlert) {
             if let existingPath = existingFilePath {
                 ExistingFileAlertView(
@@ -879,9 +870,11 @@ private struct DownloadButton: View {
     
     var body: some View {
         Button("下载") {
+            print("DownloadButton: 点击下载按钮，productId: \(productId), version: \(version)")
             if productId == "APRO" {
                 onSelect(version)
             } else {
+                print("DownloadButton: 调用onCustomDownload，version: \(version)")
                 onCustomDownload(version)
             }
         }

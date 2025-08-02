@@ -7,6 +7,12 @@
 
 import SwiftUI
 
+class CustomDownloadLoadingState: ObservableObject {
+    @Published var isLoading = true
+    @Published var currentTask = ""
+    @Published var error: String?
+}
+
 struct NavigationCustomDownloadView: View {
     @StateObject private var loadingState = CustomDownloadLoadingState()
     @State private var allPackages: [Package] = []
@@ -20,6 +26,13 @@ struct NavigationCustomDownloadView: View {
     let version: String
     let onDownloadStart: ([DependenciesToDownload]) -> Void
     let onDismiss: () -> Void
+    
+    init(productId: String, version: String, onDownloadStart: @escaping ([DependenciesToDownload]) -> Void, onDismiss: @escaping () -> Void) {
+        self.productId = productId
+        self.version = version
+        self.onDownloadStart = onDownloadStart
+        self.onDismiss = onDismiss
+    }
     
     var body: some View {
         Group {
@@ -119,7 +132,7 @@ struct NavigationCustomDownloadView: View {
     }
     
     private func fetchPackageInfo() async throws -> ([Package], [DependenciesToDownload]) {
-        guard let product = findProduct(id: productId) else {
+        guard let product = findProduct(id: productId, version: version) else {
             throw NetworkError.invalidData("找不到产品信息")
         }
         

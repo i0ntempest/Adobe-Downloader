@@ -169,12 +169,17 @@ func findProduct(id: String, version: String? = nil) -> Product? {
     guard let version = version else {
         return product
     }
-    
-    // 检查产品的平台和语言集是否包含指定版本
-    for platform in product.platforms {
-        for languageSet in platform.languageSet {
-            if languageSet.productVersion == version {
-                return product
+
+    if let matchedProduct = globalProducts.first(where: { $0.id == id && $0.version == version }) {
+        return matchedProduct
+    }
+
+    for product in globalProducts.filter({ $0.id == id }) {
+        for platform in product.platforms {
+            for languageSet in platform.languageSet {
+                if languageSet.productVersion == version {
+                    return product
+                }
             }
         }
     }

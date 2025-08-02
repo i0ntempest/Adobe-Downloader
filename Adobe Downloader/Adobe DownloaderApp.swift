@@ -141,13 +141,13 @@ struct Adobe_DownloaderApp: App {
         let needsSetup = !ModifySetup.isSetupExists()
 
         await MainActor.run {
+            #if !DEBUG
             if needsSetup {
                 showCreativeCloudAlert = true
             } else if needsBackup {
-                #if !DEBUG
                 showBackupAlert = true
-                #endif
             }
+            #endif
 
             if storage.isFirstLaunch {
                 showTipsSheet = true
