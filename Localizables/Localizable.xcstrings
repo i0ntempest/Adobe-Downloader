@@ -176,6 +176,17 @@
       }
     },
     "Adobe Downloader 需要通过后台服务来安装与移动文件。请在\"系统设置 → 通用 → 登录项与扩展\"中允许此应用的后台项目。" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adobe Downloader needs to use the background service to install and move files. Please allow this app's background project in \"System Settings → General → Login Items and Extensions\"."
+          }
+        }
+      }
+    },
+    "Adobe Downloader需要后台Helper服务来执行安装和文件操作。\n\n解决方法：\n1. 点击下方「打开系统设置」按钮\n2. 在「登录项与扩展」中找到 Adobe Downloader\n3. 确保应用已被允许，并检查是否有任何需要启用的后台项目\n4. 如果看不到相关选项，请尝试：\n   - 重启 Adobe Downloader\n   - 或重启系统后再试\n\n注意：macOS可能需要重启才能完全激活Helper服务。" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -441,6 +452,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Helper reconnected successfully"
+          }
+        }
+      }
+    },
+    "Helper服务需要批准" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Helper service needs approval"
           }
         }
       }
@@ -876,6 +897,16 @@
         }
       }
     },
+    "保留文件" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep files"
+          }
+        }
+      }
+    },
     "修改 Setup 组件失败" : {
       "localizations" : {
         "en" : {
@@ -1056,6 +1087,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Delete Adobe license and activation related files"
+          }
+        }
+      }
+    },
+    "删除已完成任务时同时删除本地文件" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete completed tasks when deleting local files"
           }
         }
       }
@@ -1518,6 +1559,16 @@
         }
       }
     },
+    "将删除文件" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Will delete files"
+          }
+        }
+      }
+    },
     "将执行的命令：" : {
       "localizations" : {
         "en" : {
@@ -1860,6 +1911,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Open System Settings"
+          }
+        }
+      }
+    },
+    "打开系统设置批准Helper" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open System Settings to Approve Helper"
+          }
+        }
+      }
+    },
+    "打开设置" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Settings"
           }
         }
       }
@@ -2438,6 +2509,17 @@
         }
       }
     },
+    "条件: %@" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Condition: %@"
+          }
+        }
+      }
+    },
     "查看" : {
       "localizations" : {
         "en" : {
@@ -2780,7 +2862,14 @@
       }
     },
     "没有写入权限" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No write permissions"
+          }
+        }
+      }
     },
     "没有找到产品" : {
       "localizations" : {
@@ -2964,7 +3053,28 @@
         }
       }
     },
+    "确定要删除所有已完成和失败的下载任务吗？\n\n• 已完成的任务：仅删除任务记录，保留本地文件\n• 失败的任务：将删除任务记录和本地文件" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are you sure you want to delete all completed and failed downloads?\n\n• Completed tasks: Only delete task records, keep local files\n• Failed tasks: Delete task records and local files"
+          }
+        }
+      }
+    },
+    "确定要删除所有已完成和失败的下载任务吗？\n\n• 已完成的任务：将删除任务记录和本地文件\n• 失败的任务：将删除任务记录和本地文件" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are you sure you want to delete all completed and failed downloads?\n\n• Completed tasks: Delete task records and local files\n• Failed tasks: Delete task records and local files"
+          }
+        }
+      }
+    },
     "确定要删除所有已完成和失败的下载任务吗？此操作将同时删除本地文件。" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3280,7 +3390,14 @@
       }
     },
     "自行安装命令" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Self-installation command"
+          }
+        }
+      }
     },
     "自行安装命令:" : {
       "localizations" : {
@@ -3731,6 +3848,7 @@
       }
     },
     "需要在系统设置中允许 Helper" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3746,6 +3864,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Need to approve in system settings"
+          }
+        }
+      }
+    },
+    "需要批准" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Need to approve"
           }
         }
       }

@@ -1,5 +1,22 @@
 # Change Log
 
+## 2025-08-11 更新日志
+
+[//]: # (2.1.2)
+```markdown
+1. 修复了Helper无法连接的问题
+2. 修复了自定义下载永远是最新版本的问题
+3. 新增开关用于在删除任务时同时删除本地文件
+4. 修复了Helper不会自动更新的问题
+
+====================
+
+1. Fixed an issue where Helper could not reconnect.
+2. Fixed an issue where the custom download is always the latest version.
+3. Added a switch to delete local files at the same time when deleting tasks.
+4. Fixed an issue where Helper would not automatically update.
+```
+
 ## 2025-07-22 更新日志
 
 [//]: # (2.1.1)

@@ -3,6 +3,34 @@
     <channel>
         <title>Adobe Downloader</title>
         <item>
+            <title>2.1.2</title>
+            <pubDate>Mon, 11 Aug 2025 12:28:06 +0800</pubDate>
+            <sparkle:version>212</sparkle:version>
+            <sparkle:shortVersionString>2.1.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/X1a0He/Adobe-Downloader/releases/download/2.1.2/Adobe.Downloader.dmg" length="4026368" type="application/octet-stream" sparkle:edSignature="LO/iyoV0Z58Xwg2OPia6x1urNbTBgXX5whJGW3E7pcggwsi9b7TJXdr4geHlCVUw77TKLwTgd9ZaQznS83lkAw=="/>
+            <description>
+                <![CDATA[
+                    <style>ul{margin-top: 0;margin-bottom: 7;padding-left: 18;}</style>
+                    <h4>Adobe Downloader 更新日志: </h4>
+                    <ul>
+                        <li>1. 修复了Helper无法连接的问题</li>
+                        <li>2. 修复了自定义下载永远是最新版本的问题</li>
+                        <li>3. 新增开关用于在删除任务时同时删除本地文件</li>
+                        <li>4. 修复了Helper不会自动更新的问题</li>
+                    </ul>
+                    <hr>
+                    <h4>Adobe Downloader Changes: </h4>
+                    <ul>
+                        <li>1. Fixed an issue where Helper could not reconnect.</li>
+                        <li>2. Fixed an issue where the custom download is always the latest version.</li>
+                        <li>3. Added a switch to delete local files at the same time when deleting tasks.</li>
+                        <li>4. Fixed an issue where Helper would not automatically update.</li>
+                    </ul>
+                ]]>
+            </description>
+        </item>
+        <item>
             <title>2.1.1</title>
             <pubDate>Tue, 22 Jul 2025 21:21:49 +0800</pubDate>
             <sparkle:version>211</sparkle:version>

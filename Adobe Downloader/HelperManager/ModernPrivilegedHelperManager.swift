@@ -181,6 +181,14 @@ class ModernPrivilegedHelperManager: NSObject, ObservableObject {
             return .notInstalled
             
         case .enabled:
+            let installedBuild = UserDefaults.standard.string(forKey: "InstalledHelperBuild")
+            let installedVersion = UserDefaults.standard.string(forKey: "InstalledHelperVersion")
+            
+            if installedBuild == nil || installedVersion == nil {
+                logger.info("Helper已启用但缺少版本信息，需要重新注册")
+                return .requiresUpdate
+            }
+            
             if await needsUpdate() {
                 return .requiresUpdate
             }
@@ -205,12 +213,19 @@ class ModernPrivilegedHelperManager: NSObject, ObservableObject {
             return
         }
         
+        logger.info("正在重新注册Helper...")
+        
         do {
             try appService.register()
-            logger.info("Helper 注册成功")
+            logger.info("Helper 重新注册成功")
 
             if let currentBuild = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
                 UserDefaults.standard.set(currentBuild, forKey: "InstalledHelperBuild")
+                logger.info("已保存Helper Build版本: \(currentBuild)")
+            }
+            if let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
+                UserDefaults.standard.set(currentVersion, forKey: "InstalledHelperVersion")
+                logger.info("已保存Helper主版本: \(currentVersion)")
             }
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
@@ -268,6 +283,7 @@ class ModernPrivilegedHelperManager: NSObject, ObservableObject {
     }
 
     private func updateHelper() {
+        logger.info("检测到Helper版本不匹配，开始重新安装Helper")
         registerHelper()
     }
 
@@ -288,6 +304,7 @@ class ModernPrivilegedHelperManager: NSObject, ObservableObject {
         try await cleanupLegacyInstallation()
 
         UserDefaults.standard.removeObject(forKey: "InstalledHelperBuild")
+        UserDefaults.standard.removeObject(forKey: "InstalledHelperVersion")
         
         await MainActor.run {
             connectionState = .disconnected
@@ -553,11 +570,59 @@ class ModernPrivilegedHelperManager: NSObject, ObservableObject {
     
     private func needsUpdate() async -> Bool {
         guard let currentBuild = Bundle.main.infoDictionary?["CFBundleVersion"] as? String,
-              let installedBuild = UserDefaults.standard.string(forKey: "InstalledHelperBuild") else {
+              let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String else {
+            logger.warning("无法获取当前应用版本信息")
             return true
         }
         
-        return currentBuild != installedBuild
+        let installedBuild = UserDefaults.standard.string(forKey: "InstalledHelperBuild")
+        let installedVersion = UserDefaults.standard.string(forKey: "InstalledHelperVersion")
+
+        guard let savedBuild = installedBuild, let savedVersion = installedVersion else {
+            logger.info("未找到已安装的Helper版本信息，当前版本=\(currentVersion)(\(currentBuild))")
+            return true
+        }
+
+        let versionComparison = compareVersions(current: currentVersion, installed: savedVersion)
+        if versionComparison == .orderedDescending {
+            logger.info("主版本升级，需要更新: 当前=\(currentVersion), 已安装=\(savedVersion)")
+            return true
+        } else if versionComparison == .orderedAscending {
+            logger.info("当前版本低于已安装版本，强制更新Helper以匹配应用: 当前=\(currentVersion), 已安装=\(savedVersion)")
+            return true
+        }
+
+        let buildComparison = compareVersions(current: currentBuild, installed: savedBuild)
+        if buildComparison == .orderedDescending {
+            logger.info("Build版本升级，需要更新: 当前=\(currentBuild), 已安装=\(savedBuild)")
+            return true
+        } else if buildComparison == .orderedAscending {
+            logger.info("当前Build版本低于已安装版本，强制更新Helper以匹配应用: 当前=\(currentBuild), 已安装=\(savedBuild)")
+            return true
+        }
+        
+        logger.info("Helper版本检查通过: 当前版本=\(currentVersion)(\(currentBuild)), 已安装版本=\(savedVersion)(\(savedBuild))")
+        return false
+    }
+    
+    private func compareVersions(current: String, installed: String) -> ComparisonResult {
+        let currentComponents = current.split(separator: ".").compactMap { Int($0) }
+        let installedComponents = installed.split(separator: ".").compactMap { Int($0) }
+        
+        let maxCount = max(currentComponents.count, installedComponents.count)
+        
+        for i in 0..<maxCount {
+            let currentPart = i < currentComponents.count ? currentComponents[i] : 0
+            let installedPart = i < installedComponents.count ? installedComponents[i] : 0
+            
+            if currentPart > installedPart {
+                return .orderedDescending
+            } else if currentPart < installedPart {
+                return .orderedAscending
+            }
+        }
+        
+        return .orderedSame
     }
     
     @objc private func handleConnectionInvalidation() {
