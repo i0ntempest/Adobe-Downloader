@@ -37,7 +37,7 @@ actor InstallManager {
     
     private func terminateSetupProcesses() async {
         let _ = await withCheckedContinuation { continuation in
-            ModernPrivilegedHelperManager.shared.executeCommand("pkill -f Setup") { result in
+            PrivilegedHelperAdapter.shared.executeCommand("pkill -f Setup") { result in
                 continuation.resume(returning: result)
             }
         }
@@ -155,7 +155,7 @@ actor InstallManager {
         for logFile in logFiles {
             let removeCommand = "rm -f '\(logFile)'"
             let result = await withCheckedContinuation { continuation in
-                ModernPrivilegedHelperManager.shared.executeCommand(removeCommand) { result in
+                PrivilegedHelperAdapter.shared.executeCommand(removeCommand) { result in
                     continuation.resume(returning: result)
                 }
             }
@@ -174,7 +174,7 @@ actor InstallManager {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             Task.detached {
                 do {
-                    try await ModernPrivilegedHelperManager.shared.executeInstallation(installCommand) { output in
+                    try await PrivilegedHelperAdapter.shared.executeInstallation(installCommand) { output in
                         Task { @MainActor in
                             if let range = output.range(of: "Exit Code:\\s*(-?[0-9]+)", options: .regularExpression),
                                let codeStr = output[range].split(separator: ":").last?.trimmingCharacters(in: .whitespaces),
@@ -182,7 +182,7 @@ actor InstallManager {
                                 
                                 if exitCode == 0 {
                                     progressHandler(1.0, String(localized: "安装完成"))
-                                    ModernPrivilegedHelperManager.shared.executeCommand("pkill -f Setup") { _ in }
+                                    PrivilegedHelperAdapter.shared.executeCommand("pkill -f Setup") { _ in }
                                     continuation.resume()
                                     return
                                 } else {
@@ -241,7 +241,7 @@ actor InstallManager {
     }
     
     func cancel() {
-        ModernPrivilegedHelperManager.shared.executeCommand("pkill -f Setup") { _ in }
+        PrivilegedHelperAdapter.shared.executeCommand("pkill -f Setup") { _ in }
     }
 
     func getInstallCommand(for driverPath: String) -> String {

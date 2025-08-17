@@ -338,7 +338,7 @@ struct CleanupView: View {
         }
         timeoutTimer.resume()
 
-        ModernPrivilegedHelperManager.shared.executeCommand(command) { [self] (output: String) in
+        PrivilegedHelperAdapter.shared.executeCommand(command) { [self] (output: String) in
             timeoutTimer.cancel()
             DispatchQueue.main.async {
                 if let index = cleanupLogs.lastIndex(where: { $0.command == command }) {

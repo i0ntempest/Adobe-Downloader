@@ -9,13 +9,10 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
-	<key>SMAppService</key>
+	<key>SMPrivilegedExecutables</key>
 	<dict>
 		<key>com.x1a0he.macOS.Adobe-Downloader.helper</key>
-		<dict>
-			<key>PlistName</key>
-			<string>com.x1a0he.macOS.Adobe-Downloader.helper.plist</string>
-		</dict>
+		<string>identifier "com.x1a0he.macOS.Adobe-Downloader.helper" and anchor apple generic and certificate leaf[subject.CN] = "Apple Development: x1a0he@outlook.com (LFN2762T4F)" and certificate 1[field.1.2.840.113635.100.6.2.1] /* exists */</string>
 	</dict>
 	<key>SUFeedURL</key>
 	<string>https://raw.githubusercontent.com/X1a0He/Adobe-Downloader/refs/heads/main/appcast.xml</string>

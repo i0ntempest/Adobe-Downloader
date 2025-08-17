@@ -7,7 +7,6 @@
 import SwiftUI
 import Sparkle
 import Combine
-import ServiceManagement
 
 
 private enum AboutViewConstants {
@@ -276,7 +275,6 @@ final class GeneralSettingsViewModel: ObservableObject {
         case connecting
         case disconnected
         case checking
-        case needsApproval
     }
 
     init(updater: SPUUpdater) {
@@ -287,7 +285,7 @@ final class GeneralSettingsViewModel: ObservableObject {
 
         self.helperConnectionStatus = .connecting
 
-        ModernPrivilegedHelperManager.shared.$connectionState
+        PrivilegedHelperAdapter.shared.$connectionState
             .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
                 switch state {
@@ -297,8 +295,6 @@ final class GeneralSettingsViewModel: ObservableObject {
                     self?.helperConnectionStatus = .disconnected
                 case .connecting:
                     self?.helperConnectionStatus = .connecting
-                case .needsApproval:
-                    self?.helperConnectionStatus = .needsApproval
                 }
             }
             .store(in: &cancellables)
@@ -874,7 +870,7 @@ struct HelperStatusRow: View {
     @Binding var helperAlertMessage: String
     @Binding var helperAlertSuccess: Bool
     @State private var isReinstallingHelper = false
-    @State private var helperStatus: ModernPrivilegedHelperManager.HelperStatus = .notInstalled
+    @State private var helperStatus: PrivilegedHelperAdapter.HelperStatus = .noFound
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -919,24 +915,12 @@ struct HelperStatusRow: View {
 
                 Button(action: {
                     isReinstallingHelper = true
-                    Task {
-                        do {
-                            try await ModernPrivilegedHelperManager.shared.uninstallHelper()
-                            await ModernPrivilegedHelperManager.shared.checkAndInstallHelper()
-                            
-                            await MainActor.run {
-                                helperAlertSuccess = true
-                                helperAlertMessage = "Helper 重新安装成功"
-                                showHelperAlert = true
-                                isReinstallingHelper = false
-                            }
-                        } catch {
-                            await MainActor.run {
-                                helperAlertSuccess = false
-                                helperAlertMessage = error.localizedDescription
-                                showHelperAlert = true
-                                isReinstallingHelper = false
-                            }
+                    PrivilegedHelperAdapter.shared.reinstallHelper { success, message in
+                        DispatchQueue.main.async {
+                            helperAlertSuccess = success
+                            helperAlertMessage = message
+                            showHelperAlert = true
+                            isReinstallingHelper = false
                         }
                     }
                 }) {
@@ -983,32 +967,18 @@ struct HelperStatusRow: View {
                 Spacer()
 
                 Button(action: {
-                    if viewModel.helperConnectionStatus == .needsApproval {
-                        // 打开系统设置让用户批准Helper
-                        SMAppService.openSystemSettingsLoginItems()
-                    } else {
-                        Task {
-                            do {
-                                try await ModernPrivilegedHelperManager.shared.reconnectHelper()
-                                await MainActor.run {
-                                    helperAlertSuccess = true
-                                    helperAlertMessage = "重新连接成功"
-                                    showHelperAlert = true
-                                }
-                            } catch {
-                                await MainActor.run {
-                                    helperAlertSuccess = false
-                                    helperAlertMessage = error.localizedDescription
-                                    showHelperAlert = true
-                                }
-                            }
+                    PrivilegedHelperAdapter.shared.reconnectHelper { success, message in
+                        DispatchQueue.main.async {
+                            helperAlertSuccess = success
+                            helperAlertMessage = message
+                            showHelperAlert = true
                         }
                     }
                 }) {
                     HStack(spacing: 4) {
-                        Image(systemName: viewModel.helperConnectionStatus == .needsApproval ? "gear" : "network")
+                        Image(systemName: "network")
                             .font(.system(size: 12))
-                        Text(viewModel.helperConnectionStatus == .needsApproval ? "打开设置" : "重新连接")
+                        Text("重新连接")
                             .font(.system(size: 13))
                     }
                     .frame(minWidth: 90)
@@ -1016,11 +986,13 @@ struct HelperStatusRow: View {
                 .buttonStyle(BeautifulButtonStyle(baseColor: shouldDisableReconnectButton ? Color.gray.opacity(0.6) : Color.blue.opacity(0.8)))
                 .foregroundColor(shouldDisableReconnectButton ? Color.white.opacity(0.8) : .white)
                 .disabled(shouldDisableReconnectButton)
-                .help(viewModel.helperConnectionStatus == .needsApproval ? "打开系统设置批准Helper" : "尝试重新连接到已安装的 Helper")
+                .help("尝试重新连接到已安装的 Helper")
             }
         }
         .task {
-            helperStatus = await ModernPrivilegedHelperManager.shared.getHelperStatus()
+            PrivilegedHelperAdapter.shared.getHelperStatus { status in
+                helperStatus = status
+            }
         }
     }
 
@@ -1030,7 +1002,6 @@ struct HelperStatusRow: View {
         case .connecting: return .orange
         case .disconnected: return .red
         case .checking: return .orange
-        case .needsApproval: return .yellow
         }
     }
     
@@ -1045,7 +1016,6 @@ struct HelperStatusRow: View {
         case .connecting: return Color.orange.opacity(0.1)
         case .disconnected: return Color.red.opacity(0.1)
         case .checking: return Color.orange.opacity(0.1)
-        case .needsApproval: return Color.yellow.opacity(0.1)
         }
     }
 
@@ -1055,7 +1025,6 @@ struct HelperStatusRow: View {
         case .connecting: return String(localized: "正在连接")
         case .disconnected: return String(localized: "连接断开")
         case .checking: return String(localized: "检查中")
-        case .needsApproval: return String(localized: "需要批准")
         }
     }
 }

@@ -7,7 +7,7 @@
 
 import Foundation
 import AppKit
-import ServiceManagement
+import Combine
 
 @objcMembers
 class PrivilegedHelperAdapter: NSObject, ObservableObject {
@@ -17,7 +17,7 @@ class PrivilegedHelperAdapter: NSObject, ObservableObject {
     
     @Published var connectionState: ConnectionState = .disconnected
 
-    private let modernManager: ModernPrivilegedHelperManager
+    private let smJobBlessManager: SMJobBlessHelperManager
     var connectionSuccessBlock: (() -> Void)?
 
     enum HelperStatus {
@@ -44,158 +44,95 @@ class PrivilegedHelperAdapter: NSObject, ObservableObject {
     }
 
     override init() {
-        self.modernManager = ModernPrivilegedHelperManager.shared
+        self.smJobBlessManager = SMJobBlessHelperManager.shared
         super.init()
 
-        modernManager.$connectionState
+        smJobBlessManager.$connectionState
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] modernState in
-                self?.connectionState = self?.convertConnectionState(modernState) ?? .disconnected
+            .sink { [weak self] smJobBlessState in
+                self?.connectionState = self?.convertConnectionState(smJobBlessState) ?? .disconnected
             }
             .store(in: &cancellables)
 
-        Task {
-            await initializeWithMigration()
+        smJobBlessManager.connectionSuccessBlock = { [weak self] in
+            self?.connectionSuccessBlock?()
         }
     }
     
     private var cancellables = Set<AnyCancellable>()
 
     func checkInstall() {
-        Task {
-            await modernManager.checkAndInstallHelper()
-        }
+        smJobBlessManager.checkInstall()
     }
     
     func getHelperStatus(callback: @escaping ((HelperStatus) -> Void)) {
-        Task {
-            let modernStatus = await modernManager.getHelperStatus()
-            let legacyStatus = convertHelperStatus(modernStatus)
-            
-            await MainActor.run {
-                callback(legacyStatus)
-            }
+        smJobBlessManager.getHelperStatus { status in
+            let legacyStatus = self.convertHelperStatus(status)
+            callback(legacyStatus)
         }
     }
     
     static var getHelperStatus: Bool {
-        let helperURL = Bundle.main.bundleURL.appendingPathComponent("Contents/Library/LaunchServices/" + machServiceName)
-        guard CFBundleCopyInfoDictionaryForURL(helperURL as CFURL) != nil else { return false }
-
-        let appService = SMAppService.daemon(plistName: machServiceName)
-        return appService.status == .enabled
+        return SMJobBlessHelperManager.getHelperStatus
     }
 
     func executeCommand(_ command: String, completion: @escaping (String) -> Void) {
-        modernManager.executeCommand(command, completion: completion)
+        smJobBlessManager.executeCommand(command, completion: completion)
     }
     
     func executeInstallation(_ command: String, progress: @escaping (String) -> Void) async throws {
-        try await modernManager.executeInstallation(command, progress: progress)
+        try await smJobBlessManager.executeInstallation(command, progress: progress)
     }
     
     func reconnectHelper(completion: @escaping (Bool, String) -> Void) {
-        Task {
-            do {
-                try await modernManager.reconnectHelper()
-                completion(true, String(localized: "重新连接成功"))
-            } catch {
-                completion(false, error.localizedDescription)
-            }
-        }
+        smJobBlessManager.reconnectHelper(completion: completion)
     }
     
     func reinstallHelper(completion: @escaping (Bool, String) -> Void) {
-        Task {
-            do {
-                try await modernManager.uninstallHelper()
-                await modernManager.checkAndInstallHelper()
-
-                try await Task.sleep(nanoseconds: 2_000_000_000)
-                
-                let status = await modernManager.getHelperStatus()
-                switch status {
-                case .installed:
-                    completion(true, String(localized: "重新安装成功"))
-                case .needsApproval:
-                    completion(false, String(localized: "需要在系统设置中批准"))
-                default:
-                    completion(false, String(localized: "重新安装失败"))
-                }
-            } catch {
-                completion(false, error.localizedDescription)
-            }
-        }
+        smJobBlessManager.reinstallHelper(completion: completion)
     }
     
     func removeInstallHelper(completion: ((Bool) -> Void)? = nil) {
-        Task {
-            do {
-                try await modernManager.uninstallHelper()
-                completion?(true)
-            } catch {
-                completion?(false)
-            }
-        }
+        smJobBlessManager.removeInstallHelper(completion: completion)
     }
     
     func forceReinstallHelper() {
-        reinstallHelper { _, _ in }
+        smJobBlessManager.forceCleanAndReinstallHelper { success, message in
+            print("Helper重新安装结果: \(success ? "成功" : "失败") - \(message)")
+        }
     }
     
     func disconnectHelper() {
-        Task {
-            await modernManager.disconnectHelper()
-        }
+        smJobBlessManager.disconnectHelper()
     }
     
     func uninstallHelperViaTerminal(completion: @escaping (Bool, String) -> Void) {
-        Task {
-            do {
-                try await modernManager.uninstallHelper()
-                completion(true, String(localized: "Helper 已完全卸载"))
-            } catch {
-                completion(false, error.localizedDescription)
-            }
-        }
+        smJobBlessManager.uninstallHelperViaTerminal(completion: completion)
     }
     
     public func getHelperProxy() throws -> HelperToolProtocol {
-        return try modernManager.getHelperProxy()
+        return try smJobBlessManager.getHelperProxy()
     }
     
-    private func initializeWithMigration() async {
-        do {
-            let _ = try await ModernPrivilegedHelperManager.initializeWithMigration()
-            connectionSuccessBlock?()
-        } catch {
-            print("Helper 初始化失败: \(error)")
-        }
-    }
-    
-    private func convertConnectionState(_ modernState: ModernPrivilegedHelperManager.ConnectionState) -> ConnectionState {
-        switch modernState {
+    private func convertConnectionState(_ smJobBlessState: SMJobBlessHelperManager.ConnectionState) -> ConnectionState {
+        switch smJobBlessState {
         case .connected:
             return .connected
         case .disconnected:
             return .disconnected
         case .connecting:
             return .connecting
-        case .needsApproval:
-            return .disconnected
         }
     }
     
-    private func convertHelperStatus(_ modernStatus: ModernPrivilegedHelperManager.HelperStatus) -> HelperStatus {
-        switch modernStatus {
+    private func convertHelperStatus(_ smJobBlessStatus: SMJobBlessHelperManager.HelperStatus) -> HelperStatus {
+        switch smJobBlessStatus {
         case .installed:
             return .installed
-        case .notInstalled, .needsApproval, .legacy:
+        case .noFound:
             return .noFound
-        case .requiresUpdate:
+        case .needUpdate:
             return .needUpdate
         }
     }
 }
-
-import Combine

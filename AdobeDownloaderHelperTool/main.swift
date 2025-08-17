@@ -9,6 +9,12 @@ import os.log
     case shellCommand
 }
 
+@objc(HelperToolProtocol) protocol HelperToolProtocol {
+    @objc(executeCommand:path1:path2:permissions:withReply:)
+    func executeCommand(type: CommandType, path1: String, path2: String, permissions: Int, withReply reply: @escaping (String) -> Void)
+    func getInstallationOutput(withReply reply: @escaping (String) -> Void)
+}
+
 class SecureCommandHandler {
     static func createCommand(type: CommandType, path1: String, path2: String = "", permissions: Int = 0) -> String? {
         if type == .shellCommand {
@@ -55,12 +61,6 @@ class SecureCommandHandler {
     }
 }
 
-@objc(HelperToolProtocol) protocol HelperToolProtocol {
-    @objc(executeCommand:path1:path2:permissions:withReply:)
-    func executeCommand(type: CommandType, path1: String, path2: String, permissions: Int, withReply reply: @escaping (String) -> Void)
-    func getInstallationOutput(withReply reply: @escaping (String) -> Void)
-}
-
 class HelperTool: NSObject, HelperToolProtocol {
     private let listener: NSXPCListener
     private var connections: Set<NSXPCConnection> = []
@@ -99,7 +99,7 @@ class HelperTool: NSObject, HelperToolProtocol {
             #if DEBUG
             self.logger.notice("收到安全命令执行请求: \(shellCommand, privacy: .public)")
             #else
-            self.logger.notice("收到安全命令执行请求")
+            self.logger.notice("收到安全命令执行请求: \(String(shellCommand.prefix(20)))")
             #endif
             
             let isSetupCommand = shellCommand.contains("Setup") && shellCommand.contains("--install")
@@ -150,7 +150,9 @@ class HelperTool: NSObject, HelperToolProtocol {
             }
 
             let outputHandle = outputPipe.fileHandleForReading
+            let errorHandle = errorPipe.fileHandleForReading
             var output = ""
+            var errorOutput = ""
             
             outputHandle.readabilityHandler = { handle in
                 let data = handle.availableData
@@ -158,18 +160,27 @@ class HelperTool: NSObject, HelperToolProtocol {
                     output += newOutput
                 }
             }
+            
+            errorHandle.readabilityHandler = { handle in
+                let data = handle.availableData
+                if let newError = String(data: data, encoding: .utf8) {
+                    errorOutput += newError
+                }
+            }
 
             task.waitUntilExit()
             
             outputHandle.readabilityHandler = nil
-            errorPipe.fileHandleForReading.readabilityHandler = nil
+            errorHandle.readabilityHandler = nil
             
             if task.terminationStatus == 0 {
                 self.logger.notice("命令执行成功")
-                reply(output.isEmpty ? "Success" : output)
+                let result = output.isEmpty ? "Success" : output.trimmingCharacters(in: .whitespacesAndNewlines)
+                reply(result)
             } else {
-                self.logger.error("命令执行失败，退出码: \(task.terminationStatus, privacy: .public)")
-                reply("Error: Command failed with exit code \(task.terminationStatus)")
+                let fullErrorMsg = errorOutput.isEmpty ? "Unknown error" : errorOutput.trimmingCharacters(in: .whitespacesAndNewlines)
+                self.logger.error("命令执行失败，退出码: \(task.terminationStatus), 错误信息: \(fullErrorMsg)")
+                reply("Error: Command failed with exit code \(task.terminationStatus): \(fullErrorMsg)")
             }
         }
     }
