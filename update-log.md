@@ -1,5 +1,18 @@
 # Change Log
 
+## 2025-08-17 更新日志
+
+[//]: # (2.1.3)
+```markdown
+1. 垃圾 SMAppService 赶紧滚，回退 SMJobBless Helper
+2. 修复了安装时 Helper 权限不足导致 103 错误的问题
+
+====================
+
+1. Back to SMJobBless Helper.
+2. Fixed an issue where Helper permissions were insufficient during installation.
+```
+
 ## 2025-08-11 更新日志
 
 [//]: # (2.1.2)

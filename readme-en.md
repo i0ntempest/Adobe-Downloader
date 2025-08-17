@@ -68,13 +68,11 @@ when prompted.
 
 - For historical update logs, please go to [Update Log](update-log.md)
 
-- 2025-08-11 Update Log
+- 2025-08-17 Update Log
 
 ```markdown
-1. Fixed an issue where Helper could not reconnect.
-2. Fixed an issue where the custom download is always the latest version.
-3. Added a switch to delete local files at the same time when deleting tasks.
-4. Fixed an issue where Helper would not automatically update.
+1. Back to SMJobBless Helper.
+2. Fixed an issue where Helper permissions were insufficient during installation.
 ```
 
 ### Language friendly
